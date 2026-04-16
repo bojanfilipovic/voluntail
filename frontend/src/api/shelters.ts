@@ -18,5 +18,17 @@ export async function fetchShelters(): Promise<Shelter[]> {
   if (!res.ok) {
     throw new Error(`HTTP ${res.status}`)
   }
-  return res.json() as Promise<Shelter[]>
+
+  let raw: unknown
+  try {
+    raw = await res.json()
+  } catch {
+    throw new Error('Invalid JSON from /api/shelters')
+  }
+
+  if (!Array.isArray(raw)) {
+    throw new Error('Expected a JSON array from /api/shelters')
+  }
+
+  return raw as Shelter[]
 }
