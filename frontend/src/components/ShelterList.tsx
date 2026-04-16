@@ -1,12 +1,20 @@
-import { useQuery } from '@tanstack/react-query'
-import { fetchShelters } from '../api/shelters'
+import type { Shelter } from '../api/shelters'
 
-export function ShelterList() {
-  const { data, error, isPending } = useQuery({
-    queryKey: ['shelters'],
-    queryFn: fetchShelters,
-  })
+type Props = {
+  shelters: Shelter[] | undefined
+  error: Error | null
+  isPending: boolean
+  selectedId: string | null
+  onSelectShelter: (s: Shelter) => void
+}
 
+export function ShelterList({
+  shelters,
+  error,
+  isPending,
+  selectedId,
+  onSelectShelter,
+}: Props) {
   return (
     <section className="shelters-preview" aria-labelledby="shelters-heading">
       <h2 id="shelters-heading">Shelters</h2>
@@ -16,21 +24,38 @@ export function ShelterList() {
       </p>
       {error ? (
         <p className="shelters-error" role="alert">
-          {error instanceof Error ? error.message : 'Request failed'}
+          {error.message}
         </p>
       ) : isPending ? (
         <p>Loading shelters…</p>
       ) : (
         <ul className="shelters-list">
-          {(data ?? []).map((s) => (
+          {(shelters ?? []).map((s) => (
             <li key={s.id}>
-              <strong>{s.name}</strong>{' '}
-              <span className="shelters-meta">
-                ({s.registryTag}) · {s.latitude.toFixed(4)},{' '}
-                {s.longitude.toFixed(4)}
-              </span>
-              <div className="shelters-desc">{s.description}</div>
-              {s.signupUrl ? <a href={s.signupUrl}>Signup link</a> : null}
+              <button
+                type="button"
+                className={`shelter-row${s.id === selectedId ? ' shelter-row--selected' : ''}`}
+                onClick={() => onSelectShelter(s)}
+              >
+                <strong>{s.name}</strong>{' '}
+                <span className="shelters-meta">
+                  ({s.registryTag}) · {s.latitude.toFixed(4)},{' '}
+                  {s.longitude.toFixed(4)}
+                </span>
+                <div className="shelters-desc">{s.description}</div>
+                {s.signupUrl ? (
+                  <span className="shelters-link-wrap">
+                    <a
+                      href={s.signupUrl}
+                      onClick={(e) => e.stopPropagation()}
+                      rel="noreferrer noopener"
+                      target="_blank"
+                    >
+                      Signup link
+                    </a>
+                  </span>
+                ) : null}
+              </button>
             </li>
           ))}
         </ul>
