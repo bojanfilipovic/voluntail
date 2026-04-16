@@ -29,6 +29,7 @@ dependencies {
     implementation(libs.hikari)
     implementation(libs.exposed.core)
     implementation(libs.exposed.jdbc)
+    implementation(libs.exposed.json)
     implementation(libs.ktor.server.default.headers)
     implementation(libs.ktor.server.content.negotiation)
     implementation(libs.ktor.server.core)
@@ -37,5 +38,10 @@ dependencies {
     implementation(libs.ktor.server.netty)
     implementation(libs.logback.classic)
     testImplementation(libs.ktor.server.test.host)
+    testImplementation("io.ktor:ktor-client-core:${libs.versions.ktor.get()}")
     testImplementation(libs.kotlin.test.junit)
+}
+
+tasks.withType<Test>().configureEach {
+    environment("CMS_API_KEY", "test-secret")
 }

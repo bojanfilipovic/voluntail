@@ -13,4 +13,6 @@ data class ShelterResponse(
     val registryTag: RegistryTag,
     val species: List<String>,
     val signupUrl: String?,
+    val imageUrl: String?,
+    val donationUrl: String?,
 )

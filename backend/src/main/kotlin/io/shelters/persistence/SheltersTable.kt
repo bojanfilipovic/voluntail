@@ -1,8 +1,17 @@
 package io.shelters.persistence
 
 import io.shelters.RegistryTag
+import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.builtins.serializer
+import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.java.javaUUID
+import org.jetbrains.exposed.v1.json.jsonb
+
+internal val sheltersTableJson =
+    Json {
+        ignoreUnknownKeys = true
+    }
 
 object SheltersTable : Table("shelters") {
     val id = javaUUID("id")
@@ -11,8 +20,15 @@ object SheltersTable : Table("shelters") {
     val latitude = double("latitude")
     val longitude = double("longitude")
     val registryTag = enumerationByName<RegistryTag>("registry_tag", 16)
-    val species = text("species")
+    val species =
+        jsonb(
+            "species",
+            sheltersTableJson,
+            ListSerializer(String.serializer()),
+        )
     val signupUrl = text("signup_url").nullable()
+    val imageUrl = text("image_url").nullable()
+    val donationUrl = text("donation_url").nullable()
 
     override val primaryKey = PrimaryKey(id)
 }

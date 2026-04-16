@@ -19,8 +19,11 @@ const NL_VIEW = {
   zoom: 6.5,
 } as const
 
+export type MapCenter = { latitude: number; longitude: number }
+
 export type ShelterMapHandle = {
   flyToShelter: (s: Shelter) => void
+  getMapCenter: () => MapCenter
 }
 
 type Props = {
@@ -38,6 +41,10 @@ function validShelters(shelters: Shelter[]): Shelter[] {
       Math.abs(s.latitude) <= 90 &&
       Math.abs(s.longitude) <= 180,
   )
+}
+
+function defaultCenter(): MapCenter {
+  return { latitude: NL_VIEW.latitude, longitude: NL_VIEW.longitude }
 }
 
 export const ShelterMap = forwardRef<ShelterMapHandle, Props>(
@@ -61,6 +68,12 @@ export const ShelterMap = forwardRef<ShelterMapHandle, Props>(
           zoom: Math.max(map.getZoom(), 10),
           essential: true,
         })
+      },
+      getMapCenter: () => {
+        const map = mapRef.current?.getMap()
+        const c = map?.getCenter()
+        if (!c) return defaultCenter()
+        return { latitude: c.lat, longitude: c.lng }
       },
     }))
 
