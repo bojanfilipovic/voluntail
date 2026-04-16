@@ -22,6 +22,32 @@ Here's a list of features included in this project:
 
 ## Building & Running
 
+Uses **JDK 21** via Gradle `kotlin { jvmToolchain(21) }` and Kotlin `jvmTarget` 21.
+
+### JDK 21 on this Mac (Homebrew)
+
+`openjdk@21` is **keg-only**: it does not replace the default `java`, and `/usr/libexec/java_home` may still only list another JDK (e.g. 26). Gradle then cannot resolve toolchain 21 unless you point it at 21.
+
+**Option A — per shell (no sudo, good default)**  
+Use Homebrew’s JDK 21 as `JAVA_HOME` before Gradle:
+
+```bash
+export JAVA_HOME="/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home"
+export PATH="$JAVA_HOME/bin:$PATH"
+```
+
+Add the same `export` lines to `~/.zshrc` if you want that for every terminal.
+
+**Option B — install once, system `java_home` sees 21 (requires sudo)**  
+Then `/usr/libexec/java_home -v 21` works for GUI apps and tools that only look at the macOS JVM directory:
+
+```bash
+brew install openjdk@21   # if not already installed
+sudo ln -sfn /opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk /Library/Java/JavaVirtualMachines/openjdk-21.jdk
+```
+
+**Check:** `./gradlew -version` should report JVM **21** after Option A or after `export JAVA_HOME=$(/usr/libexec/java_home -v 21)`.
+
 To build or run the project, use one of the following tasks:
 
 | Task                                    | Description                                                          |
