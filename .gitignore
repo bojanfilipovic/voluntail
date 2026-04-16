@@ -1,17 +1,66 @@
-# Compiled class file
-*.class
+# --- OS ---
+.DS_Store
+Thumbs.db
 
-# Log file
-*.log
+# --- IDEs ---
+.idea/
+*.iml
+.project
+.classpath
+.settings/
+*.swp
+*.swo
 
-# BlueJ files
-*.ctxt
+# --- Env / secrets (keep .env.example tracked if you add one) ---
+.env
+.env.*
+!.env.example
+!backend/.env.example
 
-# Mobile Tools for Java (J2ME)
-.mtj.tmp/
+# --- Gradle / Kotlin JVM (backend) ---
+backend/.gradle/
+**/.gradle/
+build/
+**/build/
+out/
+**/out/
+**/.gradle-home/
+**/.gradle-user/
 
-# Package Files #
+# Kotlin Gradle plugin cache (K2, etc.)
+.kotlin/
+
+# If you keep `*.jar` ignored, always un-ignore the wrapper (reproducible builds / CI).
 *.jar
+!**/gradle/wrapper/gradle-wrapper.jar
+
+*.class
+hs_err_pid*
+replay_pid*
+
+# --- Node / Vite (frontend) ---
+node_modules/
+**/node_modules/
+dist/
+**/dist/
+dist-ssr/
+*.local
+.vite/
+
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# --- Test / coverage ---
+coverage/
+*.lcov
+.nyc_output/
+
+# --- Archives (optional; remove lines if you commit release artifacts) ---
 *.war
 *.nar
 *.ear
@@ -19,9 +68,6 @@
 *.tar.gz
 *.rar
 
-# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
-hs_err_pid*
-replay_pid*
-
-# Kotlin Gradle plugin data, see https://kotlinlang.org/docs/whatsnew20.html#new-directory-for-kotlin-data-in-gradle-projects
-.kotlin/
+# --- Misc Java noise ---
+*.ctxt
+.mtj.tmp/

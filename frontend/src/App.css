@@ -1,0 +1,99 @@
+.app-root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-header {
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.app-header h1 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: var(--text-h);
+}
+
+.app-tagline {
+  margin: 0.25rem 0 0;
+  font-size: 0.9rem;
+  opacity: 0.85;
+}
+
+.app-main {
+  flex: 1;
+  padding: 1rem 1.5rem;
+}
+
+.split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .split {
+    grid-template-columns: 1fr;
+  }
+}
+
+.split-pane {
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  padding: 1rem;
+  min-height: 200px;
+}
+
+.split-placeholder {
+  margin: 0;
+  color: var(--text);
+  opacity: 0.8;
+}
+
+.shelters-preview {
+  margin-top: 0;
+  text-align: start;
+  max-width: none;
+}
+
+.shelters-preview h2 {
+  font-size: 1.1rem;
+  margin: 0 0 0.35rem;
+}
+
+.shelters-hint {
+  font-size: 0.85rem;
+  opacity: 0.85;
+  margin: 0 0 0.75rem;
+}
+
+.shelters-error {
+  color: #c44;
+  margin: 0;
+}
+
+.shelters-list {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.shelters-list li {
+  margin-bottom: 1rem;
+}
+
+.shelters-meta {
+  font-size: 0.85rem;
+  opacity: 0.9;
+}
+
+.shelters-desc {
+  font-size: 0.9rem;
+  margin: 0.35rem 0 0.25rem;
+  line-height: 1.4;
+}
+
+.shelters-list a {
+  font-size: 0.85rem;
+}
