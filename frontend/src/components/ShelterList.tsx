@@ -8,6 +8,10 @@ type Props = {
   onSelectShelter: (s: Shelter) => void
 }
 
+function speciesLine(s: Shelter): string {
+  return s.species.length ? s.species.join(' · ') : '—'
+}
+
 export function ShelterList({
   shelters,
   error,
@@ -37,24 +41,40 @@ export function ShelterList({
                 className={`shelter-row${s.id === selectedId ? ' shelter-row--selected' : ''}`}
                 onClick={() => onSelectShelter(s)}
               >
-                <strong>{s.name}</strong>{' '}
-                <span className="shelters-meta">
-                  ({s.registryTag}) · {s.latitude.toFixed(4)},{' '}
-                  {s.longitude.toFixed(4)}
-                </span>
-                <div className="shelters-desc">{s.description}</div>
-                {s.signupUrl ? (
-                  <span className="shelters-link-wrap">
-                    <a
-                      href={s.signupUrl}
-                      onClick={(e) => e.stopPropagation()}
-                      rel="noreferrer noopener"
-                      target="_blank"
-                    >
-                      Signup link
-                    </a>
+                <span className="shelter-row-grid">
+                  {s.imageUrl ? (
+                    <span className="shelter-row-thumb-wrap">
+                      <img
+                        src={s.imageUrl}
+                        alt=""
+                        className="shelter-row-thumb"
+                        loading="lazy"
+                      />
+                    </span>
+                  ) : (
+                    <span className="shelter-row-thumb-wrap shelter-row-thumb-wrap--empty" aria-hidden />
+                  )}
+                  <span className="shelter-row-text">
+                    <span className="shelter-row-title">
+                      <strong>{s.name}</strong>
+                      <span className="shelters-meta"> ({s.registryTag})</span>
+                    </span>
+                    <span className="shelters-species">{speciesLine(s)}</span>
+                    <span className="shelters-desc">{s.description}</span>
+                    {s.signupUrl ? (
+                      <span className="shelters-link-wrap">
+                        <a
+                          href={s.signupUrl}
+                          onClick={(e) => e.stopPropagation()}
+                          rel="noreferrer noopener"
+                          target="_blank"
+                        >
+                          Signup link
+                        </a>
+                      </span>
+                    ) : null}
                   </span>
-                ) : null}
+                </span>
               </button>
             </li>
           ))}

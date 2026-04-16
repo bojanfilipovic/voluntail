@@ -7,5 +7,7 @@ create table if not exists public.shelters (
     longitude double precision not null,
     registry_tag text not null check (registry_tag in ('DOA', 'ROZ')),
     species jsonb not null default '[]'::jsonb,
-    signup_url text null
+    signup_url text null,
+    image_url text null,
+    donation_url text null
 );

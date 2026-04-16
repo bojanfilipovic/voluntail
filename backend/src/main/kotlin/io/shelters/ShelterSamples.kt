@@ -8,7 +8,7 @@ object ShelterSamples {
     val all: List<ShelterResponse> =
         listOf(
             ShelterResponse(
-                id = "sample-doa-1",
+                id = "a0000001-0001-4001-8001-000000000001",
                 name = "The Animal Line (sample)",
                 description =
                     "Dogs and cats from the Utrecht area. " +
@@ -19,9 +19,11 @@ object ShelterSamples {
                 registryTag = RegistryTag.DOA,
                 species = listOf("dog", "cat", "rabbit"),
                 signupUrl = "https://example.com/signup",
+                imageUrl = "https://picsum.photos/seed/voluntail-doa/800/450",
+                donationUrl = "https://example.com/donate",
             ),
             ShelterResponse(
-                id = "sample-roz-1",
+                id = "a0000002-0002-4002-8002-000000000002",
                 name = "Northern Reptile House (sample)",
                 description =
                     "Specialist care for reptiles and amphibians. " +
@@ -32,6 +34,8 @@ object ShelterSamples {
                 registryTag = RegistryTag.ROZ,
                 species = listOf("reptile", "amphibian"),
                 signupUrl = null,
+                imageUrl = "https://picsum.photos/seed/voluntail-roz/800/450",
+                donationUrl = "https://example.com/donate-reptile",
             ),
         )
 }

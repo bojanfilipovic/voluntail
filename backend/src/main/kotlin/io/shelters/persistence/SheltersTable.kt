@@ -13,6 +13,8 @@ object SheltersTable : Table("shelters") {
     val registryTag = enumerationByName<RegistryTag>("registry_tag", 16)
     val species = text("species")
     val signupUrl = text("signup_url").nullable()
+    val imageUrl = text("image_url").nullable()
+    val donationUrl = text("donation_url").nullable()
 
     override val primaryKey = PrimaryKey(id)
 }

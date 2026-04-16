@@ -33,6 +33,18 @@ export function ShelterDetailDialog({ shelter, onClose }: Props) {
     >
       {shelter ? (
         <>
+          <div className="shelter-dialog-hero">
+            {shelter.imageUrl ? (
+              <img
+                src={shelter.imageUrl}
+                alt=""
+                className="shelter-dialog-hero-img"
+                loading="lazy"
+              />
+            ) : (
+              <div className="shelter-dialog-hero-placeholder" aria-hidden />
+            )}
+          </div>
           <header className="shelter-dialog-header">
             <h2 id="shelter-dialog-title">{shelter.name}</h2>
             <form method="dialog">
@@ -48,16 +60,35 @@ export function ShelterDetailDialog({ shelter, onClose }: Props) {
           </header>
           <div className="shelter-dialog-body">
             <p className="shelter-dialog-meta">
-              {shelter.registryTag} · {shelter.species.join(', ')}
+              {shelter.registryTag} · {shelter.species.length ? shelter.species.join(', ') : '—'}
+            </p>
+            <p className="shelter-dialog-lead">
+              Most shelters need volunteers, adopters, and foster homes—reach out via the links
+              below when you are ready.
             </p>
             <p className="shelter-dialog-desc">{shelter.description}</p>
-            {shelter.signupUrl ? (
-              <p className="shelter-dialog-links">
-                <a href={shelter.signupUrl} rel="noreferrer noopener" target="_blank">
-                  Signup / volunteer
+            <div className="shelter-dialog-actions">
+              {shelter.signupUrl ? (
+                <a
+                  className="shelter-dialog-cta shelter-dialog-cta--primary"
+                  href={shelter.signupUrl}
+                  rel="noreferrer noopener"
+                  target="_blank"
+                >
+                  Volunteer / signup
                 </a>
-              </p>
-            ) : null}
+              ) : null}
+              {shelter.donationUrl ? (
+                <a
+                  className="shelter-dialog-cta shelter-dialog-cta--secondary"
+                  href={shelter.donationUrl}
+                  rel="noreferrer noopener"
+                  target="_blank"
+                >
+                  Donate
+                </a>
+              ) : null}
+            </div>
           </div>
         </>
       ) : null}

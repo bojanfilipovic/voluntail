@@ -5,6 +5,7 @@ import com.zaxxer.hikari.HikariDataSource
 import io.shelters.persistence.ExposedShelterRepository
 import org.jetbrains.exposed.v1.jdbc.Database
 
+// TODO bfilipovic: fix this class the code is quite messy
 fun createShelterRepository(): ShelterRepository {
     val jdbcUrl =
         System.getenv("DATABASE_JDBC_URL")?.trim().orEmpty().ifEmpty {
