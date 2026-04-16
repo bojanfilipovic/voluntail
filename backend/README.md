@@ -24,6 +24,12 @@ Here's a list of features included in this project:
 
 Uses **JDK 21** via Gradle `kotlin { jvmToolchain(21) }` and Kotlin `jvmTarget` 21.
 
+### Shelters / Postgres (Supabase)
+
+- Versioned DDL: [`supabase/migrations/`](supabase/migrations/) — run files **in name order** in the Supabase SQL editor (create table, then seed), or wire Supabase CLI later. The seed migration is **idempotent** (`ON CONFLICT DO UPDATE`).
+- **JDBC:** set env **`DATABASE_JDBC_URL`** to your full JDBC URL (see [`.env.example`](.env.example)). If unset, `/api/shelters` uses **in-memory** sample data.
+- Pool: **HikariCP** (`maximumPoolSize` 5).
+
 ### JDK 21 on this Mac (Homebrew)
 
 `openjdk@21` is **keg-only**: it does not replace the default `java`, and `/usr/libexec/java_home` may still only list another JDK (e.g. 26). Gradle then cannot resolve toolchain 21 unless you point it at 21.

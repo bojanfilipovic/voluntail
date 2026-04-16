@@ -5,10 +5,10 @@ import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import io.ktor.server.routing.route
 
-fun Route.shelterRoutes() {
+fun Route.shelterRoutes(repository: ShelterRepository) {
     route("/api") {
         get("/shelters") {
-            call.respond(ShelterSamples.all)
+            call.respond(repository.list())
         }
     }
 }
