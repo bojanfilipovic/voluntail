@@ -17,8 +17,6 @@ function toQueryError(error: unknown): Error | null {
   return new Error(typeof error === 'string' ? error : 'Request failed')
 }
 
-const CMS_ENABLED = Boolean(import.meta.env.VITE_CMS_API_KEY?.trim())
-
 function App() {
   const queryClient = useQueryClient()
   const mapRef = useRef<ShelterMapHandle>(null)
@@ -108,36 +106,36 @@ function App() {
       <main className="app-main">
         <div className="split">
           <section
-            className="split-pane split-pane--map split-pane--map-wrap"
+            className="split-pane split-pane--map split-pane--map-column"
             aria-label="Map of shelters"
           >
-            <ShelterMap
-              ref={mapRef}
-              shelters={data ?? []}
-              selectedId={selectedId}
-              onSelectShelter={handleMapSelect}
-              onClearSelection={clearSelection}
-            />
-            {CMS_ENABLED ? (
-              <div className="map-cms-toolbar">
-                <button
-                  type="button"
-                  className="map-cms-btn"
-                  onClick={handleAddPin}
-                  disabled={cmsBusy}
-                >
-                  Add pin
-                </button>
-                <button
-                  type="button"
-                  className="map-cms-btn map-cms-btn--danger"
-                  onClick={handleRemovePin}
-                  disabled={cmsBusy || !selectedId}
-                >
-                  Remove pin
-                </button>
-              </div>
-            ) : null}
+            <div className="map-cms-toolbar" role="toolbar" aria-label="Shelter CMS">
+              <button
+                type="button"
+                className="map-cms-btn"
+                onClick={handleAddPin}
+                disabled={cmsBusy}
+              >
+                Add pin
+              </button>
+              <button
+                type="button"
+                className="map-cms-btn map-cms-btn--danger"
+                onClick={handleRemovePin}
+                disabled={cmsBusy || !selectedId}
+              >
+                Remove pin
+              </button>
+            </div>
+            <div className="map-cms-map-slot">
+              <ShelterMap
+                ref={mapRef}
+                shelters={data ?? []}
+                selectedId={selectedId}
+                onSelectShelter={handleMapSelect}
+                onClearSelection={clearSelection}
+              />
+            </div>
           </section>
           <section
             className="split-pane split-pane--directory"
@@ -158,7 +156,12 @@ function App() {
           </section>
         </div>
       </main>
-      <ShelterDetailDialog shelter={selectedShelter} onClose={clearSelection} />
+      <ShelterDetailDialog
+        shelter={selectedShelter}
+        onClose={clearSelection}
+        onRemove={handleRemovePin}
+        removeDisabled={cmsBusy}
+      />
     </div>
   )
 }

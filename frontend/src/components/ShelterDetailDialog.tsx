@@ -4,9 +4,16 @@ import type { Shelter } from '../api/shelters'
 type Props = {
   shelter: Shelter | null
   onClose: () => void
+  onRemove: () => void
+  removeDisabled?: boolean
 }
 
-export function ShelterDetailDialog({ shelter, onClose }: Props) {
+export function ShelterDetailDialog({
+  shelter,
+  onClose,
+  onRemove,
+  removeDisabled = false,
+}: Props) {
   const dialogRef = useRef<HTMLDialogElement>(null)
   const closeButtonRef = useRef<HTMLButtonElement>(null)
 
@@ -88,6 +95,14 @@ export function ShelterDetailDialog({ shelter, onClose }: Props) {
                   Donate
                 </a>
               ) : null}
+              <button
+                type="button"
+                className="shelter-dialog-remove map-cms-btn map-cms-btn--danger"
+                disabled={removeDisabled}
+                onClick={onRemove}
+              >
+                Remove pin
+              </button>
             </div>
           </div>
         </>

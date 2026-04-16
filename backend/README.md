@@ -34,7 +34,7 @@ Uses **JDK 21** via Gradle `kotlin { jvmToolchain(21) }` and Kotlin `jvmTarget` 
 **Supabase pooler / JDBC URL hints**
 
 - Prefer **`sslmode=require`** (or stricter) on hosted Postgres.
-- If you use Supabase’s **transaction pooler** (PgBouncer in transaction mode) and see prepared-statement or “duplicate statement” issues, add **`prepareThreshold=0`** to the JDBC URL so the driver avoids server-side named prepared statements that do not survive pooling well.
+- Supabase’s **transaction pooler** (PgBouncer in transaction mode) does not play well with server-side prepared statements. **`ShelterRepositoryFactory`** sets **`prepareThreshold=0`** on the pool via Hikari `addDataSourceProperty`, so the PostgreSQL JDBC driver avoids server-side named prepared statements for connections from this pool.
 
 ### JDK 21 on this Mac (Homebrew)
 

@@ -21,6 +21,9 @@ fun createShelterRepository(): ShelterRepository {
             System.getenv("DB_PASSWORD")?.takeIf { it.isNotBlank() }?.let { password = it }
             maximumPoolSize = 5
             poolName = "voluntail-shelters"
+            // PgBouncer transaction mode (e.g. Supabase pooler :6543) cannot reuse server-side
+            // prepared statements across pooled backend sessions; force simple protocol.
+            addDataSourceProperty("prepareThreshold", "0")
         }
     val dataSource = HikariDataSource(cfg)
     val database = Database.connect(dataSource)

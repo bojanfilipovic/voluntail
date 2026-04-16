@@ -6,10 +6,6 @@ import io.shelters.ShelterResponse
 import java.util.UUID
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.builtins.ListSerializer
-import kotlinx.serialization.builtins.serializer
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.Database
@@ -22,8 +18,6 @@ import kotlin.uuid.ExperimentalUuidApi
 class ExposedShelterRepository(
     private val database: Database,
 ) : ShelterRepository {
-    private val json = Json { ignoreUnknownKeys = true }
-
     @OptIn(ExperimentalUuidApi::class)
     override suspend fun list(): List<ShelterResponse> =
         withContext(Dispatchers.IO) {
@@ -32,7 +26,6 @@ class ExposedShelterRepository(
                     .selectAll()
                     .orderBy(SheltersTable.name, SortOrder.ASC)
                     .map { row ->
-                        val speciesRaw = row[SheltersTable.species]
                         ShelterResponse(
                             id = row[SheltersTable.id].toString(),
                             name = row[SheltersTable.name],
@@ -40,7 +33,7 @@ class ExposedShelterRepository(
                             latitude = row[SheltersTable.latitude],
                             longitude = row[SheltersTable.longitude],
                             registryTag = row[SheltersTable.registryTag],
-                            species = parseSpeciesJson(speciesRaw),
+                            species = row[SheltersTable.species],
                             signupUrl = row[SheltersTable.signupUrl],
                             imageUrl = row[SheltersTable.imageUrl],
                             donationUrl = row[SheltersTable.donationUrl],
@@ -53,23 +46,19 @@ class ExposedShelterRepository(
     override suspend fun insert(request: ShelterCreateRequest): ShelterResponse =
         withContext(Dispatchers.IO) {
             suspendTransaction(db = database, readOnly = false) {
-                val speciesJson =
-                    json.encodeToString(
-                        ListSerializer(String.serializer()),
-                        request.species,
-                    )
-                val newId =
-                    SheltersTable.insert { row ->
-                        row[name] = request.name.trim()
-                        row[description] = request.description.trim()
-                        row[latitude] = request.latitude
-                        row[longitude] = request.longitude
-                        row[registryTag] = request.registryTag
-                        row[species] = speciesJson
-                        row[signupUrl] = request.signupUrl?.trim()?.takeIf { it.isNotEmpty() }
-                        row[imageUrl] = request.imageUrl?.trim()?.takeIf { it.isNotEmpty() }
-                        row[donationUrl] = request.donationUrl?.trim()?.takeIf { it.isNotEmpty() }
-                    }[SheltersTable.id]
+                val newId = UUID.randomUUID()
+                SheltersTable.insert { row ->
+                    row[SheltersTable.id] = newId
+                    row[name] = request.name.trim()
+                    row[description] = request.description.trim()
+                    row[latitude] = request.latitude
+                    row[longitude] = request.longitude
+                    row[registryTag] = request.registryTag
+                    row[species] = request.species
+                    row[signupUrl] = request.signupUrl?.trim()?.takeIf { it.isNotEmpty() }
+                    row[imageUrl] = request.imageUrl?.trim()?.takeIf { it.isNotEmpty() }
+                    row[donationUrl] = request.donationUrl?.trim()?.takeIf { it.isNotEmpty() }
+                }
 
                 ShelterResponse(
                     id = newId.toString(),
@@ -92,15 +81,5 @@ class ExposedShelterRepository(
             suspendTransaction(db = database, readOnly = false) {
                 SheltersTable.deleteWhere { SheltersTable.id eq id } > 0
             }
-        }
-
-    private fun parseSpeciesJson(raw: String?): List<String> =
-        when {
-            raw.isNullOrBlank() -> emptyList()
-            else ->
-                json.decodeFromString(
-                    ListSerializer(String.serializer()),
-                    raw,
-                )
         }
 }
