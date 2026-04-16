@@ -27,6 +27,8 @@ tasks.withType<KotlinCompile>().configureEach {
 dependencies {
     implementation(libs.postgresql.jdbc)
     implementation(libs.hikari)
+    implementation(libs.exposed.core)
+    implementation(libs.exposed.jdbc)
     implementation(libs.ktor.server.default.headers)
     implementation(libs.ktor.server.content.negotiation)
     implementation(libs.ktor.server.core)

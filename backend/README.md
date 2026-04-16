@@ -27,8 +27,14 @@ Uses **JDK 21** via Gradle `kotlin { jvmToolchain(21) }` and Kotlin `jvmTarget` 
 ### Shelters / Postgres (Supabase)
 
 - Versioned DDL: [`supabase/migrations/`](supabase/migrations/) — run files **in name order** in the Supabase SQL editor (create table, then seed), or wire Supabase CLI later. The seed migration is **idempotent** (`ON CONFLICT DO UPDATE`).
-- **JDBC:** set env **`DATABASE_JDBC_URL`** to your full JDBC URL (see [`.env.example`](.env.example)). If unset, `/api/shelters` uses **in-memory** sample data.
+- **JDBC:** set env **`DATABASE_JDBC_URL`** to your full JDBC URL (see [`.env.example`](.env.example)). For legacy setups, **`DB_URL`** is still accepted (with optional **`DB_USERNAME`** / **`DB_PASSWORD`** when the URL does not embed credentials). If all of these are unset or empty, `/api/shelters` uses **in-memory** sample data.
+- Reads use **JetBrains Exposed** (DSL + JDBC) on top of the same Hikari pool; schema remains owned by Supabase SQL only (no `SchemaUtils` DDL from the app).
 - Pool: **HikariCP** (`maximumPoolSize` 5).
+
+**Supabase pooler / JDBC URL hints**
+
+- Prefer **`sslmode=require`** (or stricter) on hosted Postgres.
+- If you use Supabase’s **transaction pooler** (PgBouncer in transaction mode) and see prepared-statement or “duplicate statement” issues, add **`prepareThreshold=0`** to the JDBC URL so the driver avoids server-side named prepared statements that do not survive pooling well.
 
 ### JDK 21 on this Mac (Homebrew)
 

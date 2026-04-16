@@ -2,21 +2,26 @@ package io.shelters
 
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
+import io.shelters.persistence.ExposedShelterRepository
+import org.jetbrains.exposed.v1.jdbc.Database
 
 fun createShelterRepository(): ShelterRepository {
-//    val url = System.getenv("DATABASE_JDBC_URL")?.trim().orEmpty()
-    val url = System.getenv("DB_URL")?.trim().orEmpty()
-    if (url.isEmpty()) {
+    val jdbcUrl =
+        System.getenv("DATABASE_JDBC_URL")?.trim().orEmpty().ifEmpty {
+            System.getenv("DB_URL")?.trim().orEmpty()
+        }
+    if (jdbcUrl.isEmpty()) {
         return InMemoryShelterRepository()
     }
     val cfg =
         HikariConfig().apply {
-            jdbcUrl = url
-            username = System.getenv("DB_USERNAME")
-            password = System.getenv("DB_PASSWORD")
+            this.jdbcUrl = jdbcUrl
+            System.getenv("DB_USERNAME")?.takeIf { it.isNotBlank() }?.let { username = it }
+            System.getenv("DB_PASSWORD")?.takeIf { it.isNotBlank() }?.let { password = it }
             maximumPoolSize = 5
             poolName = "voluntail-shelters"
         }
     val dataSource = HikariDataSource(cfg)
-    return JdbcShelterRepository(dataSource)
+    val database = Database.connect(dataSource)
+    return ExposedShelterRepository(database)
 }
