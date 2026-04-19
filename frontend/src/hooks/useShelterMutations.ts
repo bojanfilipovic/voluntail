@@ -14,6 +14,7 @@ import {
   type ShelterPatchPayload,
 } from '@/api/shelters'
 import { toQueryError } from '@/lib/queryError'
+import { shelterQueryKeys } from '@/lib/queryKeys'
 
 export interface ShelterMutationsApi {
   cmsError: string | null
@@ -29,7 +30,7 @@ export interface ShelterMutationsApi {
 }
 
 async function invalidateSheltersList(queryClient: QueryClient): Promise<void> {
-  await queryClient.invalidateQueries({ queryKey: ['shelters'] })
+  await queryClient.invalidateQueries({ queryKey: shelterQueryKeys.all })
 }
 
 function cmsMutationMessage(error: unknown, fallback: string): string {
@@ -46,8 +47,8 @@ export function useShelterMutations(): ShelterMutationsApi {
       setCmsError(null)
       await invalidateSheltersList(queryClient)
     },
-    onError: (e: unknown) => {
-      setCmsError(cmsMutationMessage(e, 'Create failed'))
+    onError: () => {
+      /* Create failures use inline error in AddShelterDialog (avoid duplicate banner). */
     },
   })
 
@@ -63,8 +64,8 @@ export function useShelterMutations(): ShelterMutationsApi {
       setCmsError(null)
       await invalidateSheltersList(queryClient)
     },
-    onError: (e: unknown) => {
-      setCmsError(cmsMutationMessage(e, 'Update failed'))
+    onError: () => {
+      /* Update failures use inline error in EditShelterDialog. */
     },
   })
 

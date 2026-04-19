@@ -21,6 +21,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { parseValidatedCoords } from '@/domain/coordinates'
 import { sortShelterSpecies, type ShelterSpecies } from '@/domain/species'
+import { toQueryError } from '@/lib/queryError'
 
 type Props = {
   open: boolean
@@ -102,8 +103,10 @@ export function AddShelterDialog({
     }
     try {
       await onSubmit(payload)
-    } catch {
-      /* parent surfaces cmsError */
+    } catch (e) {
+      setFormError(
+        toQueryError(e)?.message ?? 'Could not save shelter. Check that the API is running.',
+      )
     }
   }
 

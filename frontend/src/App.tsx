@@ -1,12 +1,18 @@
 import { useQuery } from '@tanstack/react-query'
-import { useEffect, useMemo, useState } from 'react'
+import {
+  lazy,
+  Suspense,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react'
 import { fetchShelters } from '@/api/shelters'
 import { AddShelterDialog } from '@/components/AddShelterDialog'
 import { EditShelterDialog } from '@/components/EditShelterDialog'
 import { ShelterDetailDialog } from '@/components/ShelterDetailDialog'
 import { ShelterList } from '@/components/ShelterList'
-import { ShelterMap } from '@/components/ShelterMap'
 import { ShareFeedbackDialog } from '@/components/ShareFeedbackDialog'
+import { DiscoveryErrorBoundary } from '@/components/layout/DiscoveryErrorBoundary'
 import { DiscoveryGrid } from '@/components/layout/DiscoveryGrid'
 import { DiscoveryHeader } from '@/components/layout/DiscoveryHeader'
 import { MapPlacementToolbar } from '@/components/layout/MapPlacementToolbar'
@@ -14,6 +20,21 @@ import { useShelterDiscoveryState } from '@/hooks/useShelterDiscoveryState'
 import { useShelterMutations } from '@/hooks/useShelterMutations'
 import { SPECIES_VALUES, type ShelterSpecies } from '@/domain/species'
 import { toQueryError } from '@/lib/queryError'
+import { shelterQueryKeys } from '@/lib/queryKeys'
+
+const ShelterMapLazy = lazy(async () => {
+  const mod = await import('@/components/ShelterMap')
+  return { default: mod.ShelterMap }
+})
+
+function MapLoadingFallback() {
+  return (
+    <div className="bg-muted/40 text-muted-foreground flex min-h-[220px] flex-1 flex-col items-center justify-center gap-2 px-4 py-8 text-sm">
+      <span className="inline-block size-6 animate-spin rounded-full border-2 border-current border-t-transparent" aria-hidden />
+      <span>Loading map…</span>
+    </div>
+  )
+}
 
 function App() {
   const mutations = useShelterMutations()
@@ -22,11 +43,23 @@ function App() {
   const [feedbackOpen, setFeedbackOpen] = useState(false)
 
   const { data, error, isPending } = useQuery({
-    queryKey: ['shelters'],
+    queryKey: shelterQueryKeys.all,
     queryFn: fetchShelters,
   })
 
   const queryError = useMemo(() => toQueryError(error), [error])
+
+  /** One banner: directory fetch failure and CMS mutation failure (deduped when identical). */
+  const directoryAlert = useMemo((): Error | null => {
+    const q = queryError
+    const cmsText = mutations.cmsError
+    if (q?.message && cmsText && q.message === cmsText) {
+      return q
+    }
+    if (q) return q
+    if (cmsText) return new Error(cmsText)
+    return null
+  }, [queryError, mutations.cmsError])
 
   const speciesCounts = useMemo(() => {
     const counts = Object.fromEntries(
@@ -92,58 +125,57 @@ function App() {
     <div className="bg-background text-foreground flex h-full min-h-0 flex-col overflow-hidden">
       <DiscoveryHeader onShareFeedback={() => setFeedbackOpen(true)} />
       <main className="flex min-h-0 flex-1 flex-col overflow-hidden px-6 py-4">
-        <DiscoveryGrid>
-          <section
-            className="border-border flex min-h-0 flex-col overflow-hidden rounded-lg border"
-            aria-label="Map of shelters"
-          >
-            <MapPlacementToolbar
-              placementMode={placementMode}
-              draftLocationKnown={Boolean(draftLocation)}
-              addDialogOpen={addDialogOpen}
-              cmsBusy={mutations.cmsBusy}
-              cancelPlacementDisabled={cancelPlacementDisabled}
-              onStartAddPin={handleStartAddPin}
-              onEnterDetails={handleEnterDetails}
-              onCancelPlacement={handleCancelPlacement}
-            />
-            <div className="flex h-full min-h-0 flex-1 flex-col">
-              <ShelterMap
-                ref={mapRef}
-                shelters={filteredShelters ?? []}
-                selectedId={selectedShelter?.id ?? null}
-                onSelectShelter={handleMapSelect}
-                onClearSelection={clearSelection}
-                placementOrRelocateActive={placementOrRelocateActive}
-                draftLocation={draftLocation}
-                onDraftPosition={handleDraftPosition}
+        <DiscoveryErrorBoundary>
+          <DiscoveryGrid>
+            <section
+              className="border-border flex min-h-0 flex-col overflow-hidden rounded-lg border"
+              aria-label="Map of shelters"
+            >
+              <MapPlacementToolbar
+                placementMode={placementMode}
+                draftLocationKnown={Boolean(draftLocation)}
+                addDialogOpen={addDialogOpen}
+                cmsBusy={mutations.cmsBusy}
+                cancelPlacementDisabled={cancelPlacementDisabled}
+                onStartAddPin={handleStartAddPin}
+                onEnterDetails={handleEnterDetails}
+                onCancelPlacement={handleCancelPlacement}
               />
-            </div>
-          </section>
-          <section
-            className="border-border flex min-h-0 flex-col overflow-hidden rounded-lg border"
-            aria-label="Directory"
-          >
-            <div className="flex min-h-0 flex-1 flex-col overflow-y-auto p-4">
-              {mutations.cmsError ? (
-                <p className="text-destructive mb-3 text-sm" role="alert">
-                  {mutations.cmsError}
-                </p>
-              ) : null}
-              <ShelterList
-                shelters={filteredShelters}
-                error={queryError}
-                isPending={isPending}
-                totalShelterCount={data?.length}
-                selectedId={selectedShelter?.id ?? null}
-                onSelectShelter={handleListSelect}
-                speciesFilter={speciesFilter}
-                onSpeciesFilter={setSpeciesFilter}
-                speciesFilters={speciesFilters}
-              />
-            </div>
-          </section>
-        </DiscoveryGrid>
+              <div className="flex h-full min-h-0 flex-1 flex-col">
+                <Suspense fallback={<MapLoadingFallback />}>
+                  <ShelterMapLazy
+                    ref={mapRef}
+                    shelters={filteredShelters ?? []}
+                    selectedId={selectedShelter?.id ?? null}
+                    onSelectShelter={handleMapSelect}
+                    onClearSelection={clearSelection}
+                    placementOrRelocateActive={placementOrRelocateActive}
+                    draftLocation={draftLocation}
+                    onDraftPosition={handleDraftPosition}
+                  />
+                </Suspense>
+              </div>
+            </section>
+            <section
+              className="border-border flex min-h-0 flex-col overflow-hidden rounded-lg border"
+              aria-label="Directory"
+            >
+              <div className="flex min-h-0 flex-1 flex-col overflow-y-auto p-4">
+                <ShelterList
+                  shelters={filteredShelters}
+                  error={directoryAlert}
+                  isPending={isPending}
+                  totalShelterCount={data?.length}
+                  selectedId={selectedShelter?.id ?? null}
+                  onSelectShelter={handleListSelect}
+                  speciesFilter={speciesFilter}
+                  onSpeciesFilter={setSpeciesFilter}
+                  speciesFilters={speciesFilters}
+                />
+              </div>
+            </section>
+          </DiscoveryGrid>
+        </DiscoveryErrorBoundary>
       </main>
       <AddShelterDialog
         key={addDialogNonce}

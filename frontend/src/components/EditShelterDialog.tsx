@@ -24,6 +24,7 @@ import {
   type ShelterSpecies,
 } from '@/domain/species'
 import type { ShelterPatchPayload } from '@/schemas/shelters'
+import { toQueryError } from '@/lib/queryError'
 
 type Props = {
   shelter: Shelter | null
@@ -93,8 +94,10 @@ export function EditShelterDialog({
     try {
       await onSubmit(shelter.id, payload)
       onClose()
-    } catch {
-      /* parent surfaces cmsError */
+    } catch (e) {
+      setFormError(
+        toQueryError(e)?.message ?? 'Could not save changes. Check that the API is running.',
+      )
     }
   }
 

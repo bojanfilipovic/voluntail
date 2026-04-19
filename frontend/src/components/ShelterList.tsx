@@ -45,6 +45,15 @@ export function ShelterList({
         proxied by Vite.
       </p>
 
+      {error ? (
+        <div
+          className="border-destructive/40 bg-destructive/5 text-destructive mb-4 rounded-lg border px-3 py-2 text-sm leading-relaxed"
+          role="alert"
+        >
+          {error.message}
+        </div>
+      ) : null}
+
       {speciesFilters.length > 0 ? (
         <div className="mb-4 flex flex-wrap gap-2" role="group" aria-label="Filter by species">
           <Button
@@ -81,11 +90,7 @@ export function ShelterList({
         </div>
       ) : null}
 
-      {error ? (
-        <p className="text-destructive text-sm" role="alert">
-          {error.message}
-        </p>
-      ) : isPending ? (
+      {error ? null : isPending ? (
         <p className="text-muted-foreground text-sm">Loading shelters…</p>
       ) : (
         <ul className="list-none space-y-3 p-0">
