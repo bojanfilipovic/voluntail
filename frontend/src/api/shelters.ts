@@ -1,13 +1,18 @@
+import type { ShelterSpecies } from '@/domain/species'
+import {
+  errorFromFetchFailure,
+  errorMessageFromResponse,
+} from '@/lib/apiErrors'
+import { parseJsonResponse } from '@/lib/http'
 import {
   shelterSchema,
   sheltersListSchema,
   type Shelter,
   type ShelterPatchPayload,
-} from '../schemas/shelters'
-import type { ShelterSpecies } from '@/domain/species'
+} from '@/schemas/shelters'
 
 export type { Shelter }
-export type { ShelterPatchPayload } from '../schemas/shelters'
+export type { ShelterPatchPayload }
 
 export type ShelterCreatePayload = {
   name: string
@@ -21,6 +26,7 @@ export type ShelterCreatePayload = {
 }
 
 const SHELTERS_URL = '/api/shelters'
+const INVALID_JSON_SHELTERS = 'Invalid JSON from /api/shelters'
 
 const CMS_HEADER = 'X-CMS-Key'
 
@@ -31,47 +37,53 @@ function cmsHeaders(): HeadersInit {
 }
 
 export async function fetchShelters(): Promise<Shelter[]> {
-  const res = await fetch(SHELTERS_URL)
-  if (!res.ok) {
-    throw new Error(`HTTP ${res.status}`)
-  }
-
-  let raw: unknown
+  let res: Response
   try {
-    raw = await res.json()
-  } catch {
-    throw new Error('Invalid JSON from /api/shelters')
+    res = await fetch(SHELTERS_URL)
+  } catch (e) {
+    throw errorFromFetchFailure(e)
   }
-
+  if (!res.ok) {
+    throw new Error(await errorMessageFromResponse(res))
+  }
+  const raw = await parseJsonResponse(res, INVALID_JSON_SHELTERS)
   return sheltersListSchema.parse(raw)
 }
 
 export async function createShelter(body: ShelterCreatePayload): Promise<Shelter> {
-  const res = await fetch(SHELTERS_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      ...cmsHeaders(),
-    },
-    body: JSON.stringify(body),
-  })
-  if (!res.ok) {
-    const detail = await res.text().catch(() => '')
-    throw new Error(detail || `HTTP ${res.status}`)
+  let res: Response
+  try {
+    res = await fetch(SHELTERS_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...cmsHeaders(),
+      },
+      body: JSON.stringify(body),
+    })
+  } catch (e) {
+    throw errorFromFetchFailure(e)
   }
-  const raw: unknown = await res.json()
+  if (!res.ok) {
+    throw new Error(await errorMessageFromResponse(res))
+  }
+  const raw = await parseJsonResponse(res, INVALID_JSON_SHELTERS)
   return shelterSchema.parse(raw)
 }
 
 export async function deleteShelter(id: string): Promise<void> {
-  const res = await fetch(`${SHELTERS_URL}/${encodeURIComponent(id)}`, {
-    method: 'DELETE',
-    headers: { ...cmsHeaders() },
-  })
+  let res: Response
+  try {
+    res = await fetch(`${SHELTERS_URL}/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+      headers: { ...cmsHeaders() },
+    })
+  } catch (e) {
+    throw errorFromFetchFailure(e)
+  }
   if (res.status === 204) return
   if (!res.ok) {
-    const detail = await res.text().catch(() => '')
-    throw new Error(detail || `HTTP ${res.status}`)
+    throw new Error(await errorMessageFromResponse(res))
   }
 }
 
@@ -79,18 +91,22 @@ export async function updateShelter(
   id: string,
   body: ShelterPatchPayload,
 ): Promise<Shelter> {
-  const res = await fetch(`${SHELTERS_URL}/${encodeURIComponent(id)}`, {
-    method: 'PATCH',
-    headers: {
-      'Content-Type': 'application/json',
-      ...cmsHeaders(),
-    },
-    body: JSON.stringify(body),
-  })
-  if (!res.ok) {
-    const detail = await res.text().catch(() => '')
-    throw new Error(detail || `HTTP ${res.status}`)
+  let res: Response
+  try {
+    res = await fetch(`${SHELTERS_URL}/${encodeURIComponent(id)}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        ...cmsHeaders(),
+      },
+      body: JSON.stringify(body),
+    })
+  } catch (e) {
+    throw errorFromFetchFailure(e)
   }
-  const raw: unknown = await res.json()
+  if (!res.ok) {
+    throw new Error(await errorMessageFromResponse(res))
+  }
+  const raw = await parseJsonResponse(res, INVALID_JSON_SHELTERS)
   return shelterSchema.parse(raw)
 }

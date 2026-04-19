@@ -1,4 +1,9 @@
-import { useMutation, useQueryClient, type UseMutationResult } from '@tanstack/react-query'
+import {
+  useMutation,
+  useQueryClient,
+  type QueryClient,
+  type UseMutationResult,
+} from '@tanstack/react-query'
 import { useState, type Dispatch, type SetStateAction } from 'react'
 import {
   createShelter,
@@ -7,8 +12,9 @@ import {
   type Shelter,
   type ShelterCreatePayload,
   type ShelterPatchPayload,
-} from '../api/shelters'
-import { toQueryError } from '../lib/queryError'
+} from '@/api/shelters'
+import { toQueryError } from '@/lib/queryError'
+import { shelterQueryKeys } from '@/lib/queryKeys'
 
 export interface ShelterMutationsApi {
   cmsError: string | null
@@ -23,6 +29,14 @@ export interface ShelterMutationsApi {
   cmsBusy: boolean
 }
 
+async function invalidateSheltersList(queryClient: QueryClient): Promise<void> {
+  await queryClient.invalidateQueries({ queryKey: shelterQueryKeys.all })
+}
+
+function cmsMutationMessage(error: unknown, fallback: string): string {
+  return toQueryError(error)?.message ?? fallback
+}
+
 export function useShelterMutations(): ShelterMutationsApi {
   const queryClient = useQueryClient()
   const [cmsError, setCmsError] = useState<string | null>(null)
@@ -31,10 +45,10 @@ export function useShelterMutations(): ShelterMutationsApi {
     mutationFn: createShelter,
     onSuccess: async () => {
       setCmsError(null)
-      await queryClient.invalidateQueries({ queryKey: ['shelters'] })
+      await invalidateSheltersList(queryClient)
     },
-    onError: (e: unknown) => {
-      setCmsError(toQueryError(e)?.message ?? 'Create failed')
+    onError: () => {
+      /* Create failures use inline error in AddShelterDialog (avoid duplicate banner). */
     },
   })
 
@@ -48,10 +62,10 @@ export function useShelterMutations(): ShelterMutationsApi {
     }) => updateShelter(id, body),
     onSuccess: async () => {
       setCmsError(null)
-      await queryClient.invalidateQueries({ queryKey: ['shelters'] })
+      await invalidateSheltersList(queryClient)
     },
-    onError: (e: unknown) => {
-      setCmsError(toQueryError(e)?.message ?? 'Update failed')
+    onError: () => {
+      /* Update failures use inline error in EditShelterDialog. */
     },
   })
 
@@ -59,10 +73,10 @@ export function useShelterMutations(): ShelterMutationsApi {
     mutationFn: deleteShelter,
     onSuccess: async () => {
       setCmsError(null)
-      await queryClient.invalidateQueries({ queryKey: ['shelters'] })
+      await invalidateSheltersList(queryClient)
     },
     onError: (e: unknown) => {
-      setCmsError(toQueryError(e)?.message ?? 'Delete failed')
+      setCmsError(cmsMutationMessage(e, 'Delete failed'))
     },
   })
 

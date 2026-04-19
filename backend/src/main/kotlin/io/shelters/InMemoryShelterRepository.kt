@@ -8,18 +8,10 @@ class InMemoryShelterRepository : ShelterRepository {
     override suspend fun getAll(): List<ShelterResponse> =
         rows
 
-    override suspend fun insert(request: ShelterCreateRequest): ShelterResponse =
-        ShelterResponse(
-            id = UUID.randomUUID().toString(),
-            name = request.name.trim(),
-            description = request.description.trim(),
-            latitude = request.latitude,
-            longitude = request.longitude,
-            species = request.species,
-            signupUrl = request.signupUrl?.trim()?.takeIf { it.isNotEmpty() },
-            imageUrl = request.imageUrl?.trim()?.takeIf { it.isNotEmpty() },
-            donationUrl = request.donationUrl?.trim()?.takeIf { it.isNotEmpty() },
-        ).also { rows.add(it) }
+    override suspend fun insert(request: ShelterCreateRequest): ShelterResponse {
+        val id = UUID.randomUUID()
+        return request.toShelterResponse(id).also { rows.add(it) }
+    }
 
     override suspend fun update(
         id: UUID,

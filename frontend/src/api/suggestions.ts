@@ -1,6 +1,12 @@
-import { suggestionCreatedSchema, type SuggestionCreated } from '@/schemas/suggestions'
+import { errorFromFetchFailure, friendlyHttpStatusMessage, plainTextErrorBody } from '@/lib/apiErrors'
+import { parseJsonResponse } from '@/lib/http'
+import {
+  suggestionCreatedSchema,
+  type SuggestionCreated,
+} from '@/schemas/suggestions'
 
 const SUGGESTIONS_URL = '/api/suggestions'
+const INVALID_JSON_SUGGESTIONS = 'Invalid JSON from /api/suggestions'
 
 export type { SuggestionCreated }
 
@@ -16,32 +22,32 @@ export async function postSuggestion(payload: {
     body.contact = c
   }
 
-  const res = await fetch(SUGGESTIONS_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  })
+  let res: Response
+  try {
+    res = await fetch(SUGGESTIONS_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    })
+  } catch (e) {
+    throw errorFromFetchFailure(e)
+  }
 
   if (!res.ok) {
-    const detail = await res.text().catch(() => '')
+    const rawText = await res.text().catch(() => '')
+    const plain = plainTextErrorBody(rawText)
     if (res.status === 503) {
-      throw new Error(detail || 'Feedback is temporarily unavailable.')
+      throw new Error(plain ?? 'Feedback is temporarily unavailable.')
     }
     if (res.status === 429) {
-      throw new Error(detail || 'Feedback inbox is full for this pilot.')
+      throw new Error(plain ?? 'Feedback inbox is full for this pilot.')
     }
     if (res.status === 400) {
-      throw new Error(detail || 'Invalid suggestion.')
+      throw new Error(plain ?? 'Invalid suggestion.')
     }
-    throw new Error(detail || `HTTP ${res.status}`)
+    throw new Error(plain ?? friendlyHttpStatusMessage(res.status))
   }
 
-  let raw: unknown
-  try {
-    raw = await res.json()
-  } catch {
-    throw new Error('Invalid JSON from /api/suggestions')
-  }
-
+  const raw = await parseJsonResponse(res, INVALID_JSON_SUGGESTIONS)
   return suggestionCreatedSchema.parse(raw)
 }

@@ -13,10 +13,11 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import {
+  SUGGESTION_MAX_CONTACT_LENGTH,
+  SUGGESTION_MAX_MESSAGE_LENGTH,
+} from '@/domain/feedbackLimits'
 import { PartyPopper } from 'lucide-react'
-
-const MAX_MESSAGE_LENGTH = 4000
-const MAX_CONTACT_LENGTH = 100
 
 type Props = {
   open: boolean
@@ -44,7 +45,7 @@ export function ShareFeedbackDialog({ open, onOpenChange }: Props) {
   }
 
   const trimmed = message.trim()
-  const tooLong = message.length > MAX_MESSAGE_LENGTH
+  const tooLong = message.length > SUGGESTION_MAX_MESSAGE_LENGTH
   const submitDisabled =
     mutation.isPending || trimmed.length === 0 || tooLong
 
@@ -81,7 +82,7 @@ export function ShareFeedbackDialog({ open, onOpenChange }: Props) {
                   }}
                   placeholder="Your thoughts…"
                   rows={5}
-                  maxLength={MAX_MESSAGE_LENGTH}
+                  maxLength={SUGGESTION_MAX_MESSAGE_LENGTH}
                   aria-invalid={tooLong || undefined}
                   aria-describedby={
                     tooLong ? 'peer-feedback-modal-too-long' : 'peer-feedback-modal-counter'
@@ -90,11 +91,12 @@ export function ShareFeedbackDialog({ open, onOpenChange }: Props) {
                 />
                 {tooLong ? (
                   <p id="peer-feedback-modal-too-long" className="text-destructive text-xs" role="alert">
-                    Message exceeds {MAX_MESSAGE_LENGTH.toLocaleString()} characters.
+                    Message exceeds {SUGGESTION_MAX_MESSAGE_LENGTH.toLocaleString()} characters.
                   </p>
                 ) : (
                   <p id="peer-feedback-modal-counter" className="text-muted-foreground text-xs">
-                    {message.length.toLocaleString()} / {MAX_MESSAGE_LENGTH.toLocaleString()} characters
+                    {message.length.toLocaleString()} /{' '}
+                    {SUGGESTION_MAX_MESSAGE_LENGTH.toLocaleString()} characters
                   </p>
                 )}
               </div>
@@ -116,7 +118,7 @@ export function ShareFeedbackDialog({ open, onOpenChange }: Props) {
                     mutation.reset()
                   }}
                   placeholder="Name, email, or handle"
-                  maxLength={MAX_CONTACT_LENGTH}
+                  maxLength={SUGGESTION_MAX_CONTACT_LENGTH}
                   aria-describedby="peer-feedback-modal-contact-hint peer-feedback-modal-contact-counter"
                   className="max-w-full"
                 />
@@ -124,7 +126,8 @@ export function ShareFeedbackDialog({ open, onOpenChange }: Props) {
                   id="peer-feedback-modal-contact-counter"
                   className="text-muted-foreground text-xs"
                 >
-                  {contact.length.toLocaleString()} / {MAX_CONTACT_LENGTH.toLocaleString()} characters
+                  {contact.length.toLocaleString()} /{' '}
+                  {SUGGESTION_MAX_CONTACT_LENGTH.toLocaleString()} characters
                 </p>
               </div>
               {mutation.isError ? (
