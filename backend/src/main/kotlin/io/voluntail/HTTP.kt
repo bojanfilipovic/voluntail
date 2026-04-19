@@ -4,8 +4,10 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
+import io.ktor.server.plugins.cors.CORSConfig
 import io.ktor.server.plugins.cors.routing.CORS
 import io.ktor.server.plugins.defaultheaders.DefaultHeaders
+import java.net.URI
 
 fun Application.configureHTTP() {
     install(DefaultHeaders) {
@@ -25,31 +27,35 @@ fun Application.configureHTTP() {
     }
 }
 
-private fun io.ktor.server.plugins.cors.CORSConfig.applyCorsOriginsFromEnv() {
+private fun CORSConfig.applyCorsOriginsFromEnv() {
     val raw = System.getenv("CORS_ORIGINS")?.trim().orEmpty()
-    if (raw.isNotEmpty()) {
-        for (token in raw.split(',').map { it.trim() }.filter { it.isNotEmpty() }) {
-            applyOneCorsOrigin(token)
+    when {
+        raw.isBlank() -> {
+            allowHost("localhost:5173", schemes = listOf("http"))
+            allowHost("localhost:4173", schemes = listOf("http"))
         }
-    } else {
-        allowHost("localhost:5173", schemes = listOf("http"))
-        allowHost("localhost:4173", schemes = listOf("http"))
+        else ->
+            raw.split(',').map { it.trim() }.filter { it.isNotEmpty() }.forEach(::applyOneCorsOrigin)
     }
 }
 
-private fun io.ktor.server.plugins.cors.CORSConfig.applyOneCorsOrigin(token: String) {
-    if (token.startsWith("http://") || token.startsWith("https://")) {
-        val uri = java.net.URI.create(token)
-        val scheme = uri.scheme ?: return
-        val hostPart = uri.host ?: return
-        val port = uri.port
-        val hostWithPort =
-            when {
-                port == -1 -> hostPart
-                else -> "$hostPart:$port"
-            }
-        allowHost(hostWithPort, schemes = listOf(scheme))
-    } else {
-        allowHost(token, schemes = listOf("http", "https"))
+private fun CORSConfig.applyOneCorsOrigin(token: String) {
+    when {
+        token.startsWith("http://") || token.startsWith("https://") ->
+            allowOriginFromUri(URI.create(token))
+        else ->
+            allowHost(token, schemes = listOf("http", "https"))
     }
+}
+
+private fun CORSConfig.allowOriginFromUri(uri: URI) {
+    val scheme = uri.scheme ?: return
+    val hostPart = uri.host ?: return
+    val port = uri.port
+    val hostWithPort =
+        when {
+            port == -1 -> hostPart
+            else -> "$hostPart:$port"
+        }
+    allowHost(hostWithPort, schemes = listOf(scheme))
 }
