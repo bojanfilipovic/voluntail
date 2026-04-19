@@ -13,38 +13,10 @@ import io.ktor.server.routing.route
 import java.util.UUID
 import kotlin.math.abs
 
-//%% TODO bfilipovic: yeah I think all of this needs some human eyes
-private suspend fun ApplicationCall.ensureCmsAuthorized(): Boolean {
-    val expected = System.getenv("CMS_API_KEY")?.trim().orEmpty()
-    if (expected.isEmpty()) {
-        respondText(
-            "CMS mutations disabled: set CMS_API_KEY on the server",
-            status = HttpStatusCode.Forbidden,
-        )
-        return false
-    }
-    val provided = request.headers["X-CMS-Key"]?.trim().orEmpty()
-    if (provided != expected) {
-        respondText(
-            "Invalid or missing X-CMS-Key header",
-            status = HttpStatusCode.Unauthorized,
-        )
-        return false
-    }
-    return true
-}
-
-private fun isValidCreate(req: ShelterCreateRequest): Boolean {
-    if (req.name.isBlank()) return false
-    if (!req.latitude.isFinite() || !req.longitude.isFinite()) return false
-    if (abs(req.latitude) > 90.0 || abs(req.longitude) > 180.0) return false
-    return true
-}
-
 fun Route.shelterRoutes(repository: ShelterRepository) {
     route("/api") {
         get("/shelters") {
-            call.respond(repository.list())
+            call.respond(repository.getAll())
         }
         post("/shelters") {
             if (!call.ensureCmsAuthorized()) return@post
@@ -74,3 +46,29 @@ fun Route.shelterRoutes(repository: ShelterRepository) {
         }
     }
 }
+
+private suspend fun ApplicationCall.ensureCmsAuthorized(): Boolean {
+    val expected = System.getenv("CMS_API_KEY")?.trim().orEmpty()
+    val provided = request.headers["X-CMS-Key"]?.trim().orEmpty()
+    return when {
+        expected.isEmpty() ->
+            respondText(
+                "CMS mutations disabled: set CMS_API_KEY on the server",
+                status = HttpStatusCode.Forbidden,
+            ).let { false }
+        provided != expected ->
+            respondText(
+                "Invalid or missing X-CMS-Key header",
+                status = HttpStatusCode.Unauthorized,
+            ).let { false }
+        else -> true
+    }
+}
+
+private fun isValidCreate(req: ShelterCreateRequest): Boolean =
+    when {
+        req.name.isBlank() -> false
+        (!req.latitude.isFinite() || !req.longitude.isFinite()) -> false
+        (abs(req.latitude) > 90.0 || abs(req.longitude) > 180.0) -> false
+        else -> true
+    }

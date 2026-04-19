@@ -20,7 +20,6 @@ fun Application.configureHTTP() {
         allowMethod(HttpMethod.Post)
         allowHeader(HttpHeaders.Authorization)
         allowHeader(HttpHeaders.ContentType)
-        allowHeader("MyCustomHeader")
         // TODO bfilipovic: clean this up
         // Tighten before prod: Vercel preview + local Vite; add Railway host via env when needed.
         allowHost("localhost:5173", schemes = listOf("http"))

@@ -19,7 +19,7 @@ class ExposedShelterRepository(
     private val database: Database,
 ) : ShelterRepository {
     @OptIn(ExperimentalUuidApi::class)
-    override suspend fun list(): List<ShelterResponse> =
+    override suspend fun getAll(): List<ShelterResponse> =
         withContext(Dispatchers.IO) {
             suspendTransaction(db = database, readOnly = true) {
                 SheltersTable
