@@ -9,7 +9,7 @@ data class ShelterUpdateRequest(
     val description: String? = null,
     val latitude: Double? = null,
     val longitude: Double? = null,
-    val species: List<String>? = null,
+    val species: List<ShelterSpecies>? = null,
     val signupUrl: String? = null,
     val imageUrl: String? = null,
     val donationUrl: String? = null,

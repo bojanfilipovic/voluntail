@@ -21,12 +21,21 @@ fun Route.shelterRoutes(repository: ShelterRepository) {
         }
         post("/shelters") {
             if (!call.ensureCmsAuthorized()) return@post
-            val body = call.receive<ShelterCreateRequest>()
-            if (!isValidCreate(body)) {
+            val body = call.receive<ShelterCreateBody>()
+            val request =
+                body.toCreateRequestOrNull()
+                    ?: run {
+                        call.respondText(
+                            "Invalid shelter payload or unknown species",
+                            status = HttpStatusCode.BadRequest,
+                        )
+                        return@post
+                    }
+            if (!isValidCreate(request)) {
                 call.respondText("Invalid shelter payload", status = HttpStatusCode.BadRequest)
                 return@post
             }
-            val created = repository.insert(body)
+            val created = repository.insert(request)
             call.respond(HttpStatusCode.Created, created)
         }
         patch("/shelters/{id}") {
@@ -38,20 +47,29 @@ fun Route.shelterRoutes(repository: ShelterRepository) {
                     call.respondText("Invalid id", status = HttpStatusCode.BadRequest)
                     return@patch
                 }
-            val body = call.receive<ShelterUpdateRequest>()
-            if (body.isNoOp()) {
+            val body = call.receive<ShelterUpdateBody>()
+            val request =
+                body.toUpdateRequestOrNull()
+                    ?: run {
+                        call.respondText(
+                            "Invalid shelter patch or unknown species",
+                            status = HttpStatusCode.BadRequest,
+                        )
+                        return@patch
+                    }
+            if (request.isNoOp()) {
                 call.respondText(
                     "No fields to update",
                     status = HttpStatusCode.BadRequest,
                 )
                 return@patch
             }
-            if (!isValidUpdate(body)) {
+            if (!isValidUpdate(request)) {
                 call.respondText("Invalid shelter patch", status = HttpStatusCode.BadRequest)
                 return@patch
             }
             val updated =
-                repository.update(id, body)
+                repository.update(id, request)
                     ?: run {
                         call.respondText(
                             "Shelter not found",

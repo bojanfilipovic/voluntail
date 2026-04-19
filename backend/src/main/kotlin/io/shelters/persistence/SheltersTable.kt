@@ -1,7 +1,7 @@
 package io.shelters.persistence
 
+import io.shelters.ShelterSpecies
 import kotlinx.serialization.builtins.ListSerializer
-import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.java.javaUUID
@@ -22,7 +22,7 @@ object SheltersTable : Table("shelters") {
         jsonb(
             "species",
             sheltersTableJson,
-            ListSerializer(String.serializer()),
+            ListSerializer(ShelterSpecies.serializer()),
         )
     val signupUrl = text("signup_url").nullable()
     val imageUrl = text("image_url").nullable()

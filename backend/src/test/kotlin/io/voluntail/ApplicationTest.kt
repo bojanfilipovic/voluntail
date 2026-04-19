@@ -101,6 +101,24 @@ class ApplicationTest {
         }
 
     @Test
+    fun testPostShelterWithInvalidSpeciesReturns400() =
+        testApplication {
+            application {
+                module()
+            }
+            client
+                .post("/api/shelters") {
+                    header("X-CMS-Key", "test-secret")
+                    contentType(ContentType.Application.Json)
+                    setBody(
+                        """{"name":"Bad Species","description":"X","latitude":52.0,"longitude":5.0,"species":["amphibian"]}""",
+                    )
+                }.apply {
+                    assertEquals(HttpStatusCode.BadRequest, status)
+                }
+        }
+
+    @Test
     fun testPatchShelterWithCmsKey() =
         testApplication {
             application {

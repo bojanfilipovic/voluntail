@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button'
-import { cn } from '@/lib/utils'
 import type { Shelter } from '@/api/shelters'
+import { speciesLabel, type ShelterSpecies } from '@/domain/species'
+import { cn } from '@/lib/utils'
 
 type Props = {
   shelters: Shelter[] | undefined
@@ -8,13 +9,13 @@ type Props = {
   isPending: boolean
   selectedId: string | null
   onSelectShelter: (s: Shelter) => void
-  speciesFilter: string | null
-  onSpeciesFilter: (species: string | null) => void
-  speciesOptions: string[]
+  speciesFilter: ShelterSpecies | null
+  onSpeciesFilter: (species: ShelterSpecies | null) => void
+  speciesOptions: ShelterSpecies[]
 }
 
 function speciesLine(s: Shelter): string {
-  return s.species.length ? s.species.join(' · ') : '—'
+  return s.species.length ? s.species.map(speciesLabel).join(' · ') : '—'
 }
 
 export function ShelterList({
@@ -56,7 +57,7 @@ export function ShelterList({
               variant={speciesFilter === sp ? 'default' : 'outline'}
               onClick={() => onSpeciesFilter(speciesFilter === sp ? null : sp)}
             >
-              {sp}
+              {speciesLabel(sp)}
             </Button>
           ))}
         </div>

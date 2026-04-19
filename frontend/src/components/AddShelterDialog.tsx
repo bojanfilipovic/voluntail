@@ -1,5 +1,11 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import type { Shelter, ShelterCreatePayload } from '@/api/shelters'
+import {
+  SPECIES_VALUES,
+  sortShelterSpecies,
+  speciesLabel,
+  type ShelterSpecies,
+} from '@/domain/species'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -30,13 +36,6 @@ const DEFAULT_IMAGE_URL =
   'https://picsum.photos/seed/voluntail-default/800/450'
 const DEFAULT_DONATION_URL = 'https://example.com/donate'
 
-function parseSpecies(raw: string): string[] {
-  return raw
-    .split(',')
-    .map((s) => s.trim())
-    .filter(Boolean)
-}
-
 function urlOrDefault(raw: string, fallback: string): string {
   const t = raw.trim()
   return t || fallback
@@ -51,7 +50,7 @@ export function AddShelterDialog({
 }: Props) {
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
-  const [speciesRaw, setSpeciesRaw] = useState('')
+  const [speciesPicked, setSpeciesPicked] = useState<ShelterSpecies[]>([])
   const [latitude, setLatitude] = useState(() =>
     draftLocation ? String(draftLocation.latitude) : '',
   )
@@ -92,7 +91,7 @@ export function AddShelterDialog({
       description: descFinal,
       latitude: lat,
       longitude: lng,
-      species: parseSpecies(speciesRaw),
+      species: sortShelterSpecies(speciesPicked),
       signupUrl: urlOrDefault(signupUrl, DEFAULT_SIGNUP_URL),
       imageUrl: urlOrDefault(imageUrl, DEFAULT_IMAGE_URL),
       donationUrl: urlOrDefault(donationUrl, DEFAULT_DONATION_URL),
@@ -174,16 +173,36 @@ export function AddShelterDialog({
                     />
                   </div>
                 </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="add-species">Species (comma-separated)</Label>
-                  <Input
-                    id="add-species"
-                    name="species"
-                    value={speciesRaw}
-                    onChange={(e) => setSpeciesRaw(e.target.value)}
-                    placeholder="dog, cat"
-                  />
-                </div>
+                <fieldset className="space-y-2">
+                  <legend className="text-foreground mb-1.5 text-sm font-medium">
+                    Species
+                  </legend>
+                  <div className="flex flex-col gap-2">
+                    {SPECIES_VALUES.map((sp) => (
+                      <label
+                        key={sp}
+                        htmlFor={`add-species-${sp}`}
+                        className="flex cursor-pointer items-center gap-2 text-sm"
+                      >
+                        <input
+                          id={`add-species-${sp}`}
+                          type="checkbox"
+                          name="species"
+                          checked={speciesPicked.includes(sp)}
+                          onChange={() =>
+                            setSpeciesPicked((prev) =>
+                              prev.includes(sp)
+                                ? prev.filter((x) => x !== sp)
+                                : [...prev, sp],
+                            )
+                          }
+                          className="border-input accent-primary size-4 rounded"
+                        />
+                        <span>{speciesLabel(sp)}</span>
+                      </label>
+                    ))}
+                  </div>
+                </fieldset>
                 <div className="space-y-1.5">
                   <Label htmlFor="add-signup">Signup URL</Label>
                   <Input

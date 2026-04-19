@@ -11,11 +11,12 @@ import { Button } from '@/components/ui/button'
 import { MessageSquare } from 'lucide-react'
 import { useShelterDiscoveryState } from '@/hooks/useShelterDiscoveryState'
 import { useShelterMutations } from '@/hooks/useShelterMutations'
+import type { ShelterSpecies } from '@/domain/species'
 import { toQueryError } from '@/lib/queryError'
 
 function App() {
   const mutations = useShelterMutations()
-  const [speciesFilter, setSpeciesFilter] = useState<string | null>(null)
+  const [speciesFilter, setSpeciesFilter] = useState<ShelterSpecies | null>(null)
   const [editOpen, setEditOpen] = useState(false)
   const [feedbackOpen, setFeedbackOpen] = useState(false)
 
@@ -27,7 +28,7 @@ function App() {
   const queryError = useMemo(() => toQueryError(error), [error])
 
   const speciesOptions = useMemo(() => {
-    const set = new Set<string>()
+    const set = new Set<ShelterSpecies>()
     for (const s of data ?? []) {
       for (const sp of s.species) {
         set.add(sp)

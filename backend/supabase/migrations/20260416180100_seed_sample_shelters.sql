@@ -29,7 +29,7 @@ values
             || 'Stub record for the ROZ track and map pins.',
         52.3676,
         4.9041,
-        '["reptile","amphibian"]'::jsonb,
+        '["reptile"]'::jsonb,
         null,
         'https://picsum.photos/seed/voluntail-roz/800/450',
         'https://example.com/donate-reptile'
