@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button'
 import { MessageSquare } from 'lucide-react'
 import { useShelterDiscoveryState } from '@/hooks/useShelterDiscoveryState'
 import { useShelterMutations } from '@/hooks/useShelterMutations'
-import type { ShelterSpecies } from '@/domain/species'
+import { SPECIES_VALUES, type ShelterSpecies } from '@/domain/species'
 import { toQueryError } from '@/lib/queryError'
 
 function App() {
@@ -27,15 +27,26 @@ function App() {
 
   const queryError = useMemo(() => toQueryError(error), [error])
 
-  const speciesOptions = useMemo(() => {
-    const set = new Set<ShelterSpecies>()
+  const speciesCounts = useMemo(() => {
+    const counts = Object.fromEntries(
+      SPECIES_VALUES.map((sp) => [sp, 0]),
+    ) as Record<ShelterSpecies, number>
     for (const s of data ?? []) {
       for (const sp of s.species) {
-        set.add(sp)
+        counts[sp] += 1
       }
     }
-    return [...set].sort((a, b) => a.localeCompare(b))
+    return counts
   }, [data])
+
+  const speciesFilters = useMemo(
+    () =>
+      SPECIES_VALUES.map((species) => ({
+        species,
+        count: speciesCounts[species],
+      })),
+    [speciesCounts],
+  )
 
   const filteredShelters = useMemo(() => {
     if (!data) return undefined
@@ -188,11 +199,12 @@ function App() {
                 shelters={filteredShelters}
                 error={queryError}
                 isPending={isPending}
+                totalShelterCount={data?.length}
                 selectedId={selectedShelter?.id ?? null}
                 onSelectShelter={handleListSelect}
                 speciesFilter={speciesFilter}
                 onSpeciesFilter={setSpeciesFilter}
-                speciesOptions={speciesOptions}
+                speciesFilters={speciesFilters}
               />
             </div>
           </section>

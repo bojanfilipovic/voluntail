@@ -8,6 +8,9 @@ enum class ShelterSpecies {
     cat,
     rabbit,
     reptile,
+    rodent,
+    amphibian,
+    wildlife,
 }
 
 /** Returns null if any non-empty token is not a valid [ShelterSpecies] name. */
