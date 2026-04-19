@@ -3,8 +3,10 @@ import { useState, type Dispatch, type SetStateAction } from 'react'
 import {
   createShelter,
   deleteShelter,
+  updateShelter,
   type Shelter,
   type ShelterCreatePayload,
+  type ShelterPatchPayload,
 } from '../api/shelters'
 import { toQueryError } from '../lib/queryError'
 
@@ -12,6 +14,11 @@ export interface ShelterMutationsApi {
   cmsError: string | null
   setCmsError: Dispatch<SetStateAction<string | null>>
   createMutation: UseMutationResult<Shelter, unknown, ShelterCreatePayload>
+  updateMutation: UseMutationResult<
+    Shelter,
+    unknown,
+    { id: string; body: ShelterPatchPayload }
+  >
   deleteMutation: UseMutationResult<void, unknown, string>
   cmsBusy: boolean
 }
@@ -31,6 +38,23 @@ export function useShelterMutations(): ShelterMutationsApi {
     },
   })
 
+  const updateMutation = useMutation({
+    mutationFn: ({
+      id,
+      body,
+    }: {
+      id: string
+      body: ShelterPatchPayload
+    }) => updateShelter(id, body),
+    onSuccess: async () => {
+      setCmsError(null)
+      await queryClient.invalidateQueries({ queryKey: ['shelters'] })
+    },
+    onError: (e: unknown) => {
+      setCmsError(toQueryError(e)?.message ?? 'Update failed')
+    },
+  })
+
   const deleteMutation = useMutation({
     mutationFn: deleteShelter,
     onSuccess: async () => {
@@ -46,7 +70,11 @@ export function useShelterMutations(): ShelterMutationsApi {
     cmsError,
     setCmsError,
     createMutation,
+    updateMutation,
     deleteMutation,
-    cmsBusy: createMutation.isPending || deleteMutation.isPending,
+    cmsBusy:
+      createMutation.isPending ||
+      updateMutation.isPending ||
+      deleteMutation.isPending,
   }
 }

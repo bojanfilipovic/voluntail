@@ -1,4 +1,6 @@
-import type { Shelter } from '../api/shelters'
+import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
+import type { Shelter } from '@/api/shelters'
 
 type Props = {
   shelters: Shelter[] | undefined
@@ -6,6 +8,9 @@ type Props = {
   isPending: boolean
   selectedId: string | null
   onSelectShelter: (s: Shelter) => void
+  speciesFilter: string | null
+  onSpeciesFilter: (species: string | null) => void
+  speciesOptions: string[]
 }
 
 function speciesLine(s: Shelter): string {
@@ -18,55 +23,94 @@ export function ShelterList({
   isPending,
   selectedId,
   onSelectShelter,
+  speciesFilter,
+  onSpeciesFilter,
+  speciesOptions,
 }: Props) {
   return (
-    <section className="shelters-preview" aria-labelledby="shelters-heading">
-      <h2 id="shelters-heading">Shelters</h2>
-      <p className="shelters-hint">
-        Run the Ktor backend on <code>:8080</code>; this page loads{' '}
-        <code>/api/shelters</code> via the Vite dev proxy.
+    <section className="text-start" aria-labelledby="shelters-heading">
+      <h2 id="shelters-heading" className="text-foreground mb-1 text-lg font-semibold tracking-tight">
+        Shelters
+      </h2>
+      <p className="text-muted-foreground mb-3 text-sm leading-relaxed">
+        Tap a pin or a row to open details and outbound links. Requires the Ktor API (e.g.{' '}
+        <code className="bg-muted rounded px-1 py-0.5 font-mono text-xs">localhost:8080</code>)
+        proxied by Vite.
       </p>
+
+      {speciesOptions.length > 0 ? (
+        <div className="mb-4 flex flex-wrap gap-2" role="group" aria-label="Filter by species">
+          <Button
+            type="button"
+            size="sm"
+            variant={speciesFilter === null ? 'default' : 'outline'}
+            onClick={() => onSpeciesFilter(null)}
+          >
+            All
+          </Button>
+          {speciesOptions.map((sp) => (
+            <Button
+              key={sp}
+              type="button"
+              size="sm"
+              variant={speciesFilter === sp ? 'default' : 'outline'}
+              onClick={() => onSpeciesFilter(speciesFilter === sp ? null : sp)}
+            >
+              {sp}
+            </Button>
+          ))}
+        </div>
+      ) : null}
+
       {error ? (
-        <p className="shelters-error" role="alert">
+        <p className="text-destructive text-sm" role="alert">
           {error.message}
         </p>
       ) : isPending ? (
-        <p>Loading shelters…</p>
+        <p className="text-muted-foreground text-sm">Loading shelters…</p>
       ) : (
-        <ul className="shelters-list">
+        <ul className="list-none space-y-3 p-0">
           {(shelters ?? []).map((s) => (
             <li key={s.id}>
               <button
                 type="button"
-                className={`shelter-row${s.id === selectedId ? ' shelter-row--selected' : ''}`}
+                className={cn(
+                  'hover:bg-muted/80 w-full rounded-lg border border-transparent p-2 text-start transition-colors',
+                  s.id === selectedId &&
+                    'border-primary/50 bg-primary/10 ring-primary/30 ring-1',
+                )}
                 onClick={() => onSelectShelter(s)}
               >
-                <span className="shelter-row-grid">
+                <span className="grid grid-cols-[4.5rem_1fr] items-start gap-3">
                   {s.imageUrl ? (
-                    <span className="shelter-row-thumb-wrap">
+                    <span className="border-border bg-muted h-[4.5rem] w-[4.5rem] shrink-0 overflow-hidden rounded-md border">
                       <img
                         src={s.imageUrl}
                         alt=""
-                        className="shelter-row-thumb"
+                        className="size-full object-cover"
                         loading="lazy"
                       />
                     </span>
                   ) : (
-                    <span className="shelter-row-thumb-wrap shelter-row-thumb-wrap--empty" aria-hidden />
+                    <span
+                      className="border-border h-[4.5rem] w-[4.5rem] shrink-0 rounded-md border bg-gradient-to-br from-muted to-muted/60"
+                      aria-hidden
+                    />
                   )}
-                  <span className="shelter-row-text">
-                    <span className="shelter-row-title">
-                      <strong>{s.name}</strong>
+                  <span className="flex min-w-0 flex-col gap-0.5">
+                    <span className="text-foreground font-medium leading-snug">{s.name}</span>
+                    <span className="text-muted-foreground text-xs">{speciesLine(s)}</span>
+                    <span className="text-foreground/90 line-clamp-3 text-sm leading-snug">
+                      {s.description}
                     </span>
-                    <span className="shelters-species">{speciesLine(s)}</span>
-                    <span className="shelters-desc">{s.description}</span>
                     {s.signupUrl ? (
-                      <span className="shelters-link-wrap">
+                      <span className="mt-1">
                         <a
                           href={s.signupUrl}
                           onClick={(e) => e.stopPropagation()}
                           rel="noreferrer noopener"
                           target="_blank"
+                          className="text-primary text-xs underline-offset-4 hover:underline"
                         >
                           Signup link
                         </a>

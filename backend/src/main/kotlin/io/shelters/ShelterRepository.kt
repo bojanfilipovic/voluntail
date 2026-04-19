@@ -7,5 +7,10 @@ interface ShelterRepository {
 
     suspend fun insert(request: ShelterCreateRequest): ShelterResponse
 
+    suspend fun update(
+        id: UUID,
+        request: ShelterUpdateRequest,
+    ): ShelterResponse?
+
     suspend fun delete(id: UUID): Boolean
 }

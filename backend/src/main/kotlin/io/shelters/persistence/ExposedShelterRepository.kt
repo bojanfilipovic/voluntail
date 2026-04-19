@@ -3,9 +3,12 @@ package io.shelters.persistence
 import io.shelters.ShelterCreateRequest
 import io.shelters.ShelterRepository
 import io.shelters.ShelterResponse
+import io.shelters.ShelterUpdateRequest
+import io.shelters.applyTo
 import java.util.UUID
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.Database
@@ -13,6 +16,7 @@ import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.suspendTransaction
+import org.jetbrains.exposed.v1.jdbc.update
 import kotlin.uuid.ExperimentalUuidApi
 
 class ExposedShelterRepository(
@@ -25,19 +29,7 @@ class ExposedShelterRepository(
                 SheltersTable
                     .selectAll()
                     .orderBy(SheltersTable.name, SortOrder.ASC)
-                    .map { row ->
-                        ShelterResponse(
-                            id = row[SheltersTable.id].toString(),
-                            name = row[SheltersTable.name],
-                            description = row[SheltersTable.description],
-                            latitude = row[SheltersTable.latitude],
-                            longitude = row[SheltersTable.longitude],
-                            species = row[SheltersTable.species],
-                            signupUrl = row[SheltersTable.signupUrl],
-                            imageUrl = row[SheltersTable.imageUrl],
-                            donationUrl = row[SheltersTable.donationUrl],
-                        )
-                    }
+                    .map { row -> row.toShelterResponse() }
             }
         }
 
@@ -73,6 +65,34 @@ class ExposedShelterRepository(
         }
 
     @OptIn(ExperimentalUuidApi::class)
+    override suspend fun update(
+        id: UUID,
+        request: ShelterUpdateRequest,
+    ): ShelterResponse? =
+        withContext(Dispatchers.IO) {
+            suspendTransaction(db = database, readOnly = false) {
+                val row =
+                    SheltersTable
+                        .selectAll()
+                        .where { SheltersTable.id eq id }
+                        .firstOrNull()
+                        ?: return@suspendTransaction null
+                val merged = request.applyTo(row.toShelterResponse())
+                SheltersTable.update({ SheltersTable.id eq id }) {
+                    it[SheltersTable.name] = merged.name
+                    it[SheltersTable.description] = merged.description
+                    it[SheltersTable.latitude] = merged.latitude
+                    it[SheltersTable.longitude] = merged.longitude
+                    it[SheltersTable.species] = merged.species
+                    it[SheltersTable.signupUrl] = merged.signupUrl
+                    it[SheltersTable.imageUrl] = merged.imageUrl
+                    it[SheltersTable.donationUrl] = merged.donationUrl
+                }
+                merged
+            }
+        }
+
+    @OptIn(ExperimentalUuidApi::class)
     override suspend fun delete(id: UUID): Boolean =
         withContext(Dispatchers.IO) {
             suspendTransaction(db = database, readOnly = false) {
@@ -80,3 +100,16 @@ class ExposedShelterRepository(
             }
         }
 }
+
+private fun ResultRow.toShelterResponse(): ShelterResponse =
+    ShelterResponse(
+        id = this[SheltersTable.id].toString(),
+        name = this[SheltersTable.name],
+        description = this[SheltersTable.description],
+        latitude = this[SheltersTable.latitude],
+        longitude = this[SheltersTable.longitude],
+        species = this[SheltersTable.species],
+        signupUrl = this[SheltersTable.signupUrl],
+        imageUrl = this[SheltersTable.imageUrl],
+        donationUrl = this[SheltersTable.donationUrl],
+    )

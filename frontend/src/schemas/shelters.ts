@@ -16,3 +16,17 @@ export const shelterSchema = z.object({
 export const sheltersListSchema = z.array(shelterSchema)
 
 export type Shelter = z.infer<typeof shelterSchema>
+
+/** PATCH /api/shelters/:id — only send fields that should change (omit unknown keys). */
+export const shelterPatchPayloadSchema = z.object({
+  name: z.string().optional(),
+  description: z.string().optional(),
+  latitude: z.number().optional(),
+  longitude: z.number().optional(),
+  species: z.array(z.string()).optional(),
+  signupUrl: z.string().nullish(),
+  imageUrl: z.string().nullish(),
+  donationUrl: z.string().nullish(),
+})
+
+export type ShelterPatchPayload = z.infer<typeof shelterPatchPayloadSchema>

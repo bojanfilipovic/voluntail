@@ -1,7 +1,9 @@
 import 'mapbox-gl/dist/mapbox-gl.css'
+import { cn } from '@/lib/utils'
 import {
   forwardRef,
   useCallback,
+  useEffect,
   useImperativeHandle,
   useMemo,
   useRef,
@@ -12,7 +14,7 @@ import Map, {
   type MapMouseEvent,
   type MapRef,
 } from 'react-map-gl/mapbox'
-import type { Shelter } from '../api/shelters'
+import type { Shelter } from '@/api/shelters'
 
 const NL_VIEW = {
   longitude: 5.2913,
@@ -32,7 +34,6 @@ type Props = {
   selectedId: string | null
   onSelectShelter: (s: Shelter) => void
   onClearSelection?: () => void
-  /** First-time placement or moving the draft pin before the add modal. */
   placementOrRelocateActive?: boolean
   draftLocation?: MapCenter | null
   onDraftPosition?: (c: MapCenter) => void
@@ -52,6 +53,9 @@ function defaultCenter(): MapCenter {
   return { latitude: NL_VIEW.latitude, longitude: NL_VIEW.longitude }
 }
 
+const pinBase =
+  'pointer-events-auto block size-[22px] rotate-[-45deg] rounded-full rounded-bl-none border-2 border-background shadow-md cursor-pointer'
+
 export const ShelterMap = forwardRef<ShelterMapHandle, Props>(
   function ShelterMap(
     {
@@ -66,9 +70,26 @@ export const ShelterMap = forwardRef<ShelterMapHandle, Props>(
     ref,
   ) {
     const mapRef = useRef<MapRef>(null)
+    const containerRef = useRef<HTMLDivElement>(null)
     const token = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN
 
     const points = useMemo(() => validShelters(shelters), [shelters])
+
+    const resizeMap = useCallback(() => {
+      const map = mapRef.current?.getMap()
+      map?.resize()
+    }, [])
+
+    useEffect(() => {
+      if (!token) return
+      const el = containerRef.current
+      if (!el || typeof ResizeObserver === 'undefined') return
+      const ro = new ResizeObserver(() => {
+        resizeMap()
+      })
+      ro.observe(el)
+      return () => ro.disconnect()
+    }, [token, resizeMap])
 
     useImperativeHandle(ref, () => ({
       flyToShelter: (s: Shelter) => {
@@ -103,41 +124,46 @@ export const ShelterMap = forwardRef<ShelterMapHandle, Props>(
         }
         onClearSelection?.()
       },
-      [
-        onClearSelection,
-        onDraftPosition,
-        placementOrRelocateActive,
-      ],
+      [onClearSelection, onDraftPosition, placementOrRelocateActive],
     )
 
     if (!token) {
       return (
-        <div className="map-shell map-shell--missing-token">
-          <p className="map-missing-token">
-            Add <code>VITE_MAPBOX_ACCESS_TOKEN</code> to{' '}
-            <code>.env.local</code> (see <code>.env.example</code>), then restart{' '}
-            <code>npm run dev</code>.
+        <div className="bg-muted/50 flex min-h-[min(55vh,520px)] w-full items-center justify-center p-4">
+          <p className="text-muted-foreground max-w-md text-start text-sm leading-relaxed">
+            Add <code className="bg-muted rounded px-1 py-0.5 font-mono text-xs">VITE_MAPBOX_ACCESS_TOKEN</code>{' '}
+            to <code className="bg-muted rounded px-1 py-0.5 font-mono text-xs">.env.local</code> (see{' '}
+            <code className="bg-muted rounded px-1 py-0.5 font-mono text-xs">.env.example</code>), then restart{' '}
+            <code className="bg-muted rounded px-1 py-0.5 font-mono text-xs">npm run dev</code>.
           </p>
         </div>
       )
     }
 
-    const shellClass =
-      'map-shell' +
-      (placementOrRelocateActive ? ' map-shell--placing' : '')
-
     return (
-      <div className={shellClass}>
-        <Map
-          ref={mapRef}
-          mapboxAccessToken={token}
-          initialViewState={NL_VIEW}
-          style={{ width: '100%', height: '100%' }}
-          mapStyle="mapbox://styles/mapbox/light-v11"
-          reuseMaps
-          onClick={handleMapClick}
-          cursor={placementOrRelocateActive ? 'crosshair' : undefined}
-        >
+      <div
+        ref={containerRef}
+        className={cn(
+          'relative h-full min-h-0 w-full flex-1',
+          placementOrRelocateActive && '[&_.mapboxgl-canvas-container]:cursor-crosshair',
+        )}
+      >
+        {/* Absolute fill: Mapbox canvas must match the flex-allocated box; call resize() on load + container resize. */}
+        <div className="absolute inset-0">
+          <Map
+            ref={mapRef}
+            mapboxAccessToken={token}
+            initialViewState={NL_VIEW}
+            style={{ width: '100%', height: '100%' }}
+            mapStyle="mapbox://styles/mapbox/light-v11"
+            reuseMaps
+            onLoad={() => {
+              resizeMap()
+              requestAnimationFrame(() => resizeMap())
+            }}
+            onClick={handleMapClick}
+            cursor={placementOrRelocateActive ? 'crosshair' : undefined}
+          >
           <NavigationControl position="top-right" showCompass={false} />
           {points.map((s) => (
             <Marker
@@ -152,11 +178,12 @@ export const ShelterMap = forwardRef<ShelterMapHandle, Props>(
             >
               <button
                 type="button"
-                className={
-                  s.id === selectedId
-                    ? 'map-pin map-pin--selected'
-                    : 'map-pin'
-                }
+                className={cn(
+                  pinBase,
+                  'bg-primary',
+                  s.id === selectedId &&
+                    'scale-110 bg-blue-600 shadow-lg dark:bg-blue-500',
+                )}
                 aria-label={s.name}
                 title={s.name}
               />
@@ -171,13 +198,17 @@ export const ShelterMap = forwardRef<ShelterMapHandle, Props>(
               anchor="bottom"
             >
               <span
-                className="map-pin map-pin--draft"
+                className={cn(
+                  pinBase,
+                  'pointer-events-none animate-pulse bg-amber-500 shadow-[0_0_0_3px_rgba(245,158,11,0.45)]',
+                )}
                 aria-label="Draft pin location"
                 title="Draft pin — use Enter details to save"
               />
             </Marker>
           ) : null}
         </Map>
+        </div>
       </div>
     )
   },

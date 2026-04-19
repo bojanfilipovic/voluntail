@@ -8,6 +8,7 @@ import io.ktor.server.response.respondText
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
+import io.ktor.server.routing.patch
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 import java.util.UUID
@@ -27,6 +28,38 @@ fun Route.shelterRoutes(repository: ShelterRepository) {
             }
             val created = repository.insert(body)
             call.respond(HttpStatusCode.Created, created)
+        }
+        patch("/shelters/{id}") {
+            if (!call.ensureCmsAuthorized()) return@patch
+            val id =
+                try {
+                    UUID.fromString(call.parameters["id"] ?: "")
+                } catch (_: IllegalArgumentException) {
+                    call.respondText("Invalid id", status = HttpStatusCode.BadRequest)
+                    return@patch
+                }
+            val body = call.receive<ShelterUpdateRequest>()
+            if (body.isNoOp()) {
+                call.respondText(
+                    "No fields to update",
+                    status = HttpStatusCode.BadRequest,
+                )
+                return@patch
+            }
+            if (!isValidUpdate(body)) {
+                call.respondText("Invalid shelter patch", status = HttpStatusCode.BadRequest)
+                return@patch
+            }
+            val updated =
+                repository.update(id, body)
+                    ?: run {
+                        call.respondText(
+                            "Shelter not found",
+                            status = HttpStatusCode.NotFound,
+                        )
+                        return@patch
+                    }
+            call.respond(updated)
         }
         delete("/shelters/{id}") {
             if (!call.ensureCmsAuthorized()) return@delete
@@ -74,5 +107,22 @@ private fun isValidCreate(req: ShelterCreateRequest): Boolean =
         req.name.isBlank() -> false
         (!req.latitude.isFinite() || !req.longitude.isFinite()) -> false
         (abs(req.latitude) > 90.0 || abs(req.longitude) > 180.0) -> false
+        else -> true
+    }
+
+private fun isValidUpdate(req: ShelterUpdateRequest): Boolean =
+    when {
+        req.latitude != null &&
+            (
+                !req.latitude.isFinite() ||
+                    abs(req.latitude) > 90.0
+            )
+        -> false
+        req.longitude != null &&
+            (
+                !req.longitude.isFinite() ||
+                    abs(req.longitude) > 180.0
+            )
+        -> false
         else -> true
     }
