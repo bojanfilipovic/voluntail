@@ -5,16 +5,21 @@ import com.zaxxer.hikari.HikariDataSource
 import io.shelters.persistence.ExposedShelterRepository
 import org.jetbrains.exposed.v1.jdbc.Database
 
-// TODO bfilipovic: fix this class the code is quite messy
-fun createShelterRepository(): ShelterRepository {
-    val jdbcUrl =
-        System.getenv("DATABASE_JDBC_URL")?.trim().orEmpty().ifEmpty {
-            System.getenv("DB_URL")?.trim().orEmpty()
+fun createShelterRepository(): ShelterRepository =
+    System.getenv("DB_URL")?.trim().orEmpty()
+        .let { jdbcUrl ->
+            when {
+                jdbcUrl.isEmpty() -> InMemoryShelterRepository()
+                else -> {
+                    ExposedShelterRepository(
+                        Database.connect(dataSource(jdbcUrl))
+                    )
+                }
+            }
         }
-    if (jdbcUrl.isEmpty()) {
-        return InMemoryShelterRepository()
-    }
-    val cfg =
+
+private fun dataSource(jdbcUrl: String): HikariDataSource =
+    HikariDataSource(
         HikariConfig().apply {
             this.jdbcUrl = jdbcUrl
             System.getenv("DB_USERNAME")?.takeIf { it.isNotBlank() }?.let { username = it }
@@ -25,7 +30,4 @@ fun createShelterRepository(): ShelterRepository {
             // prepared statements across pooled backend sessions; force simple protocol.
             addDataSourceProperty("prepareThreshold", "0")
         }
-    val dataSource = HikariDataSource(cfg)
-    val database = Database.connect(dataSource)
-    return ExposedShelterRepository(database)
-}
+    )
