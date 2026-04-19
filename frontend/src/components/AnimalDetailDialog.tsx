@@ -1,6 +1,6 @@
 import type { Animal } from '@/api/animals'
 import type { Shelter } from '@/api/shelters'
-import { Button } from '@/components/ui/button'
+import { Button, buttonVariants } from '@/components/ui/button'
 import {
   Dialog,
   DialogClose,
@@ -12,6 +12,7 @@ import {
 import { speciesLabel } from '@/domain/species'
 import { cn } from '@/lib/utils'
 import { XIcon } from 'lucide-react'
+import { useEffect, useState } from 'react'
 
 function statusLabel(s: Animal['status']): string {
   switch (s) {
@@ -27,9 +28,9 @@ function statusLabel(s: Animal['status']): string {
 }
 
 type Props = {
+  /** When non-null, the dialog is open; parent should derive this from a single source (e.g. detail flag ∧ selected row). */
   animal: Animal | null
   shelter: Shelter | null
-  open: boolean
   onClose: () => void
   onEdit: () => void
   cmsConfigured: boolean
@@ -42,7 +43,6 @@ type Props = {
 export function AnimalDetailDialog({
   animal,
   shelter,
-  open,
   onClose,
   onEdit,
   cmsConfigured,
@@ -52,9 +52,14 @@ export function AnimalDetailDialog({
   deleteBusy,
 }: Props) {
   const showCms = cmsConfigured
+  const [shelterDetailsOpen, setShelterDetailsOpen] = useState(false)
+
+  useEffect(() => {
+    setShelterDetailsOpen(false)
+  }, [animal?.id])
 
   return (
-    <Dialog open={open} onOpenChange={(next) => !next && onClose()}>
+    <Dialog open={Boolean(animal)} onOpenChange={(next) => !next && onClose()}>
       <DialogContent
         className="max-w-lg gap-0 overflow-hidden p-0 sm:max-w-lg"
         showCloseButton={false}
@@ -116,6 +121,65 @@ export function AnimalDetailDialog({
                     External profile / more info
                   </a>
                 </p>
+              ) : null}
+              {shelter ? (
+                <div className="space-y-2">
+                  <p className="text-muted-foreground text-xs leading-snug">
+                    This animal is listed by the shelter below. Use their official links for
+                    volunteering or donations.
+                  </p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="w-full sm:w-auto"
+                    aria-expanded={shelterDetailsOpen}
+                    aria-controls="animal-dialog-shelter-details"
+                    onClick={() => setShelterDetailsOpen((open) => !open)}
+                  >
+                    {shelterDetailsOpen ? 'Hide shelter details' : 'Shelter details'}
+                  </Button>
+                  {shelterDetailsOpen ? (
+                    <div
+                      className="border-border bg-muted/30 space-y-3 rounded-lg border p-3"
+                      id="animal-dialog-shelter-details"
+                    >
+                      <p className="text-muted-foreground text-sm">
+                        {shelter.city}
+                        {shelter.species.length
+                          ? ` · ${shelter.species.map(speciesLabel).join(', ')}`
+                          : ''}
+                      </p>
+                      <p className="text-foreground/95 leading-relaxed">{shelter.description}</p>
+                      <div className="flex flex-wrap gap-2">
+                        {shelter.signupUrl ? (
+                          <a
+                            href={shelter.signupUrl}
+                            rel="noreferrer noopener"
+                            target="_blank"
+                            className={cn(buttonVariants({ variant: 'default', size: 'sm' }))}
+                          >
+                            Volunteer / signup
+                          </a>
+                        ) : null}
+                        {shelter.donationUrl ? (
+                          <a
+                            href={shelter.donationUrl}
+                            rel="noreferrer noopener"
+                            target="_blank"
+                            className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}
+                          >
+                            Donate
+                          </a>
+                        ) : null}
+                      </div>
+                      <p className="text-muted-foreground text-xs leading-snug">
+                        Always double-check volunteer and donation details on the shelter&apos;s
+                        official channels before you commit.
+                      </p>
+                    </div>
+                  ) : null}
+                </div>
               ) : null}
               {!animal.published ? (
                 <p className="text-destructive text-sm font-medium">

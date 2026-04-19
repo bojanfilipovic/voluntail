@@ -23,7 +23,6 @@ type Props = {
   shelters: Shelter[] | undefined
   error: Error | null
   isPending: boolean
-  totalAnimalCount: number | undefined
   selectedId: string | null
   onSelectAnimal: (a: Animal) => void
   cityFilter: string | null
@@ -32,7 +31,7 @@ type Props = {
   onShelterFilter: (shelterId: string | null) => void
   speciesFilter: ShelterSpecies | null
   onSpeciesFilter: (species: ShelterSpecies | null) => void
-  /** Distinct cities from the loaded page (for chips). */
+  /** Distinct cities from shelter directory (stable sort); filter is applied server-side. */
   cityOptions: string[]
   speciesCounts: Record<ShelterSpecies, number>
 }
@@ -42,7 +41,6 @@ export function AnimalList({
   shelters,
   error,
   isPending,
-  totalAnimalCount,
   selectedId,
   onSelectAnimal,
   cityFilter,
@@ -74,8 +72,8 @@ export function AnimalList({
         Animals
       </h2>
       <p className="text-muted-foreground mb-3 text-sm leading-relaxed">
-        Published profiles for adoption discovery; confirm details with the shelter. Selecting
-        an animal focuses its shelter on the map.
+        Published profiles for adoption discovery; confirm details with the shelter. Selecting an
+        animal pans the map to that shelter without opening shelter details.
       </p>
 
       {error ? (
@@ -87,38 +85,25 @@ export function AnimalList({
         </div>
       ) : null}
 
-      <div className="mb-3 flex flex-col gap-2">
-        <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+      <div className="mb-4 space-y-1.5">
+        <label className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
           City
-        </span>
-        <div className="flex flex-wrap gap-2" role="group" aria-label="Filter by city">
-          <Button
-            type="button"
-            size="sm"
-            variant={cityFilter === null ? 'default' : 'outline'}
-            onClick={() => onCityFilter(null)}
-            aria-pressed={cityFilter === null}
-          >
-            All
-            {totalAnimalCount !== undefined ? (
-              <span className="text-muted-foreground ml-1 tabular-nums">
-                : {totalAnimalCount}
-              </span>
-            ) : null}
-          </Button>
+        </label>
+        <select
+          className="border-input bg-background ring-offset-background focus-visible:ring-ring flex h-9 w-full max-w-md rounded-md border px-3 py-1 text-sm shadow-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+          value={cityFilter ?? ''}
+          onChange={(e) =>
+            onCityFilter(e.target.value ? e.target.value : null)
+          }
+          aria-label="Filter by city"
+        >
+          <option value="">All cities</option>
           {cityOptions.map((city) => (
-            <Button
-              key={city}
-              type="button"
-              size="sm"
-              variant={cityFilter === city ? 'default' : 'outline'}
-              onClick={() => onCityFilter(cityFilter === city ? null : city)}
-              aria-pressed={cityFilter === city}
-            >
+            <option key={city} value={city}>
               {city}
-            </Button>
+            </option>
           ))}
-        </div>
+        </select>
       </div>
 
       <div className="mb-4 space-y-1.5">

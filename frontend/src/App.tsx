@@ -9,7 +9,7 @@ import {
 } from 'react'
 import { fetchAnimals } from '@/api/animals'
 import type { Animal } from '@/api/animals'
-import { fetchShelters } from '@/api/shelters'
+import { fetchShelters, type Shelter } from '@/api/shelters'
 import { AddAnimalDialog } from '@/components/AddAnimalDialog'
 import { AddShelterDialog } from '@/components/AddShelterDialog'
 import { AnimalDetailDialog } from '@/components/AnimalDetailDialog'
@@ -53,7 +53,6 @@ function App() {
 
   const [directoryTab, setDirectoryTab] = useState<DirectoryTab>('shelters')
   const [speciesFilter, setSpeciesFilter] = useState<ShelterSpecies | null>(null)
-  const [shelterCityFilter, setShelterCityFilter] = useState<string | null>(null)
 
   const [animalCityFilter, setAnimalCityFilter] = useState<string | null>(null)
   const [animalShelterFilter, setAnimalShelterFilter] = useState<string | null>(null)
@@ -66,6 +65,10 @@ function App() {
   const [animalDetailOpen, setAnimalDetailOpen] = useState(false)
   const [animalEditOpen, setAnimalEditOpen] = useState(false)
   const [addAnimalOpen, setAddAnimalOpen] = useState(false)
+  /** Map emerald pin for “last viewed animal’s shelter”; persists after closing the animal modal. */
+  const [mapShelterHighlightId, setMapShelterHighlightId] = useState<string | null>(
+    null,
+  )
 
   const animalListQuery = useMemo(
     () => ({
@@ -121,26 +124,12 @@ function App() {
     return [...set].sort((a, b) => a.localeCompare(b))
   }, [data])
 
-  const animalCityOptions = useMemo(() => {
-    const set = new Set<string>()
-    for (const a of animals ?? []) {
-      const c = a.city.trim()
-      if (c) set.add(c)
-    }
-    return [...set].sort((a, b) => a.localeCompare(b))
-  }, [animals])
-
   const filteredShelters = useMemo(() => {
     if (!data) return undefined
     let rows = data
     if (speciesFilter) rows = rows.filter((s) => s.species.includes(speciesFilter))
-    if (shelterCityFilter) {
-      rows = rows.filter(
-        (s) => s.city.toLowerCase() === shelterCityFilter!.toLowerCase(),
-      )
-    }
     return rows
-  }, [data, speciesFilter, shelterCityFilter])
+  }, [data, speciesFilter])
 
   const mapShelters = useMemo(() => {
     if (directoryTab === 'animals') return data ?? []
@@ -199,37 +188,57 @@ function App() {
     handleRemovePin,
   } = useShelterDiscoveryState(data, mutations)
 
+  const clearSelectionAndMapHighlight = useCallback(() => {
+    clearSelection()
+    setMapShelterHighlightId(null)
+  }, [clearSelection])
+
   useEffect(() => {
     if (!selectedShelter || !speciesFilter) return
     if (!selectedShelter.species.includes(speciesFilter)) {
-      clearSelection()
+      clearSelectionAndMapHighlight()
     }
-  }, [speciesFilter, selectedShelter, clearSelection])
+  }, [speciesFilter, selectedShelter, clearSelectionAndMapHighlight])
 
-  useEffect(() => {
-    if (!selectedShelter || !shelterCityFilter) return
-    if (selectedShelter.city.toLowerCase() !== shelterCityFilter.toLowerCase()) {
-      clearSelection()
-    }
-  }, [shelterCityFilter, selectedShelter, clearSelection])
+  const handleMapSelectClearingHighlight = useCallback(
+    (s: Shelter) => {
+      setMapShelterHighlightId(null)
+      handleMapSelect(s)
+    },
+    [handleMapSelect],
+  )
+
+  const handleListSelectClearingHighlight = useCallback(
+    (s: Shelter) => {
+      setMapShelterHighlightId(null)
+      handleListSelect(s)
+    },
+    [handleListSelect],
+  )
 
   const cmsConfigured = Boolean(import.meta.env.VITE_CMS_API_KEY?.trim())
 
+  /** Single source for animal detail modal: avoids open=true with animal=null (empty overlay). */
+  const animalForDetailModal =
+    animalDetailOpen && selectedAnimal ? selectedAnimal : null
+
   const selectedAnimalShelter = useMemo(() => {
-    if (!selectedAnimal || !data) return null
-    return data.find((s) => s.id === selectedAnimal.shelterId) ?? null
-  }, [selectedAnimal, data])
+    if (!animalForDetailModal || !data) return null
+    return data.find((s) => s.id === animalForDetailModal.shelterId) ?? null
+  }, [animalForDetailModal, data])
 
   const handleSelectAnimal = useCallback(
     (animal: Animal) => {
+      clearSelection()
+      setMapShelterHighlightId(animal.shelterId)
       const sh = data?.find((s) => s.id === animal.shelterId)
       if (sh) {
-        handleListSelect(sh)
+        mapRef.current?.flyToShelter(sh)
       }
       setSelectedAnimal(animal)
       setAnimalDetailOpen(true)
     },
-    [data, handleListSelect],
+    [data, clearSelection, mapRef],
   )
 
   const handleCloseAnimalDetail = useCallback(() => {
@@ -240,7 +249,7 @@ function App() {
   const handleCloseDetail = () => {
     setEditOpen(false)
     handleCloseAnimalDetail()
-    clearSelection()
+    clearSelectionAndMapHighlight()
   }
 
   const handlePublishToggle = useCallback(async () => {
@@ -290,8 +299,9 @@ function App() {
                     ref={mapRef}
                     shelters={mapShelters}
                     selectedId={selectedShelter?.id ?? null}
-                    onSelectShelter={handleMapSelect}
-                    onClearSelection={clearSelection}
+                    animalContextShelterId={mapShelterHighlightId}
+                    onSelectShelter={handleMapSelectClearingHighlight}
+                    onClearSelection={clearSelectionAndMapHighlight}
                     placementOrRelocateActive={placementOrRelocateActive}
                     draftLocation={draftLocation}
                     onDraftPosition={handleDraftPosition}
@@ -346,10 +356,7 @@ function App() {
                     isPending={isPending}
                     totalShelterCount={data?.length}
                     selectedId={selectedShelter?.id ?? null}
-                    onSelectShelter={handleListSelect}
-                    cityFilter={shelterCityFilter}
-                    onCityFilter={setShelterCityFilter}
-                    cityOptions={shelterCityOptions}
+                    onSelectShelter={handleListSelectClearingHighlight}
                     speciesFilter={speciesFilter}
                     onSpeciesFilter={setSpeciesFilter}
                     speciesFilters={speciesFilters}
@@ -360,7 +367,6 @@ function App() {
                     shelters={data}
                     error={directoryAlert}
                     isPending={animalsPending}
-                    totalAnimalCount={animals?.length}
                     selectedId={selectedAnimal?.id ?? null}
                     onSelectAnimal={handleSelectAnimal}
                     cityFilter={animalCityFilter}
@@ -369,7 +375,7 @@ function App() {
                     onShelterFilter={setAnimalShelterFilter}
                     speciesFilter={animalSpeciesFilter}
                     onSpeciesFilter={setAnimalSpeciesFilter}
-                    cityOptions={animalCityOptions}
+                    cityOptions={shelterCityOptions}
                     speciesCounts={animalSpeciesCounts}
                   />
                 )}
@@ -402,9 +408,8 @@ function App() {
         isSubmitting={mutations.updateMutation.isPending}
       />
       <AnimalDetailDialog
-        animal={selectedAnimal}
+        animal={animalForDetailModal}
         shelter={selectedAnimalShelter}
-        open={animalDetailOpen && Boolean(selectedAnimal)}
         onClose={handleCloseAnimalDetail}
         onEdit={() => {
           setAnimalEditOpen(true)

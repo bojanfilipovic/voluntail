@@ -32,6 +32,8 @@ export type ShelterMapHandle = {
 type Props = {
   shelters: Shelter[]
   selectedId: string | null
+  /** When set (e.g. animal detail open), emphasize this shelter pin without map selection state. */
+  animalContextShelterId?: string | null
   onSelectShelter: (s: Shelter) => void
   onClearSelection?: () => void
   placementOrRelocateActive?: boolean
@@ -61,6 +63,7 @@ export const ShelterMap = forwardRef<ShelterMapHandle, Props>(
     {
       shelters,
       selectedId,
+      animalContextShelterId = null,
       onSelectShelter,
       onClearSelection,
       placementOrRelocateActive = false,
@@ -183,9 +186,25 @@ export const ShelterMap = forwardRef<ShelterMapHandle, Props>(
                   'bg-primary',
                   s.id === selectedId &&
                     'scale-110 bg-blue-600 shadow-lg dark:bg-blue-500',
+                  s.id !== selectedId &&
+                    animalContextShelterId &&
+                    s.id === animalContextShelterId &&
+                    'scale-110 bg-emerald-600 shadow-lg dark:bg-emerald-500',
                 )}
-                aria-label={s.name}
-                title={s.name}
+                aria-label={
+                  s.id !== selectedId &&
+                  animalContextShelterId &&
+                  s.id === animalContextShelterId
+                    ? `${s.name} — shelter for selected animal`
+                    : s.name
+                }
+                title={
+                  s.id !== selectedId &&
+                  animalContextShelterId &&
+                  s.id === animalContextShelterId
+                    ? `${s.name} (selected animal's shelter)`
+                    : s.name
+                }
               />
             </Marker>
           ))}

@@ -13,10 +13,6 @@ type Props = {
   totalShelterCount: number | undefined
   selectedId: string | null
   onSelectShelter: (s: Shelter) => void
-  cityFilter: string | null
-  onCityFilter: (city: string | null) => void
-  /** Distinct non-empty cities for chips (stable sort). */
-  cityOptions: string[]
   speciesFilter: ShelterSpecies | null
   onSpeciesFilter: (species: ShelterSpecies | null) => void
   /** Full enum in canonical order, with match counts (shelter may be counted under several species). */
@@ -34,9 +30,6 @@ export function ShelterList({
   totalShelterCount,
   selectedId,
   onSelectShelter,
-  cityFilter,
-  onCityFilter,
-  cityOptions,
   speciesFilter,
   onSpeciesFilter,
   speciesFilters,
@@ -58,37 +51,6 @@ export function ShelterList({
           role="alert"
         >
           {error.message}
-        </div>
-      ) : null}
-
-      {cityOptions.length > 0 ? (
-        <div className="mb-4 flex flex-wrap gap-2" role="group" aria-label="Filter by city">
-          <Button
-            type="button"
-            size="sm"
-            variant={cityFilter === null ? 'default' : 'outline'}
-            onClick={() => onCityFilter(null)}
-            aria-pressed={cityFilter === null}
-          >
-            All cities
-            {totalShelterCount !== undefined ? (
-              <span className="text-muted-foreground ml-1 tabular-nums">
-                : {totalShelterCount}
-              </span>
-            ) : null}
-          </Button>
-          {cityOptions.map((city) => (
-            <Button
-              key={city}
-              type="button"
-              size="sm"
-              variant={cityFilter === city ? 'default' : 'outline'}
-              onClick={() => onCityFilter(cityFilter === city ? null : city)}
-              aria-pressed={cityFilter === city}
-            >
-              {city}
-            </Button>
-          ))}
         </div>
       ) : null}
 
