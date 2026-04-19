@@ -6,7 +6,9 @@ import { EditShelterDialog } from '@/components/EditShelterDialog'
 import { ShelterDetailDialog } from '@/components/ShelterDetailDialog'
 import { ShelterList } from '@/components/ShelterList'
 import { ShelterMap } from '@/components/ShelterMap'
+import { ShareFeedbackDialog } from '@/components/ShareFeedbackDialog'
 import { Button } from '@/components/ui/button'
+import { MessageSquare } from 'lucide-react'
 import { useShelterDiscoveryState } from '@/hooks/useShelterDiscoveryState'
 import { useShelterMutations } from '@/hooks/useShelterMutations'
 import { toQueryError } from '@/lib/queryError'
@@ -15,6 +17,7 @@ function App() {
   const mutations = useShelterMutations()
   const [speciesFilter, setSpeciesFilter] = useState<string | null>(null)
   const [editOpen, setEditOpen] = useState(false)
+  const [feedbackOpen, setFeedbackOpen] = useState(false)
 
   const { data, error, isPending } = useQuery({
     queryKey: ['shelters'],
@@ -75,12 +78,27 @@ function App() {
   return (
     <div className="bg-background text-foreground flex h-full min-h-0 flex-col overflow-hidden">
       <header className="border-border border-b px-6 py-4">
-        <h1 className="text-lg font-semibold tracking-tight">Voluntail</h1>
-        <p className="text-muted-foreground mt-1 max-w-2xl text-sm leading-relaxed">
-          Discover animal shelters in the Netherlands—explore the map or list, then open a shelter
-          for volunteer signup and donation links. Info here is curated; always confirm details on
-          the shelter&apos;s official site.
-        </p>
+        <div className="flex flex-col gap-4 md:flex-row md:items-start md:gap-6">
+          <div className="min-w-0 md:w-2/3">
+            <h1 className="text-lg font-semibold tracking-tight">Voluntail</h1>
+            <p className="text-muted-foreground mt-1 max-w-2xl text-sm leading-relaxed">
+              Discover animal shelters in the Netherlands—explore the map or list, then open a
+              shelter for volunteer signup and donation links. Info here is curated; always confirm
+              details on the shelter&apos;s official site.
+            </p>
+          </div>
+          <div className="flex shrink-0 md:mt-0 md:w-1/3 md:justify-end">
+            <Button
+              type="button"
+              variant="default"
+              className="w-full md:w-auto"
+              onClick={() => setFeedbackOpen(true)}
+            >
+              <MessageSquare aria-hidden />
+              Share feedback
+            </Button>
+          </div>
+        </div>
       </header>
       <main className="flex min-h-0 flex-1 flex-col overflow-hidden px-6 py-4">
         {/*
@@ -202,6 +220,7 @@ function App() {
         onSubmit={(id, body) => mutations.updateMutation.mutateAsync({ id, body })}
         isSubmitting={mutations.updateMutation.isPending}
       />
+      <ShareFeedbackDialog open={feedbackOpen} onOpenChange={setFeedbackOpen} />
     </div>
   )
 }
