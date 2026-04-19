@@ -22,6 +22,7 @@ object SheltersTable : Table("shelters") {
     val signupUrl = text("signup_url").nullable()
     val imageUrl = text("image_url").nullable()
     val donationUrl = text("donation_url").nullable()
+    val city = text("city")
 
     override val primaryKey = PrimaryKey(id)
 }

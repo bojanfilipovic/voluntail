@@ -39,7 +39,7 @@ class SheltersRoutesTest {
                 .post("/api/shelters") {
                     contentType(ContentType.Application.Json)
                     setBody(
-                        """{"name":"X","description":"Y","latitude":1.0,"longitude":2.0,"species":[]}""",
+                        """{"name":"X","description":"Y","latitude":1.0,"longitude":2.0,"species":[],"city":"Teststad"}""",
                     )
                 }.apply {
                     assertEquals(HttpStatusCode.Unauthorized, status)
@@ -55,7 +55,7 @@ class SheltersRoutesTest {
                     header("X-CMS-Key", TEST_CMS_KEY)
                     contentType(ContentType.Application.Json)
                     setBody(
-                        """{"name":"Bad Species","description":"X","latitude":52.0,"longitude":5.0,"species":["fish"]}""",
+                        """{"name":"Bad Species","description":"X","latitude":52.0,"longitude":5.0,"species":["fish"],"city":"Teststad"}""",
                     )
                 }.apply {
                     assertEquals(HttpStatusCode.BadRequest, status)
@@ -71,7 +71,7 @@ class SheltersRoutesTest {
                     header("X-CMS-Key", TEST_CMS_KEY)
                     contentType(ContentType.Application.Json)
                     setBody(
-                        """{"name":"API Test Shelter","description":"From test","latitude":52.0,"longitude":5.0,"species":["dog"]}""",
+                        """{"name":"API Test Shelter","description":"From test","latitude":52.0,"longitude":5.0,"species":["dog"],"city":"Teststad"}""",
                     )
                 }
             assertEquals(HttpStatusCode.Created, createRes.status)
@@ -96,7 +96,7 @@ class SheltersRoutesTest {
                     header("X-CMS-Key", TEST_CMS_KEY)
                     contentType(ContentType.Application.Json)
                     setBody(
-                        """{"name":"Patch Me","description":"Before","latitude":52.1,"longitude":5.1,"species":["cat"]}""",
+                        """{"name":"Patch Me","description":"Before","latitude":52.1,"longitude":5.1,"species":["cat"],"city":"Teststad"}""",
                     )
                 }
             assertEquals(HttpStatusCode.Created, createRes.status)

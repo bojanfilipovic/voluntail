@@ -49,6 +49,7 @@ export function EditShelterDialog({
   const [signupUrl, setSignupUrl] = useState('')
   const [imageUrl, setImageUrl] = useState('')
   const [donationUrl, setDonationUrl] = useState('')
+  const [city, setCity] = useState('')
   const [formError, setFormError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -62,6 +63,7 @@ export function EditShelterDialog({
     setSignupUrl(shelter.signupUrl ?? '')
     setImageUrl(shelter.imageUrl ?? '')
     setDonationUrl(shelter.donationUrl ?? '')
+    setCity(shelter.city)
     setFormError(null)
     /* eslint-enable react-hooks/set-state-in-effect */
   }, [shelter, open])
@@ -87,6 +89,7 @@ export function EditShelterDialog({
       latitude: coords.latitude,
       longitude: coords.longitude,
       species: sortShelterSpecies(speciesPicked),
+      city: city.trim(),
       signupUrl: signupUrl.trim(),
       imageUrl: imageUrl.trim(),
       donationUrl: donationUrl.trim(),
@@ -140,6 +143,17 @@ export function EditShelterDialog({
                   rows={3}
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="edit-city">City</Label>
+                <Input
+                  id="edit-city"
+                  name="city"
+                  autoComplete="address-level2"
+                  value={city}
+                  onChange={(e) => setCity(e.target.value)}
                   required
                 />
               </div>

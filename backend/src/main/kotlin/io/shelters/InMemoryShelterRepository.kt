@@ -8,6 +8,9 @@ class InMemoryShelterRepository : ShelterRepository {
     override suspend fun getAll(): List<ShelterResponse> =
         rows
 
+    override suspend fun findById(id: UUID): ShelterResponse? =
+        rows.firstOrNull { it.id == id.toString() }
+
     override suspend fun insert(request: ShelterCreateRequest): ShelterResponse {
         val id = UUID.randomUUID()
         return request.toShelterResponse(id).also { rows.add(it) }

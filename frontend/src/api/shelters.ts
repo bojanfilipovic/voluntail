@@ -20,6 +20,7 @@ export type ShelterCreatePayload = {
   latitude: number
   longitude: number
   species: ShelterSpecies[]
+  city: string
   signupUrl?: string | null
   imageUrl?: string | null
   donationUrl?: string | null

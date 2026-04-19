@@ -4,6 +4,13 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.response.respondText
 
+/** True when CMS key matches; does not send a response (for GET visibility branching). */
+fun ApplicationCall.isCmsAuthorized(): Boolean {
+    val expected = System.getenv("CMS_API_KEY")?.trim().orEmpty()
+    val provided = request.headers["X-CMS-Key"]?.trim().orEmpty()
+    return expected.isNotEmpty() && provided == expected
+}
+
 suspend fun ApplicationCall.ensureCmsAuthorized(): Boolean {
     val expected = System.getenv("CMS_API_KEY")?.trim().orEmpty()
     val provided = request.headers["X-CMS-Key"]?.trim().orEmpty()

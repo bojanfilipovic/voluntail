@@ -15,6 +15,7 @@ export const shelterSchema = z.object({
   signupUrl: z.string().nullish(),
   imageUrl: z.string().nullish(),
   donationUrl: z.string().nullish(),
+  city: z.string(),
 })
 
 export const sheltersListSchema = z.array(shelterSchema)
@@ -31,6 +32,7 @@ export const shelterPatchPayloadSchema = z.object({
   signupUrl: z.string().nullish(),
   imageUrl: z.string().nullish(),
   donationUrl: z.string().nullish(),
+  city: z.string().optional(),
 })
 
 export type ShelterPatchPayload = z.infer<typeof shelterPatchPayloadSchema>

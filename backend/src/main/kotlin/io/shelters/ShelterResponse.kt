@@ -14,4 +14,5 @@ data class ShelterResponse(
     val signupUrl: String?,
     val imageUrl: String?,
     val donationUrl: String?,
+    val city: String,
 )

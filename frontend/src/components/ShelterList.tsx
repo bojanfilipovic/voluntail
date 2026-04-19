@@ -123,7 +123,9 @@ export function ShelterList({
                   )}
                   <span className="flex min-w-0 flex-col gap-0.5">
                     <span className="text-foreground font-medium leading-snug">{s.name}</span>
-                    <span className="text-muted-foreground text-xs">{speciesLine(s)}</span>
+                    <span className="text-muted-foreground text-xs">
+                      {s.city} · {speciesLine(s)}
+                    </span>
                     <span className="text-foreground/90 line-clamp-3 text-sm leading-snug">
                       {s.description}
                     </span>
