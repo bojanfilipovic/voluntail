@@ -1,13 +1,17 @@
+import type { ShelterSpecies } from '@/domain/species'
+import {
+  parseJsonResponse,
+  rejectWithResponseBody,
+} from '@/lib/http'
 import {
   shelterSchema,
   sheltersListSchema,
   type Shelter,
   type ShelterPatchPayload,
-} from '../schemas/shelters'
-import type { ShelterSpecies } from '@/domain/species'
+} from '@/schemas/shelters'
 
 export type { Shelter }
-export type { ShelterPatchPayload } from '../schemas/shelters'
+export type { ShelterPatchPayload }
 
 export type ShelterCreatePayload = {
   name: string
@@ -21,6 +25,7 @@ export type ShelterCreatePayload = {
 }
 
 const SHELTERS_URL = '/api/shelters'
+const INVALID_JSON_SHELTERS = 'Invalid JSON from /api/shelters'
 
 const CMS_HEADER = 'X-CMS-Key'
 
@@ -35,14 +40,7 @@ export async function fetchShelters(): Promise<Shelter[]> {
   if (!res.ok) {
     throw new Error(`HTTP ${res.status}`)
   }
-
-  let raw: unknown
-  try {
-    raw = await res.json()
-  } catch {
-    throw new Error('Invalid JSON from /api/shelters')
-  }
-
+  const raw = await parseJsonResponse(res, INVALID_JSON_SHELTERS)
   return sheltersListSchema.parse(raw)
 }
 
@@ -56,10 +54,9 @@ export async function createShelter(body: ShelterCreatePayload): Promise<Shelter
     body: JSON.stringify(body),
   })
   if (!res.ok) {
-    const detail = await res.text().catch(() => '')
-    throw new Error(detail || `HTTP ${res.status}`)
+    await rejectWithResponseBody(res, `HTTP ${res.status}`)
   }
-  const raw: unknown = await res.json()
+  const raw = await parseJsonResponse(res, INVALID_JSON_SHELTERS)
   return shelterSchema.parse(raw)
 }
 
@@ -70,8 +67,7 @@ export async function deleteShelter(id: string): Promise<void> {
   })
   if (res.status === 204) return
   if (!res.ok) {
-    const detail = await res.text().catch(() => '')
-    throw new Error(detail || `HTTP ${res.status}`)
+    await rejectWithResponseBody(res, `HTTP ${res.status}`)
   }
 }
 
@@ -88,9 +84,8 @@ export async function updateShelter(
     body: JSON.stringify(body),
   })
   if (!res.ok) {
-    const detail = await res.text().catch(() => '')
-    throw new Error(detail || `HTTP ${res.status}`)
+    await rejectWithResponseBody(res, `HTTP ${res.status}`)
   }
-  const raw: unknown = await res.json()
+  const raw = await parseJsonResponse(res, INVALID_JSON_SHELTERS)
   return shelterSchema.parse(raw)
 }

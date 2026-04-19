@@ -5,9 +5,9 @@ import {
   useRef,
   useState,
 } from 'react'
-import type { Shelter, ShelterCreatePayload } from '../api/shelters'
-import type { MapCenter, ShelterMapHandle } from '../components/ShelterMap'
-import type { ShelterMutationsApi } from './useShelterMutations'
+import type { Shelter, ShelterCreatePayload } from '@/api/shelters'
+import type { MapCenter, ShelterMapHandle } from '@/components/ShelterMap'
+import type { ShelterMutationsApi } from '@/hooks/useShelterMutations'
 
 export function useShelterDiscoveryState(
   shelters: Shelter[] | undefined,

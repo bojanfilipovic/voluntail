@@ -1,6 +1,11 @@
-import { suggestionCreatedSchema, type SuggestionCreated } from '@/schemas/suggestions'
+import { parseJsonResponse, readErrorBody } from '@/lib/http'
+import {
+  suggestionCreatedSchema,
+  type SuggestionCreated,
+} from '@/schemas/suggestions'
 
 const SUGGESTIONS_URL = '/api/suggestions'
+const INVALID_JSON_SUGGESTIONS = 'Invalid JSON from /api/suggestions'
 
 export type { SuggestionCreated }
 
@@ -23,7 +28,7 @@ export async function postSuggestion(payload: {
   })
 
   if (!res.ok) {
-    const detail = await res.text().catch(() => '')
+    const detail = await readErrorBody(res)
     if (res.status === 503) {
       throw new Error(detail || 'Feedback is temporarily unavailable.')
     }
@@ -36,12 +41,6 @@ export async function postSuggestion(payload: {
     throw new Error(detail || `HTTP ${res.status}`)
   }
 
-  let raw: unknown
-  try {
-    raw = await res.json()
-  } catch {
-    throw new Error('Invalid JSON from /api/suggestions')
-  }
-
+  const raw = await parseJsonResponse(res, INVALID_JSON_SUGGESTIONS)
   return suggestionCreatedSchema.parse(raw)
 }
