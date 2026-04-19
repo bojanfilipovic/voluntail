@@ -1,5 +1,13 @@
 /** Closed vocabulary aligned with backend [io.shelters.ShelterSpecies]. */
-export const SPECIES_VALUES = ['dog', 'cat', 'rabbit', 'reptile'] as const
+export const SPECIES_VALUES = [
+  'dog',
+  'cat',
+  'rabbit',
+  'reptile',
+  'rodent',
+  'amphibian',
+  'wildlife',
+] as const
 
 export type ShelterSpecies = (typeof SPECIES_VALUES)[number]
 
@@ -9,6 +17,9 @@ export function speciesLabel(sp: ShelterSpecies): string {
     cat: 'Cat',
     rabbit: 'Rabbit',
     reptile: 'Reptile',
+    rodent: 'Rodent',
+    amphibian: 'Amphibian',
+    wildlife: 'Wildlife',
   }
   return labels[sp]
 }

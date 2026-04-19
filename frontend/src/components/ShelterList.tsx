@@ -3,15 +3,20 @@ import type { Shelter } from '@/api/shelters'
 import { speciesLabel, type ShelterSpecies } from '@/domain/species'
 import { cn } from '@/lib/utils'
 
+type SpeciesFilterRow = { species: ShelterSpecies; count: number }
+
 type Props = {
   shelters: Shelter[] | undefined
   error: Error | null
   isPending: boolean
+  /** Total rows in the unfiltered directory; used for the "All" chip count. */
+  totalShelterCount: number | undefined
   selectedId: string | null
   onSelectShelter: (s: Shelter) => void
   speciesFilter: ShelterSpecies | null
   onSpeciesFilter: (species: ShelterSpecies | null) => void
-  speciesOptions: ShelterSpecies[]
+  /** Full enum in canonical order, with match counts (shelter may be counted under several species). */
+  speciesFilters: SpeciesFilterRow[]
 }
 
 function speciesLine(s: Shelter): string {
@@ -22,11 +27,12 @@ export function ShelterList({
   shelters,
   error,
   isPending,
+  totalShelterCount,
   selectedId,
   onSelectShelter,
   speciesFilter,
   onSpeciesFilter,
-  speciesOptions,
+  speciesFilters,
 }: Props) {
   return (
     <section className="text-start" aria-labelledby="shelters-heading">
@@ -39,25 +45,37 @@ export function ShelterList({
         proxied by Vite.
       </p>
 
-      {speciesOptions.length > 0 ? (
+      {speciesFilters.length > 0 ? (
         <div className="mb-4 flex flex-wrap gap-2" role="group" aria-label="Filter by species">
           <Button
             type="button"
             size="sm"
             variant={speciesFilter === null ? 'default' : 'outline'}
             onClick={() => onSpeciesFilter(null)}
+            aria-pressed={speciesFilter === null}
           >
             All
+            {totalShelterCount !== undefined ? (
+              <span className="text-muted-foreground ml-1 tabular-nums">: {totalShelterCount}</span>
+            ) : null}
           </Button>
-          {speciesOptions.map((sp) => (
+          {speciesFilters.map(({ species: sp, count }) => (
             <Button
               key={sp}
               type="button"
               size="sm"
               variant={speciesFilter === sp ? 'default' : 'outline'}
+              className={cn(
+                count === 0 &&
+                  speciesFilter !== sp &&
+                  'text-muted-foreground opacity-55 hover:opacity-80',
+              )}
+              aria-pressed={speciesFilter === sp}
+              aria-label={`${speciesLabel(sp)}: ${count} shelters`}
               onClick={() => onSpeciesFilter(speciesFilter === sp ? null : sp)}
             >
-              {speciesLabel(sp)}
+              <span>{speciesLabel(sp)}</span>
+              <span className="text-muted-foreground ml-1 tabular-nums">: {count}</span>
             </Button>
           ))}
         </div>
