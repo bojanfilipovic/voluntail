@@ -20,9 +20,36 @@ fun Application.configureHTTP() {
         allowMethod(HttpMethod.Post)
         allowHeader(HttpHeaders.Authorization)
         allowHeader(HttpHeaders.ContentType)
-        // TODO bfilipovic: clean this up
-        // Tighten before prod: Vercel preview + local Vite; add Railway host via env when needed.
+        allowHeader("X-CMS-Key")
+        applyCorsOriginsFromEnv()
+    }
+}
+
+private fun io.ktor.server.plugins.cors.CORSConfig.applyCorsOriginsFromEnv() {
+    val raw = System.getenv("CORS_ORIGINS")?.trim().orEmpty()
+    if (raw.isNotEmpty()) {
+        for (token in raw.split(',').map { it.trim() }.filter { it.isNotEmpty() }) {
+            applyOneCorsOrigin(token)
+        }
+    } else {
         allowHost("localhost:5173", schemes = listOf("http"))
         allowHost("localhost:4173", schemes = listOf("http"))
+    }
+}
+
+private fun io.ktor.server.plugins.cors.CORSConfig.applyOneCorsOrigin(token: String) {
+    if (token.startsWith("http://") || token.startsWith("https://")) {
+        val uri = java.net.URI.create(token)
+        val scheme = uri.scheme ?: return
+        val hostPart = uri.host ?: return
+        val port = uri.port
+        val hostWithPort =
+            when {
+                port == -1 -> hostPart
+                else -> "$hostPart:$port"
+            }
+        allowHost(hostWithPort, schemes = listOf(scheme))
+    } else {
+        allowHost(token, schemes = listOf("http", "https"))
     }
 }

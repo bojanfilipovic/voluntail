@@ -45,8 +45,12 @@ export function AddShelterDialog({
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [speciesRaw, setSpeciesRaw] = useState('')
-  const [latitude, setLatitude] = useState('')
-  const [longitude, setLongitude] = useState('')
+  const [latitude, setLatitude] = useState(() =>
+    draftLocation ? String(draftLocation.latitude) : '',
+  )
+  const [longitude, setLongitude] = useState(() =>
+    draftLocation ? String(draftLocation.longitude) : '',
+  )
   const [signupUrl, setSignupUrl] = useState('')
   const [imageUrl, setImageUrl] = useState('')
   const [donationUrl, setDonationUrl] = useState('')
@@ -56,15 +60,6 @@ export function AddShelterDialog({
     const el = dialogRef.current
     if (!el) return
     if (open && draftLocation) {
-      setName('')
-      setDescription('')
-      setSpeciesRaw('')
-      setSignupUrl('')
-      setImageUrl('')
-      setDonationUrl('')
-      setLatitude(String(draftLocation.latitude))
-      setLongitude(String(draftLocation.longitude))
-      setFormError(null)
       if (!el.open) el.showModal()
       requestAnimationFrame(() => {
         closeButtonRef.current?.focus()
