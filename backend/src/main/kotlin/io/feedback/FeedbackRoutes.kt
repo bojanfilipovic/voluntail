@@ -8,7 +8,8 @@ import io.ktor.server.routing.Route
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 
-const val SUGGESTION_MAX_MESSAGE_LENGTH = 8000
+const val SUGGESTION_MAX_MESSAGE_LENGTH = 4000
+const val SUGGESTION_MAX_CONTACT_LENGTH = 100
 
 fun Route.feedbackRoutes(
     repository: FeedbackRepository?,
@@ -28,6 +29,8 @@ fun Route.feedbackRoutes(
                 }
 
             val trimmed = body.message.trim()
+            val contactNormalized =
+                body.contact?.trim()?.takeUnless { it.isEmpty() }
             when {
                 trimmed.isEmpty() ->
                     call.respondText(
@@ -37,6 +40,12 @@ fun Route.feedbackRoutes(
                 trimmed.length > SUGGESTION_MAX_MESSAGE_LENGTH ->
                     call.respondText(
                         "Message exceeds maximum length ($SUGGESTION_MAX_MESSAGE_LENGTH characters)",
+                        status = HttpStatusCode.BadRequest,
+                    )
+                contactNormalized != null &&
+                    contactNormalized.length > SUGGESTION_MAX_CONTACT_LENGTH ->
+                    call.respondText(
+                        "Contact exceeds maximum length ($SUGGESTION_MAX_CONTACT_LENGTH characters)",
                         status = HttpStatusCode.BadRequest,
                     )
                 else -> {
@@ -56,7 +65,7 @@ fun Route.feedbackRoutes(
                         )
                         return@post
                     }
-                    val created = repo.insert(trimmed)
+                    val created = repo.insert(trimmed, contactNormalized)
                     call.respond(HttpStatusCode.Created, created)
                 }
             }

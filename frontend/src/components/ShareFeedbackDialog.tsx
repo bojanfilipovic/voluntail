@@ -10,11 +10,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { PartyPopper } from 'lucide-react'
 
-const MAX_MESSAGE_LENGTH = 8000
+const MAX_MESSAGE_LENGTH = 4000
+const MAX_CONTACT_LENGTH = 100
 
 type Props = {
   open: boolean
@@ -23,14 +25,19 @@ type Props = {
 
 export function ShareFeedbackDialog({ open, onOpenChange }: Props) {
   const [message, setMessage] = useState('')
+  const [contact, setContact] = useState('')
   const mutation = useMutation({
     mutationFn: postSuggestion,
-    onSuccess: () => setMessage(''),
+    onSuccess: () => {
+      setMessage('')
+      setContact('')
+    },
   })
 
   const handleOpenChange = (next: boolean) => {
     if (!next) {
       setMessage('')
+      setContact('')
       mutation.reset()
     }
     onOpenChange(next)
@@ -44,7 +51,7 @@ export function ShareFeedbackDialog({ open, onOpenChange }: Props) {
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     if (submitDisabled) return
-    mutation.mutate(trimmed)
+    mutation.mutate({ message: trimmed, contact })
   }
 
   return (
@@ -81,16 +88,45 @@ export function ShareFeedbackDialog({ open, onOpenChange }: Props) {
                   }
                   className="min-h-[120px] resize-y"
                 />
+                {tooLong ? (
+                  <p id="peer-feedback-modal-too-long" className="text-destructive text-xs" role="alert">
+                    Message exceeds {MAX_MESSAGE_LENGTH.toLocaleString()} characters.
+                  </p>
+                ) : (
+                  <p id="peer-feedback-modal-counter" className="text-muted-foreground text-xs">
+                    {message.length.toLocaleString()} / {MAX_MESSAGE_LENGTH.toLocaleString()} characters
+                  </p>
+                )}
               </div>
-              {tooLong ? (
-                <p id="peer-feedback-modal-too-long" className="text-destructive text-xs" role="alert">
-                  Message exceeds {MAX_MESSAGE_LENGTH.toLocaleString()} characters.
+              <div className="space-y-2">
+                <div className="flex flex-col gap-1">
+                  <Label htmlFor="peer-feedback-modal-contact">How to reach you (optional)</Label>
+                  <p id="peer-feedback-modal-contact-hint" className="text-muted-foreground text-xs">
+                    Leave blank if you prefer — your message above still counts either way.
+                  </p>
+                </div>
+                <Input
+                  id="peer-feedback-modal-contact"
+                  name="contact"
+                  type="text"
+                  autoComplete="off"
+                  value={contact}
+                  onChange={(e) => {
+                    setContact(e.target.value)
+                    mutation.reset()
+                  }}
+                  placeholder="Name, email, or handle"
+                  maxLength={MAX_CONTACT_LENGTH}
+                  aria-describedby="peer-feedback-modal-contact-hint peer-feedback-modal-contact-counter"
+                  className="max-w-full"
+                />
+                <p
+                  id="peer-feedback-modal-contact-counter"
+                  className="text-muted-foreground text-xs"
+                >
+                  {contact.length.toLocaleString()} / {MAX_CONTACT_LENGTH.toLocaleString()} characters
                 </p>
-              ) : (
-                <p id="peer-feedback-modal-counter" className="text-muted-foreground text-xs">
-                  {message.length.toLocaleString()} / {MAX_MESSAGE_LENGTH.toLocaleString()} characters
-                </p>
-              )}
+              </div>
               {mutation.isError ? (
                 <p className="text-destructive text-sm" role="alert">
                   {mutation.error instanceof Error

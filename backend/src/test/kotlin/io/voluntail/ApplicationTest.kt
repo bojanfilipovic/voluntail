@@ -155,11 +155,27 @@ class ApplicationTest {
             application {
                 module()
             }
-            val longMessage = "a".repeat(8001)
+            val longMessage = "a".repeat(4001)
             client
                 .post("/api/suggestions") {
                     contentType(ContentType.Application.Json)
                     setBody("""{"message":"$longMessage"}""")
+                }.apply {
+                    assertEquals(HttpStatusCode.BadRequest, status)
+                }
+        }
+
+    @Test
+    fun testPostSuggestionContactTooLongReturns400() =
+        testApplication {
+            application {
+                module()
+            }
+            val longContact = "a".repeat(101)
+            client
+                .post("/api/suggestions") {
+                    contentType(ContentType.Application.Json)
+                    setBody("""{"message":"Thanks!","contact":"$longContact"}""")
                 }.apply {
                     assertEquals(HttpStatusCode.BadRequest, status)
                 }

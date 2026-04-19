@@ -4,11 +4,22 @@ const SUGGESTIONS_URL = '/api/suggestions'
 
 export type { SuggestionCreated }
 
-export async function postSuggestion(message: string): Promise<SuggestionCreated> {
+export async function postSuggestion(payload: {
+  message: string
+  contact?: string
+}): Promise<SuggestionCreated> {
+  const body: { message: string; contact?: string } = {
+    message: payload.message,
+  }
+  const c = payload.contact?.trim()
+  if (c) {
+    body.contact = c
+  }
+
   const res = await fetch(SUGGESTIONS_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ message }),
+    body: JSON.stringify(body),
   })
 
   if (!res.ok) {

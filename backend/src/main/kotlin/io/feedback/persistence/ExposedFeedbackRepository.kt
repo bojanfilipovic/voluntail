@@ -22,7 +22,10 @@ class ExposedFeedbackRepository(
             }
         }
 
-    override suspend fun insert(message: String): SuggestionCreatedResponse =
+    override suspend fun insert(
+        message: String,
+        contact: String?,
+    ): SuggestionCreatedResponse =
         withContext(Dispatchers.IO) {
             suspendTransaction(db = database, readOnly = false) {
                 val newId = UUID.randomUUID()
@@ -31,6 +34,7 @@ class ExposedFeedbackRepository(
                     row[PeerFeedbackTable.id] = newId
                     row[PeerFeedbackTable.createdAt] = createdAt
                     row[PeerFeedbackTable.message] = message
+                    row[PeerFeedbackTable.contact] = contact
                 }
                 SuggestionCreatedResponse(
                     id = newId.toString(),

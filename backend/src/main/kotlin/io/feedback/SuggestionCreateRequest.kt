@@ -5,4 +5,5 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class SuggestionCreateRequest(
     val message: String,
+    val contact: String? = null,
 )

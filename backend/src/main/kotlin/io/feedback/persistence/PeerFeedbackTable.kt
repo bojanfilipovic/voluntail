@@ -8,6 +8,7 @@ internal object PeerFeedbackTable : Table("peer_feedback") {
     val id = javaUUID("id")
     val createdAt = timestampWithTimeZone("created_at")
     val message = text("message")
+    val contact = text("contact").nullable()
 
     override val primaryKey = PrimaryKey(id)
 }
