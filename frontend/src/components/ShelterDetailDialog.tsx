@@ -55,7 +55,7 @@ export function ShelterDetailDialog({
                 <div className="min-h-32 w-full bg-gradient-to-br from-muted to-muted/60" aria-hidden />
               )}
             </div>
-            <DialogHeader className="border-b gap-0 space-y-0 px-4 pt-4 pb-3">
+            <DialogHeader className="border-b px-4 pt-4 pb-2">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0 flex-1 space-y-2">
                   <DialogTitle id="shelter-dialog-title">{shelter.name}</DialogTitle>
