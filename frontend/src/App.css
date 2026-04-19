@@ -121,6 +121,27 @@
   transform: rotate(-45deg) scale(1.12);
 }
 
+.map-pin--draft {
+  pointer-events: none;
+  background: #f59e0b;
+  border-color: var(--bg);
+  transform: rotate(-45deg) scale(1.18);
+  box-shadow:
+    0 0 0 3px rgba(245, 158, 11, 0.45),
+    var(--shadow);
+  animation: map-pin-draft-pulse 1.25s ease-in-out infinite;
+}
+
+@keyframes map-pin-draft-pulse {
+  0%,
+  100% {
+    filter: brightness(1);
+  }
+  50% {
+    filter: brightness(1.12);
+  }
+}
+
 .map-cms-toolbar {
   flex-shrink: 0;
   display: flex;
@@ -158,8 +179,63 @@
   color: #a33;
 }
 
+.map-cms-btn--active:not(:disabled) {
+  border-color: var(--accent-border);
+  background: var(--accent-bg);
+  outline: 1px solid var(--accent-border);
+}
+
+.map-cms-btn--primary:not(:disabled) {
+  background: var(--accent);
+  color: var(--bg);
+  border-color: var(--accent);
+}
+
+.map-cms-btn--primary:not(:disabled):hover {
+  filter: brightness(1.05);
+}
+
+.map-cms-hint {
+  font-size: 0.8rem;
+  opacity: 0.88;
+  flex: 1 1 12rem;
+  min-width: 0;
+}
+
+.map-shell--placing .mapboxgl-canvas-container {
+  cursor: crosshair;
+}
+
 .map-cms-error {
   margin: 0 0 0.75rem;
+}
+
+/* Add shelter: viewport-limited height + scroll body so header/close stays reachable */
+.shelter-dialog.add-shelter-dialog {
+  max-height: min(90vh, calc(100dvh - 2rem));
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.add-shelter-dialog-inner {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1;
+}
+
+.add-shelter-dialog-header {
+  flex-shrink: 0;
+}
+
+.add-shelter-dialog-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 .shelter-dialog {
@@ -410,4 +486,69 @@
 
 .shelters-list a {
   font-size: 0.85rem;
+}
+
+.add-shelter-dialog-scroll .add-shelter-form {
+  padding: 0 1rem 1rem;
+}
+
+.add-shelter-lead {
+  margin: 0 0 0.75rem;
+  font-size: 0.88rem;
+  line-height: 1.45;
+  opacity: 0.92;
+}
+
+.add-shelter-error {
+  color: #c44;
+  margin: 0 0 0.75rem;
+  font-size: 0.88rem;
+}
+
+.add-shelter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-bottom: 0.65rem;
+  font-size: 0.85rem;
+}
+
+.add-shelter-field span {
+  opacity: 0.9;
+}
+
+.add-shelter-field input,
+.add-shelter-field textarea {
+  font: inherit;
+  padding: 0.4rem 0.5rem;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+}
+
+.add-shelter-field textarea {
+  resize: vertical;
+  min-height: 4rem;
+}
+
+.add-shelter-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+@media (max-width: 520px) {
+  .add-shelter-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.add-shelter-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: flex-end;
+  margin-top: 0.5rem;
+  padding-top: 0.25rem;
 }

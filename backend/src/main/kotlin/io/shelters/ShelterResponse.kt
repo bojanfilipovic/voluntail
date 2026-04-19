@@ -10,7 +10,6 @@ data class ShelterResponse(
     val description: String,
     val latitude: Double,
     val longitude: Double,
-    val registryTag: RegistryTag,
     val species: List<String>,
     val signupUrl: String?,
     val imageUrl: String?,

@@ -1,12 +1,9 @@
-export type RegistryTag = 'DOA' | 'ROZ'
-
 export type Shelter = {
   id: string
   name: string
   description: string
   latitude: number
   longitude: number
-  registryTag: RegistryTag
   species: string[]
   signupUrl: string | null
   imageUrl: string | null
@@ -18,7 +15,6 @@ export type ShelterCreatePayload = {
   description: string
   latitude: number
   longitude: number
-  registryTag: RegistryTag
   species: string[]
   signupUrl?: string | null
   imageUrl?: string | null

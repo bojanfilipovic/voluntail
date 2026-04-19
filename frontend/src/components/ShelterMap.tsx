@@ -9,6 +9,7 @@ import {
 import Map, {
   Marker,
   NavigationControl,
+  type MapMouseEvent,
   type MapRef,
 } from 'react-map-gl/mapbox'
 import type { Shelter } from '../api/shelters'
@@ -31,6 +32,10 @@ type Props = {
   selectedId: string | null
   onSelectShelter: (s: Shelter) => void
   onClearSelection?: () => void
+  /** First-time placement or moving the draft pin before the add modal. */
+  placementOrRelocateActive?: boolean
+  draftLocation?: MapCenter | null
+  onDraftPosition?: (c: MapCenter) => void
 }
 
 function validShelters(shelters: Shelter[]): Shelter[] {
@@ -49,7 +54,15 @@ function defaultCenter(): MapCenter {
 
 export const ShelterMap = forwardRef<ShelterMapHandle, Props>(
   function ShelterMap(
-    { shelters, selectedId, onSelectShelter, onClearSelection },
+    {
+      shelters,
+      selectedId,
+      onSelectShelter,
+      onClearSelection,
+      placementOrRelocateActive = false,
+      draftLocation = null,
+      onDraftPosition,
+    },
     ref,
   ) {
     const mapRef = useRef<MapRef>(null)
@@ -77,9 +90,25 @@ export const ShelterMap = forwardRef<ShelterMapHandle, Props>(
       },
     }))
 
-    const handleMapClick = useCallback(() => {
-      onClearSelection?.()
-    }, [onClearSelection])
+    const handleMapClick = useCallback(
+      (e: MapMouseEvent) => {
+        if (placementOrRelocateActive && onDraftPosition) {
+          const lngLat = e.lngLat
+          if (!lngLat) return
+          onDraftPosition({
+            latitude: lngLat.lat,
+            longitude: lngLat.lng,
+          })
+          return
+        }
+        onClearSelection?.()
+      },
+      [
+        onClearSelection,
+        onDraftPosition,
+        placementOrRelocateActive,
+      ],
+    )
 
     if (!token) {
       return (
@@ -93,8 +122,12 @@ export const ShelterMap = forwardRef<ShelterMapHandle, Props>(
       )
     }
 
+    const shellClass =
+      'map-shell' +
+      (placementOrRelocateActive ? ' map-shell--placing' : '')
+
     return (
-      <div className="map-shell">
+      <div className={shellClass}>
         <Map
           ref={mapRef}
           mapboxAccessToken={token}
@@ -103,6 +136,7 @@ export const ShelterMap = forwardRef<ShelterMapHandle, Props>(
           mapStyle="mapbox://styles/mapbox/light-v11"
           reuseMaps
           onClick={handleMapClick}
+          cursor={placementOrRelocateActive ? 'crosshair' : undefined}
         >
           <NavigationControl position="top-right" showCompass={false} />
           {points.map((s) => (
@@ -128,6 +162,21 @@ export const ShelterMap = forwardRef<ShelterMapHandle, Props>(
               />
             </Marker>
           ))}
+          {draftLocation &&
+          Number.isFinite(draftLocation.latitude) &&
+          Number.isFinite(draftLocation.longitude) ? (
+            <Marker
+              longitude={draftLocation.longitude}
+              latitude={draftLocation.latitude}
+              anchor="bottom"
+            >
+              <span
+                className="map-pin map-pin--draft"
+                aria-label="Draft pin location"
+                title="Draft pin — use Enter details to save"
+              />
+            </Marker>
+          ) : null}
         </Map>
       </div>
     )
