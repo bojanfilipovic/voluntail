@@ -133,4 +133,50 @@ class ApplicationTest {
                 header("X-CMS-Key", "test-secret")
             }
         }
+
+    @Test
+    fun testPostSuggestionEmptyMessageReturns400() =
+        testApplication {
+            application {
+                module()
+            }
+            client
+                .post("/api/suggestions") {
+                    contentType(ContentType.Application.Json)
+                    setBody("""{"message":""}""")
+                }.apply {
+                    assertEquals(HttpStatusCode.BadRequest, status)
+                }
+        }
+
+    @Test
+    fun testPostSuggestionTooLongReturns400() =
+        testApplication {
+            application {
+                module()
+            }
+            val longMessage = "a".repeat(8001)
+            client
+                .post("/api/suggestions") {
+                    contentType(ContentType.Application.Json)
+                    setBody("""{"message":"$longMessage"}""")
+                }.apply {
+                    assertEquals(HttpStatusCode.BadRequest, status)
+                }
+        }
+
+    @Test
+    fun testPostSuggestionWithoutDbReturns503() =
+        testApplication {
+            application {
+                module()
+            }
+            client
+                .post("/api/suggestions") {
+                    contentType(ContentType.Application.Json)
+                    setBody("""{"message":"Thanks for the pilot build!"}""")
+                }.apply {
+                    assertEquals(HttpStatusCode.ServiceUnavailable, status)
+                }
+        }
 }

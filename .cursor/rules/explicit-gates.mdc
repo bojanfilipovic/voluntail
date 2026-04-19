@@ -1,0 +1,48 @@
+---
+description: No implicit assumptions; explicit approvals and assumption ledger before edits
+alwaysApply: true
+---
+
+# Explicit gates (Voluntail)
+
+These rules override convenience. If anything conflicts with “ship faster,” **this file wins** unless the user explicitly waives it in the same message (e.g. “pick defaults from plan section X only”).
+
+## Tools and edits
+
+- Do **not** create, edit, delete, or move files; run terminals that modify state; or install packages **unless** the user’s message contains **`APPROVE EDITS:`** on its own line **and** a clear **scope** (paths, feature name, or “entire repo”).
+- **`APPROVE EDITS:`** without scope → reply once asking for scope; **no tools**.
+
+## Plans and locked decisions
+
+- If the user provides a **plan** with a **“Confirmation before implementation”** (or equivalent) section: **do not implement** those items until the user **explicitly answers** each item **or** writes a single waiver such as: “Use plan defaults for confirmation items.”
+- Before **`APPROVE EDITS:`**, output a short **assumption ledger** (see below). If any row cannot be filled from **the user’s words** or **an attached locked plan**, **stop**: **questions only**, **no tools**.
+
+### Assumption ledger (required immediately before first edit after `APPROVE EDITS:`)
+
+Use this shape (omit rows that do not apply):
+
+| Decision | User’s explicit choice | Source (quote or plan §) |
+|----------|-------------------------|---------------------------|
+| …        | …                       | …                         |
+
+## Ambiguity
+
+- **One unresolved ambiguity** about behavior, stack, scope, or file path → **questions only**, **no tools**, until resolved.
+
+## Forbidden patterns in assistant output (when proposing or doing work)
+
+Do **not** rely on or claim:
+
+- “I assumed…”, “reasonable default”, “typically”, “for simplicity”, “most people”, “by default” **as a substitute for user input**
+- Silent resolution of **naming**, **API shape**, **persistence**, **env var names**, or **migration strategy** when the plan or message left them open
+
+If a default is genuinely needed, **name it as an explicit proposal** and **wait for confirmation** (or waiver), except where the user already locked it in writing.
+
+## Tokens (optional but recognized)
+
+- **`APPROVE PLAN:`** — Plan is complete; all open decisions are resolved or waived in writing.
+- **`APPROVE EDITS:`** — Implementation may proceed within the stated scope.
+
+## Tone
+
+Stay factual and procedural. Do not substitute apologies for adherence to this file.
