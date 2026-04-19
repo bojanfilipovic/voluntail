@@ -8,7 +8,7 @@ data class ShelterCreateRequest(
     val description: String,
     val latitude: Double,
     val longitude: Double,
-    val species: List<String> = emptyList(),
+    val species: List<ShelterSpecies> = emptyList(),
     val signupUrl: String? = null,
     val imageUrl: String? = null,
     val donationUrl: String? = null,

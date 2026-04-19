@@ -9,6 +9,7 @@ import {
 import { Button, buttonVariants } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import type { Shelter } from '@/api/shelters'
+import { speciesLabel } from '@/domain/species'
 
 type Props = {
   shelter: Shelter | null
@@ -47,7 +48,9 @@ export function ShelterDetailDialog({
             <DialogHeader className="border-b px-4 pt-4 pb-2">
               <DialogTitle id="shelter-dialog-title">{shelter.name}</DialogTitle>
               <DialogDescription className="text-muted-foreground text-sm">
-                {shelter.species.length ? shelter.species.join(', ') : '—'}
+                {shelter.species.length
+                  ? shelter.species.map(speciesLabel).join(', ')
+                  : '—'}
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-3 px-4 py-3 text-sm leading-relaxed">

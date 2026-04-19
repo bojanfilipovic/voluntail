@@ -10,7 +10,7 @@ data class ShelterResponse(
     val description: String,
     val latitude: Double,
     val longitude: Double,
-    val species: List<String>,
+    val species: List<ShelterSpecies>,
     val signupUrl: String?,
     val imageUrl: String?,
     val donationUrl: String?,

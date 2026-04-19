@@ -1,5 +1,9 @@
 import { z } from 'zod'
 
+import { SPECIES_VALUES } from '@/domain/species'
+
+const shelterSpeciesEnum = z.enum(SPECIES_VALUES)
+
 /** Mirrors GET /api/shelters items and POST success body. */
 export const shelterSchema = z.object({
   id: z.string(),
@@ -7,7 +11,7 @@ export const shelterSchema = z.object({
   description: z.string(),
   latitude: z.number(),
   longitude: z.number(),
-  species: z.array(z.string()),
+  species: z.array(shelterSpeciesEnum),
   signupUrl: z.string().nullish(),
   imageUrl: z.string().nullish(),
   donationUrl: z.string().nullish(),
@@ -23,7 +27,7 @@ export const shelterPatchPayloadSchema = z.object({
   description: z.string().optional(),
   latitude: z.number().optional(),
   longitude: z.number().optional(),
-  species: z.array(z.string()).optional(),
+  species: z.array(shelterSpeciesEnum).optional(),
   signupUrl: z.string().nullish(),
   imageUrl: z.string().nullish(),
   donationUrl: z.string().nullish(),

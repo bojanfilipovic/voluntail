@@ -4,6 +4,7 @@ import {
   type Shelter,
   type ShelterPatchPayload,
 } from '../schemas/shelters'
+import type { ShelterSpecies } from '@/domain/species'
 
 export type { Shelter }
 export type { ShelterPatchPayload } from '../schemas/shelters'
@@ -13,7 +14,7 @@ export type ShelterCreatePayload = {
   description: string
   latitude: number
   longitude: number
-  species: string[]
+  species: ShelterSpecies[]
   signupUrl?: string | null
   imageUrl?: string | null
   donationUrl?: string | null

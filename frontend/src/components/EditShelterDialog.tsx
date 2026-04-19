@@ -11,6 +11,12 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import {
+  SPECIES_VALUES,
+  sortShelterSpecies,
+  speciesLabel,
+  type ShelterSpecies,
+} from '@/domain/species'
 import type { ShelterPatchPayload } from '@/schemas/shelters'
 
 type Props = {
@@ -19,13 +25,6 @@ type Props = {
   onClose: () => void
   onSubmit: (id: string, body: ShelterPatchPayload) => Promise<unknown>
   isSubmitting: boolean
-}
-
-function parseSpecies(raw: string): string[] {
-  return raw
-    .split(',')
-    .map((s) => s.trim())
-    .filter(Boolean)
 }
 
 export function EditShelterDialog({
@@ -37,7 +36,7 @@ export function EditShelterDialog({
 }: Props) {
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
-  const [speciesRaw, setSpeciesRaw] = useState('')
+  const [speciesPicked, setSpeciesPicked] = useState<ShelterSpecies[]>([])
   const [latitude, setLatitude] = useState('')
   const [longitude, setLongitude] = useState('')
   const [signupUrl, setSignupUrl] = useState('')
@@ -50,7 +49,7 @@ export function EditShelterDialog({
     /* eslint-disable react-hooks/set-state-in-effect -- hydrate form when dialog opens */
     setName(shelter.name)
     setDescription(shelter.description)
-    setSpeciesRaw(shelter.species.join(', '))
+    setSpeciesPicked([...shelter.species])
     setLatitude(String(shelter.latitude))
     setLongitude(String(shelter.longitude))
     setSignupUrl(shelter.signupUrl ?? '')
@@ -79,7 +78,7 @@ export function EditShelterDialog({
       description: description.trim(),
       latitude: lat,
       longitude: lng,
-      species: parseSpecies(speciesRaw),
+      species: sortShelterSpecies(speciesPicked),
       signupUrl: signupUrl.trim(),
       imageUrl: imageUrl.trim(),
       donationUrl: donationUrl.trim(),
@@ -158,16 +157,36 @@ export function EditShelterDialog({
                   />
                 </div>
               </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="edit-species">Species (comma-separated)</Label>
-                <Input
-                  id="edit-species"
-                  name="species"
-                  value={speciesRaw}
-                  onChange={(e) => setSpeciesRaw(e.target.value)}
-                  placeholder="dog, cat"
-                />
-              </div>
+              <fieldset className="space-y-2">
+                <legend className="text-foreground mb-1.5 text-sm font-medium">
+                  Species
+                </legend>
+                <div className="flex flex-col gap-2">
+                  {SPECIES_VALUES.map((sp) => (
+                    <label
+                      key={sp}
+                      htmlFor={`edit-species-${sp}`}
+                      className="flex cursor-pointer items-center gap-2 text-sm"
+                    >
+                      <input
+                        id={`edit-species-${sp}`}
+                        type="checkbox"
+                        name="species"
+                        checked={speciesPicked.includes(sp)}
+                        onChange={() =>
+                          setSpeciesPicked((prev) =>
+                            prev.includes(sp)
+                              ? prev.filter((x) => x !== sp)
+                              : [...prev, sp],
+                          )
+                        }
+                        className="border-input accent-primary size-4 rounded"
+                      />
+                      <span>{speciesLabel(sp)}</span>
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
               <div className="space-y-1.5">
                 <Label htmlFor="edit-signup">Signup URL</Label>
                 <Input
