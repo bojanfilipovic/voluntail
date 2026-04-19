@@ -1,5 +1,8 @@
 package io.voluntail
 
+import io.animals.AnimalRepository
+import io.animals.InMemoryAnimalRepository
+import io.animals.persistence.ExposedAnimalRepository
 import io.feedback.FeedbackRepository
 import io.feedback.persistence.ExposedFeedbackRepository
 import io.shelters.InMemoryShelterRepository
@@ -7,14 +10,25 @@ import io.shelters.ShelterRepository
 import io.shelters.persistence.ExposedShelterRepository
 import org.jetbrains.exposed.v1.jdbc.Database
 
+data class ApplicationRepositories(
+    val shelterRepository: ShelterRepository,
+    val animalRepository: AnimalRepository,
+    val feedbackRepository: FeedbackRepository?,
+)
+
 /**
  * Single JDBC pool + single Exposed [Database] per process when [DB_URL] is set.
  * Shelters fall back to in-memory samples without DB; feedback stays unavailable until DB is configured.
  */
-fun createApplicationRepositories(): Pair<ShelterRepository, FeedbackRepository?> {
+fun createApplicationRepositories(): ApplicationRepositories {
     val jdbcUrl = System.getenv("DB_URL")?.trim().orEmpty()
     return if (jdbcUrl.isEmpty()) {
-        InMemoryShelterRepository() to null
+        val shelters = InMemoryShelterRepository()
+        ApplicationRepositories(
+            shelterRepository = shelters,
+            animalRepository = InMemoryAnimalRepository(shelters),
+            feedbackRepository = null,
+        )
     } else {
         val database =
             Database.connect(
@@ -23,6 +37,10 @@ fun createApplicationRepositories(): Pair<ShelterRepository, FeedbackRepository?
                     "voluntail-pg",
                 ),
             )
-        ExposedShelterRepository(database) to ExposedFeedbackRepository(database)
+        ApplicationRepositories(
+            shelterRepository = ExposedShelterRepository(database),
+            animalRepository = ExposedAnimalRepository(database),
+            feedbackRepository = ExposedFeedbackRepository(database),
+        )
     }
 }

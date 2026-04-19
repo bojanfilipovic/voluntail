@@ -4,6 +4,7 @@ import io.ktor.server.application.Application
 import io.ktor.server.response.respond
 import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
+import io.animals.animalRoutes
 import io.feedback.feedbackRoutes
 import io.feedback.peerFeedbackMaxRows
 import io.shelters.shelterRoutes
@@ -16,7 +17,7 @@ private val serviceInfo =
     )
 
 fun Application.configureRouting() {
-    val (shelterRepository, feedbackRepository) = createApplicationRepositories()
+    val repos = createApplicationRepositories()
     routing {
         get("/") {
             call.respond(serviceInfo)
@@ -24,7 +25,8 @@ fun Application.configureRouting() {
         get("/health") {
             call.respond(serviceInfo)
         }
-        shelterRoutes(shelterRepository)
-        feedbackRoutes(feedbackRepository, peerFeedbackMaxRows())
+        shelterRoutes(repos.shelterRepository)
+        animalRoutes(repos.shelterRepository, repos.animalRepository)
+        feedbackRoutes(repos.feedbackRepository, peerFeedbackMaxRows())
     }
 }

@@ -13,6 +13,7 @@ data class ShelterUpdateBody(
     val signupUrl: String? = null,
     val imageUrl: String? = null,
     val donationUrl: String? = null,
+    val city: String? = null,
 )
 
 fun ShelterUpdateBody.toUpdateRequestOrNull(): ShelterUpdateRequest? {
@@ -29,5 +30,6 @@ fun ShelterUpdateBody.toUpdateRequestOrNull(): ShelterUpdateRequest? {
         signupUrl = signupUrl,
         imageUrl = imageUrl,
         donationUrl = donationUrl,
+        city = city,
     )
 }

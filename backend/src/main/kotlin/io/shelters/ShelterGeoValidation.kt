@@ -5,6 +5,7 @@ import kotlin.math.abs
 internal fun isValidShelterCreate(req: ShelterCreateRequest): Boolean =
     when {
         req.name.isBlank() -> false
+        req.city.isBlank() -> false
         (!req.latitude.isFinite() || !req.longitude.isFinite()) -> false
         !isValidLatitude(req.latitude) || !isValidLongitude(req.longitude) -> false
         else -> true

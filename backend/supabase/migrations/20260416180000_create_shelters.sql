@@ -8,5 +8,6 @@ create table if not exists public.shelters (
     species jsonb not null default '[]'::jsonb,
     signup_url text null,
     image_url text null,
-    donation_url text null
+    donation_url text null,
+    city text not null default ''
 );

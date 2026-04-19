@@ -60,9 +60,10 @@ export function ShelterDetailDialog({
                 <div className="min-w-0 flex-1 space-y-2">
                   <DialogTitle id="shelter-dialog-title">{shelter.name}</DialogTitle>
                   <DialogDescription className="text-muted-foreground text-sm">
+                    {shelter.city}
                     {shelter.species.length
-                      ? shelter.species.map(speciesLabel).join(', ')
-                      : '—'}
+                      ? ` · ${shelter.species.map(speciesLabel).join(', ')}`
+                      : ''}
                   </DialogDescription>
                 </div>
                 <DialogClose

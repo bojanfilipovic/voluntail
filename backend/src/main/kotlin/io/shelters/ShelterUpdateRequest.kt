@@ -13,6 +13,7 @@ data class ShelterUpdateRequest(
     val signupUrl: String? = null,
     val imageUrl: String? = null,
     val donationUrl: String? = null,
+    val city: String? = null,
 )
 
 fun ShelterUpdateRequest.isNoOp(): Boolean =
@@ -23,7 +24,8 @@ fun ShelterUpdateRequest.isNoOp(): Boolean =
         species == null &&
         signupUrl == null &&
         imageUrl == null &&
-        donationUrl == null
+        donationUrl == null &&
+        city == null
 
 /** Applies this patch onto [current]; omitted fields (`null`) keep existing values. */
 fun ShelterUpdateRequest.applyTo(current: ShelterResponse): ShelterResponse =
@@ -48,5 +50,10 @@ fun ShelterUpdateRequest.applyTo(current: ShelterResponse): ShelterResponse =
             when (donationUrl) {
                 null -> current.donationUrl
                 else -> donationUrl.trim().takeIf { it.isNotEmpty() }
+            },
+        city =
+            when (city) {
+                null -> current.city
+                else -> city.trim()
             },
     )

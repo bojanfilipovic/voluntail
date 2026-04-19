@@ -13,6 +13,7 @@ data class ShelterCreateBody(
     val signupUrl: String? = null,
     val imageUrl: String? = null,
     val donationUrl: String? = null,
+    val city: String = "",
 )
 
 fun ShelterCreateBody.toCreateRequestOrNull(): ShelterCreateRequest? {
@@ -26,5 +27,6 @@ fun ShelterCreateBody.toCreateRequestOrNull(): ShelterCreateRequest? {
         signupUrl = signupUrl,
         imageUrl = imageUrl,
         donationUrl = donationUrl,
+        city = city,
     )
 }

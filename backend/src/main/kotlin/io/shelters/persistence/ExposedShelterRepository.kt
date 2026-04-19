@@ -35,6 +35,17 @@ class ExposedShelterRepository(
             }
         }
 
+    override suspend fun findById(id: UUID): ShelterResponse? =
+        withContext(Dispatchers.IO) {
+            suspendTransaction(db = database, readOnly = true) {
+                SheltersTable
+                    .selectAll()
+                    .where { SheltersTable.id eq id }
+                    .firstOrNull()
+                    ?.toShelterResponse()
+            }
+        }
+
     override suspend fun insert(request: ShelterCreateRequest): ShelterResponse =
         withContext(Dispatchers.IO) {
             suspendTransaction(db = database, readOnly = false) {
@@ -49,6 +60,7 @@ class ExposedShelterRepository(
                     row[signupUrl] = request.signupUrl.trimmedNonBlank()
                     row[imageUrl] = request.imageUrl.trimmedNonBlank()
                     row[donationUrl] = request.donationUrl.trimmedNonBlank()
+                    row[city] = request.city.trim()
                 }
 
                 request.toShelterResponse(newId)
@@ -77,6 +89,7 @@ class ExposedShelterRepository(
                     it[SheltersTable.signupUrl] = merged.signupUrl
                     it[SheltersTable.imageUrl] = merged.imageUrl
                     it[SheltersTable.donationUrl] = merged.donationUrl
+                    it[SheltersTable.city] = merged.city
                 }
                 merged
             }
@@ -101,4 +114,5 @@ private fun ResultRow.toShelterResponse(): ShelterResponse =
         signupUrl = this[SheltersTable.signupUrl],
         imageUrl = this[SheltersTable.imageUrl],
         donationUrl = this[SheltersTable.donationUrl],
+        city = this[SheltersTable.city],
     )

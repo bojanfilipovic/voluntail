@@ -13,6 +13,7 @@ data class ShelterCreateRequest(
     val signupUrl: String? = null,
     val imageUrl: String? = null,
     val donationUrl: String? = null,
+    val city: String,
 )
 
 fun ShelterCreateRequest.toShelterResponse(id: UUID): ShelterResponse =
@@ -26,6 +27,7 @@ fun ShelterCreateRequest.toShelterResponse(id: UUID): ShelterResponse =
         signupUrl = signupUrl.trimmedNonBlank(),
         imageUrl = imageUrl.trimmedNonBlank(),
         donationUrl = donationUrl.trimmedNonBlank(),
+        city = city.trim(),
     )
 
 internal fun String?.trimmedNonBlank(): String? =

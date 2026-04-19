@@ -1,55 +1,81 @@
 import { Button } from '@/components/ui/button'
+import type { Animal } from '@/api/animals'
 import type { Shelter } from '@/api/shelters'
 import { speciesLabel, type ShelterSpecies } from '@/domain/species'
+import type { AnimalStatus } from '@/schemas/animals'
 import { cn } from '@/lib/utils'
 
-type SpeciesFilterRow = { species: ShelterSpecies; count: number }
+function statusLabel(s: AnimalStatus): string {
+  switch (s) {
+    case 'available':
+      return 'Available'
+    case 'reserved':
+      return 'Reserved'
+    case 'adopted':
+      return 'Adopted'
+    default:
+      return s
+  }
+}
 
 type Props = {
+  animals: Animal[] | undefined
   shelters: Shelter[] | undefined
   error: Error | null
   isPending: boolean
-  /** Total rows in the unfiltered directory; used for the "All" chip count. */
-  totalShelterCount: number | undefined
+  totalAnimalCount: number | undefined
   selectedId: string | null
-  onSelectShelter: (s: Shelter) => void
+  onSelectAnimal: (a: Animal) => void
   cityFilter: string | null
   onCityFilter: (city: string | null) => void
-  /** Distinct non-empty cities for chips (stable sort). */
-  cityOptions: string[]
+  shelterFilter: string | null
+  onShelterFilter: (shelterId: string | null) => void
   speciesFilter: ShelterSpecies | null
   onSpeciesFilter: (species: ShelterSpecies | null) => void
-  /** Full enum in canonical order, with match counts (shelter may be counted under several species). */
-  speciesFilters: SpeciesFilterRow[]
+  /** Distinct cities from the loaded page (for chips). */
+  cityOptions: string[]
+  speciesCounts: Record<ShelterSpecies, number>
 }
 
-function speciesLine(s: Shelter): string {
-  return s.species.length ? s.species.map(speciesLabel).join(' · ') : '—'
-}
-
-export function ShelterList({
+export function AnimalList({
+  animals,
   shelters,
   error,
   isPending,
-  totalShelterCount,
+  totalAnimalCount,
   selectedId,
-  onSelectShelter,
+  onSelectAnimal,
   cityFilter,
   onCityFilter,
-  cityOptions,
+  shelterFilter,
+  onShelterFilter,
   speciesFilter,
   onSpeciesFilter,
-  speciesFilters,
+  cityOptions,
+  speciesCounts,
 }: Props) {
+  const shelterNameById = new Map(
+    (shelters ?? []).map((s) => [s.id, s.name] as const),
+  )
+
+  const speciesFilters = (
+    Object.keys(speciesCounts) as ShelterSpecies[]
+  ).map((species) => ({
+    species,
+    count: speciesCounts[species],
+  }))
+
   return (
-    <section className="text-start" aria-labelledby="shelters-heading">
-      <h2 id="shelters-heading" className="text-foreground mb-1 text-lg font-semibold tracking-tight">
-        Shelters
+    <section className="text-start" aria-labelledby="animals-heading">
+      <h2
+        id="animals-heading"
+        className="text-foreground mb-1 text-lg font-semibold tracking-tight"
+      >
+        Animals
       </h2>
       <p className="text-muted-foreground mb-3 text-sm leading-relaxed">
-        Tap a pin or a row to open details and outbound links. Requires the Ktor API (e.g.{' '}
-        <code className="bg-muted rounded px-1 py-0.5 font-mono text-xs">localhost:8080</code>)
-        proxied by Vite.
+        Published profiles for adoption discovery; confirm details with the shelter. Selecting
+        an animal focuses its shelter on the map.
       </p>
 
       {error ? (
@@ -61,8 +87,11 @@ export function ShelterList({
         </div>
       ) : null}
 
-      {cityOptions.length > 0 ? (
-        <div className="mb-4 flex flex-wrap gap-2" role="group" aria-label="Filter by city">
+      <div className="mb-3 flex flex-col gap-2">
+        <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+          City
+        </span>
+        <div className="flex flex-wrap gap-2" role="group" aria-label="Filter by city">
           <Button
             type="button"
             size="sm"
@@ -70,10 +99,10 @@ export function ShelterList({
             onClick={() => onCityFilter(null)}
             aria-pressed={cityFilter === null}
           >
-            All cities
-            {totalShelterCount !== undefined ? (
+            All
+            {totalAnimalCount !== undefined ? (
               <span className="text-muted-foreground ml-1 tabular-nums">
-                : {totalShelterCount}
+                : {totalAnimalCount}
               </span>
             ) : null}
           </Button>
@@ -90,22 +119,31 @@ export function ShelterList({
             </Button>
           ))}
         </div>
-      ) : null}
+      </div>
 
-      {speciesFilters.length > 0 ? (
+      <div className="mb-4 space-y-1.5">
+        <label className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+          Shelter
+        </label>
+        <select
+          className="border-input bg-background ring-offset-background focus-visible:ring-ring flex h-9 w-full max-w-md rounded-md border px-3 py-1 text-sm shadow-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+          value={shelterFilter ?? ''}
+          onChange={(e) =>
+            onShelterFilter(e.target.value ? e.target.value : null)
+          }
+          aria-label="Filter by shelter"
+        >
+          <option value="">All shelters</option>
+          {(shelters ?? []).map((s) => (
+            <option key={s.id} value={s.id}>
+              {s.name}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {speciesFilters.some(({ count }) => count > 0) ? (
         <div className="mb-4 flex flex-wrap gap-2" role="group" aria-label="Filter by species">
-          <Button
-            type="button"
-            size="sm"
-            variant={speciesFilter === null ? 'default' : 'outline'}
-            onClick={() => onSpeciesFilter(null)}
-            aria-pressed={speciesFilter === null}
-          >
-            All
-            {totalShelterCount !== undefined ? (
-              <span className="text-muted-foreground ml-1 tabular-nums">: {totalShelterCount}</span>
-            ) : null}
-          </Button>
           {speciesFilters.map(({ species: sp, count }) => (
             <Button
               key={sp}
@@ -118,7 +156,6 @@ export function ShelterList({
                   'text-muted-foreground opacity-55 hover:opacity-80',
               )}
               aria-pressed={speciesFilter === sp}
-              aria-label={`${speciesLabel(sp)}: ${count} shelters`}
               onClick={() => onSpeciesFilter(speciesFilter === sp ? null : sp)}
             >
               <span>{speciesLabel(sp)}</span>
@@ -129,25 +166,25 @@ export function ShelterList({
       ) : null}
 
       {error ? null : isPending ? (
-        <p className="text-muted-foreground text-sm">Loading shelters…</p>
+        <p className="text-muted-foreground text-sm">Loading animals…</p>
       ) : (
         <ul className="list-none space-y-3 p-0">
-          {(shelters ?? []).map((s) => (
-            <li key={s.id}>
+          {(animals ?? []).map((a) => (
+            <li key={a.id}>
               <button
                 type="button"
                 className={cn(
                   'hover:bg-muted/80 w-full rounded-lg border border-transparent p-2 text-start transition-colors',
-                  s.id === selectedId &&
+                  a.id === selectedId &&
                     'border-primary/50 bg-primary/10 ring-primary/30 ring-1',
                 )}
-                onClick={() => onSelectShelter(s)}
+                onClick={() => onSelectAnimal(a)}
               >
                 <span className="grid grid-cols-[4.5rem_1fr] items-start gap-3">
-                  {s.imageUrl ? (
+                  {a.imageUrl ? (
                     <span className="border-border bg-muted h-[4.5rem] w-[4.5rem] shrink-0 overflow-hidden rounded-md border">
                       <img
-                        src={s.imageUrl}
+                        src={a.imageUrl}
                         alt=""
                         className="size-full object-cover"
                         loading="lazy"
@@ -160,25 +197,18 @@ export function ShelterList({
                     />
                   )}
                   <span className="flex min-w-0 flex-col gap-0.5">
-                    <span className="text-foreground font-medium leading-snug">{s.name}</span>
+                    <span className="text-foreground font-medium leading-snug">{a.name}</span>
                     <span className="text-muted-foreground text-xs">
-                      {s.city} · {speciesLine(s)}
+                      {speciesLabel(a.species)} · {statusLabel(a.status)} · {a.city}
                     </span>
-                    <span className="text-foreground/90 line-clamp-3 text-sm leading-snug">
-                      {s.description}
+                    <span className="text-muted-foreground text-xs">
+                      {shelterNameById.get(a.shelterId) ?? 'Shelter'}
                     </span>
-                    {s.signupUrl ? (
-                      <span className="mt-1">
-                        <a
-                          href={s.signupUrl}
-                          onClick={(e) => e.stopPropagation()}
-                          rel="noreferrer noopener"
-                          target="_blank"
-                          className="text-primary text-xs underline-offset-4 hover:underline"
-                        >
-                          Signup link
-                        </a>
-                      </span>
+                    <span className="text-foreground/90 line-clamp-2 text-sm leading-snug">
+                      {a.description}
+                    </span>
+                    {!a.published ? (
+                      <span className="text-destructive text-xs font-medium">Unpublished</span>
                     ) : null}
                   </span>
                 </span>

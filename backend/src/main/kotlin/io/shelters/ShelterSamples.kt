@@ -19,6 +19,7 @@ object ShelterSamples {
                 signupUrl = "https://doa-dierenasiel.nl/help-mee/",
                 imageUrl = "https://doa-dierenasiel.nl/wp-content/uploads/2022/08/logo-125.svg",
                 donationUrl = "https://doa-dierenasiel.nl/help-mee/",
+                city = "Amsterdam",
             ),
             ShelterResponse(
                 id = "a0000002-0002-4002-8002-000000000002",
@@ -33,6 +34,7 @@ object ShelterSamples {
                 imageUrl =
                     "https://reptileessentials.nl/cdn/shop/files/logo3.jpg?height=200&v=1753111538",
                 donationUrl = "https://dierenlot.digicollect.nl/stichting-dierenhulpdienst-nederland",
+                city = "Zwanenburg",
             ),
             ShelterResponse(
                 id = "a0000003-0003-4003-8003-000000000003",
@@ -46,6 +48,7 @@ object ShelterSamples {
                 signupUrl = "https://www.dierenopvanghengelo.nl/onze-vrijwilligers/",
                 imageUrl = "https://picsum.photos/seed/voluntail-hengelo/800/450",
                 donationUrl = "https://dierenlot.digicollect.nl/stichting-dierenopvang-hengelo",
+                city = "Hengelo",
             ),
             ShelterResponse(
                 id = "a0000004-0004-4004-8004-000000000004",
@@ -65,6 +68,7 @@ object ShelterSamples {
                 signupUrl = "https://www.dierencentrumachterhoek.nl/over-ons/vrijwilligers",
                 imageUrl = "https://picsum.photos/seed/voluntail-achterhoek/800/450",
                 donationUrl = "https://www.dier.nu/beneficianten/stg-dierencentrum-achterhoek/",
+                city = "Ruurlo",
             ),
             ShelterResponse(
                 id = "a0000005-0005-4005-8005-000000000005",
@@ -78,6 +82,7 @@ object ShelterSamples {
                 signupUrl = "https://dierentehuisarnhem.nl/contact/",
                 imageUrl = "https://picsum.photos/seed/voluntail-arnhem/800/450",
                 donationUrl = "https://dierentehuisarnhem.nl/doneer-hier/",
+                city = "Arnhem",
             ),
             ShelterResponse(
                 id = "a0000006-0006-4006-8006-000000000006",
@@ -97,6 +102,7 @@ object ShelterSamples {
                 signupUrl = "https://www.dierenopvangdewissel.nl/steun-ons/word-vrijwilliger/",
                 imageUrl = "https://picsum.photos/seed/voluntail-wissel/800/450",
                 donationUrl = "https://www.dierenopvangdewissel.nl/steun-ons/word-donateur/",
+                city = "Leeuwarden",
             ),
             ShelterResponse(
                 id = "a0000007-0007-4007-8007-000000000007",
@@ -111,6 +117,7 @@ object ShelterSamples {
                 signupUrl = "https://dierentehuisdenbosch.nl/vrijwilligerswerk/",
                 imageUrl = "https://picsum.photos/seed/voluntail-denbosch/800/450",
                 donationUrl = "https://dierentehuisdenbosch.nl/steun-ons/doneren/",
+                city = "'" + "s-Hertogenbosch",
             ),
             ShelterResponse(
                 id = "a0000008-0008-4008-8008-000000000008",
@@ -124,6 +131,7 @@ object ShelterSamples {
                 signupUrl = "https://www.dierenbescherming.nl/in-actie-komen/vrijwilligerswerk/opvangwerk",
                 imageUrl = "https://picsum.photos/seed/voluntail-rotterdam-db/800/450",
                 donationUrl = "https://www.dierenbescherming.nl/doneren",
+                city = "Rotterdam",
             ),
             ShelterResponse(
                 id = "a0000009-0009-4009-8009-000000000009",
@@ -135,6 +143,7 @@ object ShelterSamples {
                 signupUrl = "https://www.dierenasielutrecht.nl/vrijwilligerswerk/",
                 imageUrl = "https://picsum.photos/seed/voluntail-utrecht/800/450",
                 donationUrl = "https://www.dierenasielutrecht.nl/word-vriend/",
+                city = "Utrecht",
             ),
             ShelterResponse(
                 id = "a000000a-000a-400a-800a-00000000000a",
@@ -146,6 +155,7 @@ object ShelterSamples {
                 signupUrl = "https://haagsdierencentrum.nl/aanmelden-vrijwilliger/",
                 imageUrl = "https://picsum.photos/seed/voluntail-den-haag/800/450",
                 donationUrl = "https://haagsdierencentrum.nl/doneren/",
+                city = "Den Haag",
             ),
             ShelterResponse(
                 id = "a000000b-000b-400b-800b-00000000000b",
@@ -157,6 +167,7 @@ object ShelterSamples {
                 signupUrl = "https://www.dierenbescherming.nl/dierenasiel/dierenbeschermingscentrum-noord-nederland/contact",
                 imageUrl = "https://picsum.photos/seed/voluntail-groningen/800/450",
                 donationUrl = "https://www.dierenbescherming.nl/doneren",
+                city = "Groningen",
             ),
             ShelterResponse(
                 id = "a000000c-000c-400c-800c-00000000000c",
@@ -168,6 +179,7 @@ object ShelterSamples {
                 signupUrl = "https://docbreda.nl/contact/",
                 imageUrl = "https://picsum.photos/seed/voluntail-breda/800/450",
                 donationUrl = "https://www.dierenbescherming.nl/doneren",
+                city = "Breda",
             ),
             ShelterResponse(
                 id = "a000000d-000d-400d-800d-00000000000d",
@@ -179,6 +191,7 @@ object ShelterSamples {
                 signupUrl = "https://www.dierenbescherming.nl/dierenasiel/dierenbeschermingscentrum-limburg/contact",
                 imageUrl = "https://picsum.photos/seed/voluntail-limburg-born/800/450",
                 donationUrl = "https://www.dierenbescherming.nl/doneren",
+                city = "Born",
             ),
             ShelterResponse(
                 id = "a000000e-000e-400e-800e-00000000000e",
@@ -190,6 +203,7 @@ object ShelterSamples {
                 signupUrl = "http://w.dierentehuiszoetermeer.nl/contactinfo.html",
                 imageUrl = "https://picsum.photos/seed/voluntail-zoetermeer/800/450",
                 donationUrl = "https://dierentehuiszoetermeer.nl/doneren/",
+                city = "Zoetermeer",
             ),
             ShelterResponse(
                 id = "a000000f-000f-400f-800f-00000000000f",
@@ -201,6 +215,7 @@ object ShelterSamples {
                 signupUrl = "https://www.dierenasielzwolle.nl/contact",
                 imageUrl = "https://picsum.photos/seed/voluntail-zwolle/800/450",
                 donationUrl = null,
+                city = "Zwolle",
             ),
             ShelterResponse(
                 id = "a0000010-0010-4010-8010-000000000010",
@@ -212,6 +227,7 @@ object ShelterSamples {
                 signupUrl = "https://www.doct.nl/vrijwilligers/",
                 imageUrl = "https://picsum.photos/seed/voluntail-tilburg/800/450",
                 donationUrl = null,
+                city = "Tilburg",
             ),
             ShelterResponse(
                 id = "a0000011-0011-4011-8011-000000000011",
@@ -229,6 +245,7 @@ object ShelterSamples {
                 signupUrl = "https://www.rozeindhoven.nl/contact/",
                 imageUrl = "https://picsum.photos/seed/voluntail-eindhoven-roze/800/450",
                 donationUrl = "https://www.rozeindhoven.nl/word-donateur/",
+                city = "Eindhoven",
             ),
             ShelterResponse(
                 id = "a0000012-0012-4012-8012-000000000012",
@@ -240,6 +257,7 @@ object ShelterSamples {
                 signupUrl = "https://www.dierenbescherming.nl/dierenasiel/de-kuipershoek/contact",
                 imageUrl = "https://picsum.photos/seed/voluntail-kuipershoek/800/450",
                 donationUrl = "https://www.dierenbescherming.nl/doneren",
+                city = "Klarenbeek",
             ),
             ShelterResponse(
                 id = "a0000013-0013-4013-8013-000000000013",
@@ -252,6 +270,7 @@ object ShelterSamples {
                 signupUrl = "https://www.dierenbescherming.nl/dierenasiel/dierenbeschermingscentrum-amersfoort/contact",
                 imageUrl = "https://picsum.photos/seed/voluntail-amersfoort/800/450",
                 donationUrl = "https://www.dierenbescherming.nl/doneren",
+                city = "Amersfoort",
             ),
             ShelterResponse(
                 id = "a0000014-0014-4014-8014-000000000014",
@@ -263,6 +282,7 @@ object ShelterSamples {
                 signupUrl = "https://www.dierenbescherming.nl/dierenasiel/dierentehuis-kennemerland/contact",
                 imageUrl = "https://picsum.photos/seed/voluntail-kennemerland/800/450",
                 donationUrl = "https://www.dierenbescherming.nl/doneren",
+                city = "Castricum",
             ),
             ShelterResponse(
                 id = "a0000015-0015-4015-8015-000000000015",
@@ -274,6 +294,7 @@ object ShelterSamples {
                 signupUrl = "https://www.dierenasielleiden.nl/contact/",
                 imageUrl = "https://picsum.photos/seed/voluntail-leiden/800/450",
                 donationUrl = "https://www.dierenasielleiden.nl/doneren/",
+                city = "Leiden",
             ),
             ShelterResponse(
                 id = "a0000016-0016-4016-8016-000000000016",
@@ -285,6 +306,7 @@ object ShelterSamples {
                 signupUrl = "https://www.dierenbescherming.nl/dierenasiel/dierenasiel-de-swinge/contact",
                 imageUrl = "https://picsum.photos/seed/voluntail-drachten-swinge/800/450",
                 donationUrl = "https://www.dierenbescherming.nl/doneren",
+                city = "Drachten",
             ),
             ShelterResponse(
                 id = "a0000017-0017-4017-8017-000000000017",
@@ -296,6 +318,7 @@ object ShelterSamples {
                 signupUrl = "https://www.dierenbescherming.nl/dierenasiel/dierenopvangcentrum-enschede/contact",
                 imageUrl = "https://picsum.photos/seed/voluntail-enschede/800/450",
                 donationUrl = "https://www.dierenbescherming.nl/doneren",
+                city = "Enschede",
             ),
             ShelterResponse(
                 id = "a0000018-0018-4018-8018-000000000018",
@@ -307,6 +330,7 @@ object ShelterSamples {
                 signupUrl = "https://www.dierenbescherming.nl/dierenasiel/dierenopvangcentrum-gouda/contact",
                 imageUrl = "https://picsum.photos/seed/voluntail-gouda/800/450",
                 donationUrl = "https://www.dierenbescherming.nl/doneren",
+                city = "Gouda",
             ),
             ShelterResponse(
                 id = "a0000019-0019-4019-8019-000000000019",
@@ -318,6 +342,7 @@ object ShelterSamples {
                 signupUrl = "https://www.dierenbescherming.nl/dierenasiel/dierenopvangcentrum-spijkenisse/contact",
                 imageUrl = "https://picsum.photos/seed/voluntail-spijkenisse/800/450",
                 donationUrl = "https://www.dierenbescherming.nl/doneren",
+                city = "Spijkenisse",
             ),
             ShelterResponse(
                 id = "a000001a-001a-401a-801a-00000000001a",
@@ -329,6 +354,7 @@ object ShelterSamples {
                 signupUrl = "https://www.dierenbescherming.nl/dierenasiel/dierentehuis-alkmaar/contact",
                 imageUrl = "https://picsum.photos/seed/voluntail-alkmaar/800/450",
                 donationUrl = "https://www.dierenbescherming.nl/doneren",
+                city = "Purmerend",
             ),
             ShelterResponse(
                 id = "a000001b-001b-401b-801b-00000000001b",
@@ -340,6 +366,7 @@ object ShelterSamples {
                 signupUrl = "https://www.dierenbescherming.nl/dierenasiel/dierenopvangcentrum-vlaardingen/contact",
                 imageUrl = "https://picsum.photos/seed/voluntail-vlaardingen/800/450",
                 donationUrl = "https://www.dierenbescherming.nl/doneren",
+                city = "Vlaardingen",
             ),
             ShelterResponse(
                 id = "a000001c-001c-401c-801c-00000000001c",
@@ -351,6 +378,7 @@ object ShelterSamples {
                 signupUrl = "https://www.dierenbescherming.nl/dierenasiel/dierenopvang-haarlemmermeer/contact",
                 imageUrl = "https://picsum.photos/seed/voluntail-hoofddorp/800/450",
                 donationUrl = "https://www.dierenbescherming.nl/doneren",
+                city = "Hoofddorp",
             ),
             ShelterResponse(
                 id = "a000001d-001d-401d-801d-00000000001d",
@@ -362,6 +390,7 @@ object ShelterSamples {
                 signupUrl = "https://www.dierenbescherming.nl/dierenasiel/dierentehuis-de-hof-van-ede/contact",
                 imageUrl = "https://picsum.photos/seed/voluntail-ede/800/450",
                 donationUrl = "https://www.dierenbescherming.nl/doneren",
+                city = "Ede",
             ),
             ShelterResponse(
                 id = "a000001e-001e-401e-801e-00000000001e",
@@ -373,6 +402,7 @@ object ShelterSamples {
                 signupUrl = "https://www.dierenasielwalcheren.nl/contact",
                 imageUrl = "https://picsum.photos/seed/voluntail-walcheren/800/450",
                 donationUrl = null,
+                city = "Middelburg",
             ),
         )
 }

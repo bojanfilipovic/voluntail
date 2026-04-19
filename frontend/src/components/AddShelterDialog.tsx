@@ -39,6 +39,7 @@ const DEFAULT_SIGNUP_URL = 'https://example.com/signup'
 const DEFAULT_IMAGE_URL =
   'https://picsum.photos/seed/voluntail-default/800/450'
 const DEFAULT_DONATION_URL = 'https://example.com/donate'
+const DEFAULT_CITY = 'Amsterdam'
 
 function urlOrDefault(raw: string, fallback: string): string {
   const t = raw.trim()
@@ -64,6 +65,7 @@ export function AddShelterDialog({
   const [signupUrl, setSignupUrl] = useState('')
   const [imageUrl, setImageUrl] = useState('')
   const [donationUrl, setDonationUrl] = useState('')
+  const [city, setCity] = useState('')
   const [formError, setFormError] = useState<string | null>(null)
 
   /* Keep coordinate fields in sync when the draft pin moves on the map */
@@ -97,6 +99,7 @@ export function AddShelterDialog({
       latitude: coords.latitude,
       longitude: coords.longitude,
       species: sortShelterSpecies(speciesPicked),
+      city: city.trim() || DEFAULT_CITY,
       signupUrl: urlOrDefault(signupUrl, DEFAULT_SIGNUP_URL),
       imageUrl: urlOrDefault(imageUrl, DEFAULT_IMAGE_URL),
       donationUrl: urlOrDefault(donationUrl, DEFAULT_DONATION_URL),
@@ -154,6 +157,17 @@ export function AddShelterDialog({
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     placeholder={DEFAULT_DESCRIPTION}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="add-city">City</Label>
+                  <Input
+                    id="add-city"
+                    name="city"
+                    autoComplete="address-level2"
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
+                    placeholder={DEFAULT_CITY}
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
