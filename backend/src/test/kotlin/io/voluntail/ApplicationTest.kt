@@ -3,6 +3,7 @@ package io.voluntail
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.header
+import io.ktor.client.request.patch
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
@@ -97,5 +98,39 @@ class ApplicationTest {
             assertEquals(HttpStatusCode.NoContent, del.status)
             val listBody = client.get("/api/shelters").bodyAsText()
             assertTrue(!listBody.contains("API Test Shelter"))
+        }
+
+    @Test
+    fun testPatchShelterWithCmsKey() =
+        testApplication {
+            application {
+                module()
+            }
+            val createRes =
+                client.post("/api/shelters") {
+                    header("X-CMS-Key", "test-secret")
+                    contentType(ContentType.Application.Json)
+                    setBody(
+                        """{"name":"Patch Me","description":"Before","latitude":52.1,"longitude":5.1,"species":["cat"]}""",
+                    )
+                }
+            assertEquals(HttpStatusCode.Created, createRes.status)
+            val id =
+                Json.parseToJsonElement(createRes.bodyAsText())
+                    .jsonObject["id"]
+                    ?.jsonPrimitive
+                    ?.content
+                    ?: error("no id in body")
+            val patchRes =
+                client.patch("/api/shelters/$id") {
+                    header("X-CMS-Key", "test-secret")
+                    contentType(ContentType.Application.Json)
+                    setBody("""{"description":"After patch"}""")
+                }
+            assertEquals(HttpStatusCode.OK, patchRes.status)
+            assertTrue(patchRes.bodyAsText().contains("After patch"))
+            client.delete("/api/shelters/$id") {
+                header("X-CMS-Key", "test-secret")
+            }
         }
 }

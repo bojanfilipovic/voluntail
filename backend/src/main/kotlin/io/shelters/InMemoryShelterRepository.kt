@@ -21,6 +21,18 @@ class InMemoryShelterRepository : ShelterRepository {
             donationUrl = request.donationUrl?.trim()?.takeIf { it.isNotEmpty() },
         ).also { rows.add(it) }
 
+    override suspend fun update(
+        id: UUID,
+        request: ShelterUpdateRequest,
+    ): ShelterResponse? {
+        val idx = rows.indexOfFirst { it.id == id.toString() }
+        if (idx < 0) return null
+        val cur = rows[idx]
+        val merged = request.applyTo(cur)
+        rows[idx] = merged
+        return merged
+    }
+
     override suspend fun delete(id: UUID): Boolean =
         rows.removeIf { it.id == id.toString() }
 }

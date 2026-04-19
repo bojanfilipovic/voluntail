@@ -1,112 +1,110 @@
-import { useEffect, useRef } from 'react'
-import type { Shelter } from '../api/shelters'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Button, buttonVariants } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
+import type { Shelter } from '@/api/shelters'
 
 type Props = {
   shelter: Shelter | null
   onClose: () => void
   onRemove: () => void
+  onEdit: () => void
   removeDisabled?: boolean
+  editDisabled?: boolean
 }
 
 export function ShelterDetailDialog({
   shelter,
   onClose,
   onRemove,
+  onEdit,
   removeDisabled = false,
+  editDisabled = false,
 }: Props) {
-  const dialogRef = useRef<HTMLDialogElement>(null)
-  const closeButtonRef = useRef<HTMLButtonElement>(null)
-
-  useEffect(() => {
-    const el = dialogRef.current
-    if (!el) return
-    if (shelter) {
-      if (!el.open) el.showModal()
-      requestAnimationFrame(() => {
-        closeButtonRef.current?.focus()
-      })
-    } else if (el.open) {
-      el.close()
-    }
-  }, [shelter])
-
   return (
-    <dialog
-      ref={dialogRef}
-      className="shelter-dialog"
-      onClose={onClose}
-      onCancel={onClose}
-      aria-labelledby={shelter ? 'shelter-dialog-title' : undefined}
-    >
-      {shelter ? (
-        <>
-          <div className="shelter-dialog-hero">
-            {shelter.imageUrl ? (
-              <img
-                src={shelter.imageUrl}
-                alt=""
-                className="shelter-dialog-hero-img"
-                loading="lazy"
-              />
-            ) : (
-              <div className="shelter-dialog-hero-placeholder" aria-hidden />
-            )}
-          </div>
-          <header className="shelter-dialog-header">
-            <h2 id="shelter-dialog-title">{shelter.name}</h2>
-            <form method="dialog">
-              <button
-                ref={closeButtonRef}
-                type="submit"
-                className="shelter-dialog-close"
-                aria-label="Close"
-              >
-                ×
-              </button>
-            </form>
-          </header>
-          <div className="shelter-dialog-body">
-            <p className="shelter-dialog-meta">
-              {shelter.species.length ? shelter.species.join(', ') : '—'}
-            </p>
-            <p className="shelter-dialog-lead">
-              Most shelters need volunteers, adopters, and foster homes—reach out via the links
-              below when you are ready.
-            </p>
-            <p className="shelter-dialog-desc">{shelter.description}</p>
-            <div className="shelter-dialog-actions">
+    <Dialog open={Boolean(shelter)} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-w-lg gap-0 overflow-hidden p-0 sm:max-w-lg">
+        {shelter ? (
+          <>
+            <div className="relative aspect-video max-h-56 bg-muted">
+              {shelter.imageUrl ? (
+                <img
+                  src={shelter.imageUrl}
+                  alt=""
+                  className="size-full object-cover"
+                  loading="lazy"
+                />
+              ) : (
+                <div className="size-full bg-gradient-to-br from-muted to-muted/60" aria-hidden />
+              )}
+            </div>
+            <DialogHeader className="border-b px-4 pt-4 pb-2">
+              <DialogTitle id="shelter-dialog-title">{shelter.name}</DialogTitle>
+              <DialogDescription className="text-muted-foreground text-sm">
+                {shelter.species.length ? shelter.species.join(', ') : '—'}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-3 px-4 py-3 text-sm leading-relaxed">
+              <p className="text-muted-foreground">
+                Shelters rely on volunteers, adopters, and fosters—use the shelter&apos;s own
+                pages for final steps.
+              </p>
+              <p>{shelter.description}</p>
+              <p className="text-muted-foreground text-xs leading-snug">
+                Tip: always double-check volunteer and donation info on the shelter&apos;s
+                official website before you commit.
+              </p>
+            </div>
+            <DialogFooter className="flex-col gap-2 border-t bg-muted/40 px-4 py-3 sm:flex-row sm:flex-wrap sm:justify-start">
               {shelter.signupUrl ? (
                 <a
-                  className="shelter-dialog-cta shelter-dialog-cta--primary"
                   href={shelter.signupUrl}
                   rel="noreferrer noopener"
                   target="_blank"
+                  className={cn(buttonVariants({ variant: 'default', size: 'sm' }))}
                 >
                   Volunteer / signup
                 </a>
               ) : null}
               {shelter.donationUrl ? (
                 <a
-                  className="shelter-dialog-cta shelter-dialog-cta--secondary"
                   href={shelter.donationUrl}
                   rel="noreferrer noopener"
                   target="_blank"
+                  className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}
                 >
                   Donate
                 </a>
               ) : null}
-              <button
+              <Button
                 type="button"
-                className="shelter-dialog-remove map-cms-btn map-cms-btn--danger"
+                variant="secondary"
+                size="sm"
+                disabled={editDisabled}
+                onClick={onEdit}
+              >
+                Edit details
+              </Button>
+              <Button
+                type="button"
+                variant="destructive"
+                size="sm"
+                className="sm:ml-auto"
                 disabled={removeDisabled}
                 onClick={onRemove}
               >
                 Remove pin
-              </button>
-            </div>
-          </div>
-        </>
-      ) : null}
-    </dialog>
+              </Button>
+            </DialogFooter>
+          </>
+        ) : null}
+      </DialogContent>
+    </Dialog>
   )
 }

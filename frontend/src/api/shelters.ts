@@ -2,9 +2,11 @@ import {
   shelterSchema,
   sheltersListSchema,
   type Shelter,
+  type ShelterPatchPayload,
 } from '../schemas/shelters'
 
 export type { Shelter }
+export type { ShelterPatchPayload } from '../schemas/shelters'
 
 export type ShelterCreatePayload = {
   name: string
@@ -70,4 +72,24 @@ export async function deleteShelter(id: string): Promise<void> {
     const detail = await res.text().catch(() => '')
     throw new Error(detail || `HTTP ${res.status}`)
   }
+}
+
+export async function updateShelter(
+  id: string,
+  body: ShelterPatchPayload,
+): Promise<Shelter> {
+  const res = await fetch(`${SHELTERS_URL}/${encodeURIComponent(id)}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      ...cmsHeaders(),
+    },
+    body: JSON.stringify(body),
+  })
+  if (!res.ok) {
+    const detail = await res.text().catch(() => '')
+    throw new Error(detail || `HTTP ${res.status}`)
+  }
+  const raw: unknown = await res.json()
+  return shelterSchema.parse(raw)
 }
