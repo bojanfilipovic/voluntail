@@ -1,5 +1,6 @@
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -10,6 +11,7 @@ import { Button, buttonVariants } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import type { Shelter } from '@/api/shelters'
 import { speciesLabel } from '@/domain/species'
+import { XIcon } from 'lucide-react'
 
 type Props = {
   shelter: Shelter | null
@@ -30,28 +32,52 @@ export function ShelterDetailDialog({
 }: Props) {
   return (
     <Dialog open={Boolean(shelter)} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-lg gap-0 overflow-hidden p-0 sm:max-w-lg">
+      <DialogContent
+        className="max-w-lg gap-0 overflow-hidden p-0 sm:max-w-lg"
+        showCloseButton={false}
+      >
         {shelter ? (
           <>
-            <div className="relative aspect-video max-h-56 bg-muted">
+            <div
+              className={cn(
+                'relative flex min-h-[11rem] max-h-56 items-center justify-center bg-muted',
+                'px-6 py-7 sm:px-10',
+              )}
+            >
               {shelter.imageUrl ? (
                 <img
                   src={shelter.imageUrl}
                   alt=""
-                  className="size-full object-cover"
+                  className="max-h-[12.5rem] w-full object-contain object-center"
                   loading="lazy"
                 />
               ) : (
-                <div className="size-full bg-gradient-to-br from-muted to-muted/60" aria-hidden />
+                <div className="min-h-32 w-full bg-gradient-to-br from-muted to-muted/60" aria-hidden />
               )}
             </div>
             <DialogHeader className="border-b px-4 pt-4 pb-2">
-              <DialogTitle id="shelter-dialog-title">{shelter.name}</DialogTitle>
-              <DialogDescription className="text-muted-foreground text-sm">
-                {shelter.species.length
-                  ? shelter.species.map(speciesLabel).join(', ')
-                  : '—'}
-              </DialogDescription>
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0 flex-1 space-y-2">
+                  <DialogTitle id="shelter-dialog-title">{shelter.name}</DialogTitle>
+                  <DialogDescription className="text-muted-foreground text-sm">
+                    {shelter.species.length
+                      ? shelter.species.map(speciesLabel).join(', ')
+                      : '—'}
+                  </DialogDescription>
+                </div>
+                <DialogClose
+                  render={
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      className="text-muted-foreground hover:text-foreground -mr-1 shrink-0"
+                      aria-label="Close"
+                    />
+                  }
+                >
+                  <XIcon className="size-4" aria-hidden />
+                </DialogClose>
+              </div>
             </DialogHeader>
             <div className="space-y-3 px-4 py-3 text-sm leading-relaxed">
               <p className="text-muted-foreground">
