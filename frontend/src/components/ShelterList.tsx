@@ -57,7 +57,6 @@ export function ShelterList({
                   <span className="shelter-row-text">
                     <span className="shelter-row-title">
                       <strong>{s.name}</strong>
-                      <span className="shelters-meta"> ({s.registryTag})</span>
                     </span>
                     <span className="shelters-species">{speciesLine(s)}</span>
                     <span className="shelters-desc">{s.description}</span>

@@ -1,14 +1,20 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   createShelter,
   deleteShelter,
   fetchShelters,
   type Shelter,
+  type ShelterCreatePayload,
 } from './api/shelters'
+import { AddShelterDialog } from './components/AddShelterDialog'
 import { ShelterDetailDialog } from './components/ShelterDetailDialog'
 import { ShelterList } from './components/ShelterList'
-import { ShelterMap, type ShelterMapHandle } from './components/ShelterMap'
+import {
+  ShelterMap,
+  type MapCenter,
+  type ShelterMapHandle,
+} from './components/ShelterMap'
 import './App.css'
 
 function toQueryError(error: unknown): Error | null {
@@ -23,6 +29,10 @@ function App() {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [cmsError, setCmsError] = useState<string | null>(null)
 
+  const [placementMode, setPlacementMode] = useState(false)
+  const [draftLocation, setDraftLocation] = useState<MapCenter | null>(null)
+  const [addDialogOpen, setAddDialogOpen] = useState(false)
+
   const { data, error, isPending } = useQuery({
     queryKey: ['shelters'],
     queryFn: fetchShelters,
@@ -32,8 +42,13 @@ function App() {
 
   const createMutation = useMutation({
     mutationFn: createShelter,
-    onSuccess: async () => {
+    onSuccess: async (created) => {
       setCmsError(null)
+      setDraftLocation(null)
+      setPlacementMode(false)
+      setAddDialogOpen(false)
+      setSelectedId(created.id)
+      mapRef.current?.flyToShelter(created)
       await queryClient.invalidateQueries({ queryKey: ['shelters'] })
     },
     onError: (e) => {
@@ -62,31 +77,65 @@ function App() {
     setSelectedId(null)
   }, [])
 
+  const handleCancelPlacement = useCallback(() => {
+    setPlacementMode(false)
+    setDraftLocation(null)
+    setAddDialogOpen(false)
+  }, [])
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return
+      if (addDialogOpen) return
+      if (!placementMode && !draftLocation) return
+      handleCancelPlacement()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [addDialogOpen, placementMode, draftLocation, handleCancelPlacement])
+
   const handleMapSelect = useCallback((s: Shelter) => {
+    setDraftLocation(null)
+    setPlacementMode(false)
     setSelectedId(s.id)
   }, [])
 
   const handleListSelect = useCallback((s: Shelter) => {
+    setDraftLocation(null)
+    setPlacementMode(false)
     setSelectedId(s.id)
     mapRef.current?.flyToShelter(s)
   }, [])
 
-  const handleAddPin = useCallback(() => {
+  const handleStartAddPin = useCallback(() => {
     setCmsError(null)
-    const c = mapRef.current?.getMapCenter() ?? {
-      latitude: 52.1326,
-      longitude: 5.2913,
-    }
-    createMutation.mutate({
-      name: 'New shelter',
-      description:
-        'Placeholder from the map. Edit name, description, and links in Supabase (or a future in-app editor).',
-      latitude: c.latitude,
-      longitude: c.longitude,
-      registryTag: 'DOA',
-      species: [],
-    })
-  }, [createMutation])
+    setSelectedId(null)
+    setAddDialogOpen(false)
+    setDraftLocation(null)
+    setPlacementMode(true)
+  }, [])
+
+  const handleDraftPosition = useCallback((loc: MapCenter) => {
+    setDraftLocation(loc)
+    setPlacementMode(false)
+    setSelectedId(null)
+  }, [])
+
+  const handleEnterDetails = useCallback(() => {
+    if (!draftLocation) return
+    setAddDialogOpen(true)
+  }, [draftLocation])
+
+  const handleCloseAddDialog = useCallback(() => {
+    setAddDialogOpen(false)
+  }, [])
+
+  const handleCreateShelter = useCallback(
+    async (payload: ShelterCreatePayload) => {
+      return createMutation.mutateAsync(payload)
+    },
+    [createMutation],
+  )
 
   const handleRemovePin = useCallback(() => {
     if (!selectedId) return
@@ -96,6 +145,12 @@ function App() {
   }, [deleteMutation, selectedId])
 
   const cmsBusy = createMutation.isPending || deleteMutation.isPending
+
+  const placementOrRelocateActive =
+    placementMode || (!!draftLocation && !addDialogOpen)
+
+  const cancelPlacementDisabled =
+    cmsBusy || (!placementMode && !draftLocation)
 
   return (
     <div className="app-root">
@@ -112,20 +167,39 @@ function App() {
             <div className="map-cms-toolbar" role="toolbar" aria-label="Shelter CMS">
               <button
                 type="button"
-                className="map-cms-btn"
-                onClick={handleAddPin}
+                className={
+                  placementMode
+                    ? 'map-cms-btn map-cms-btn--active'
+                    : 'map-cms-btn'
+                }
+                onClick={handleStartAddPin}
                 disabled={cmsBusy}
               >
                 Add pin
               </button>
               <button
                 type="button"
-                className="map-cms-btn map-cms-btn--danger"
-                onClick={handleRemovePin}
-                disabled={cmsBusy || !selectedId}
+                className="map-cms-btn map-cms-btn--primary"
+                onClick={handleEnterDetails}
+                disabled={cmsBusy || !draftLocation}
               >
-                Remove pin
+                Enter details
               </button>
+              <button
+                type="button"
+                className="map-cms-btn"
+                onClick={handleCancelPlacement}
+                disabled={cancelPlacementDisabled}
+              >
+                Cancel
+              </button>
+              {placementMode ? (
+                <span className="map-cms-hint">Click the map to place a pin.</span>
+              ) : draftLocation && !addDialogOpen ? (
+                <span className="map-cms-hint">
+                  Draft pin set — Enter details or click the map to move it.
+                </span>
+              ) : null}
             </div>
             <div className="map-cms-map-slot">
               <ShelterMap
@@ -134,6 +208,9 @@ function App() {
                 selectedId={selectedId}
                 onSelectShelter={handleMapSelect}
                 onClearSelection={clearSelection}
+                placementOrRelocateActive={placementOrRelocateActive}
+                draftLocation={draftLocation}
+                onDraftPosition={handleDraftPosition}
               />
             </div>
           </section>
@@ -156,6 +233,13 @@ function App() {
           </section>
         </div>
       </main>
+      <AddShelterDialog
+        open={addDialogOpen}
+        draftLocation={draftLocation}
+        onClose={handleCloseAddDialog}
+        onSubmit={handleCreateShelter}
+        isSubmitting={createMutation.isPending}
+      />
       <ShelterDetailDialog
         shelter={selectedShelter}
         onClose={clearSelection}

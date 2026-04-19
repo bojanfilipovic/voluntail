@@ -1,6 +1,5 @@
 package io.shelters.persistence
 
-import io.shelters.RegistryTag
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.Json
@@ -19,7 +18,6 @@ object SheltersTable : Table("shelters") {
     val description = text("description")
     val latitude = double("latitude")
     val longitude = double("longitude")
-    val registryTag = enumerationByName<RegistryTag>("registry_tag", 16)
     val species =
         jsonb(
             "species",

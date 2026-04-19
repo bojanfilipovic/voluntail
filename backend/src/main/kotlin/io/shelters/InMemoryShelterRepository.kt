@@ -15,7 +15,6 @@ class InMemoryShelterRepository : ShelterRepository {
             description = request.description.trim(),
             latitude = request.latitude,
             longitude = request.longitude,
-            registryTag = request.registryTag,
             species = request.species,
             signupUrl = request.signupUrl?.trim()?.takeIf { it.isNotEmpty() },
             imageUrl = request.imageUrl?.trim()?.takeIf { it.isNotEmpty() },

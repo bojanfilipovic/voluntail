@@ -8,7 +8,6 @@ data class ShelterCreateRequest(
     val description: String,
     val latitude: Double,
     val longitude: Double,
-    val registryTag: RegistryTag,
     val species: List<String> = emptyList(),
     val signupUrl: String? = null,
     val imageUrl: String? = null,

@@ -67,7 +67,7 @@ export function ShelterDetailDialog({
           </header>
           <div className="shelter-dialog-body">
             <p className="shelter-dialog-meta">
-              {shelter.registryTag} · {shelter.species.length ? shelter.species.join(', ') : '—'}
+              {shelter.species.length ? shelter.species.join(', ') : '—'}
             </p>
             <p className="shelter-dialog-lead">
               Most shelters need volunteers, adopters, and foster homes—reach out via the links

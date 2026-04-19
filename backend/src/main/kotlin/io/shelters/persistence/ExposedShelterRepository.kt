@@ -32,7 +32,6 @@ class ExposedShelterRepository(
                             description = row[SheltersTable.description],
                             latitude = row[SheltersTable.latitude],
                             longitude = row[SheltersTable.longitude],
-                            registryTag = row[SheltersTable.registryTag],
                             species = row[SheltersTable.species],
                             signupUrl = row[SheltersTable.signupUrl],
                             imageUrl = row[SheltersTable.imageUrl],
@@ -53,7 +52,6 @@ class ExposedShelterRepository(
                     row[description] = request.description.trim()
                     row[latitude] = request.latitude
                     row[longitude] = request.longitude
-                    row[registryTag] = request.registryTag
                     row[species] = request.species
                     row[signupUrl] = request.signupUrl?.trim()?.takeIf { it.isNotEmpty() }
                     row[imageUrl] = request.imageUrl?.trim()?.takeIf { it.isNotEmpty() }
@@ -66,7 +64,6 @@ class ExposedShelterRepository(
                     description = request.description.trim(),
                     latitude = request.latitude,
                     longitude = request.longitude,
-                    registryTag = request.registryTag,
                     species = request.species,
                     signupUrl = request.signupUrl?.trim()?.takeIf { it.isNotEmpty() },
                     imageUrl = request.imageUrl?.trim()?.takeIf { it.isNotEmpty() },

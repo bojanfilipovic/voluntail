@@ -48,7 +48,7 @@ class ApplicationTest {
                 .post("/api/shelters") {
                     contentType(ContentType.Application.Json)
                     setBody(
-                        """{"name":"X","description":"Y","latitude":1.0,"longitude":2.0,"registryTag":"DOA","species":[]}""",
+                        """{"name":"X","description":"Y","latitude":1.0,"longitude":2.0,"species":[]}""",
                     )
                 }.apply {
                     assertEquals(HttpStatusCode.Unauthorized, status)
@@ -66,7 +66,7 @@ class ApplicationTest {
                     header("X-CMS-Key", "test-secret")
                     contentType(ContentType.Application.Json)
                     setBody(
-                        """{"name":"API Test Shelter","description":"From test","latitude":52.0,"longitude":5.0,"registryTag":"DOA","species":["dog"]}""",
+                        """{"name":"API Test Shelter","description":"From test","latitude":52.0,"longitude":5.0,"species":["dog"]}""",
                     )
                 }
             assertEquals(HttpStatusCode.Created, createRes.status)
