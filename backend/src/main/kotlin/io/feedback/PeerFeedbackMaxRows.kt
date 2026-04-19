@@ -1,12 +1,15 @@
 package io.feedback
 
-/** Upper bound on stored peer_feedback rows (spam blast radius). Default 50; override via PEER_FEEDBACK_MAX_ROWS. */
-private const val PEER_FEEDBACK_MAX_ROWS_FALLBACK = 50
-private const val PEER_FEEDBACK_MAX_ROWS_CEILING = 10_000
+/**
+ * Max stored [peer_feedback] rows before POST returns 429. Overridable via [PEER_FEEDBACK_MAX_ROWS]
+ * (e.g. Railway) without code changes. Default 50; valid range 1..50 (higher values clamp to 50).
+ */
+private const val PEER_FEEDBACK_MAX_ROWS_DEFAULT = 50
+private const val PEER_FEEDBACK_MAX_ROWS_CEILING = 50
 
-fun peerFeedbackMaxRows(): Int =
-    System.getenv("PEER_FEEDBACK_MAX_ROWS")?.trim()?.toIntOrNull()?.coerceIn(
-        1,
-        PEER_FEEDBACK_MAX_ROWS_CEILING,
-    )
-        ?: PEER_FEEDBACK_MAX_ROWS_FALLBACK
+fun peerFeedbackMaxRows(): Int {
+    val raw = System.getenv("PEER_FEEDBACK_MAX_ROWS")?.trim()?.toIntOrNull()
+        ?: return PEER_FEEDBACK_MAX_ROWS_DEFAULT
+    if (raw <= 0) return PEER_FEEDBACK_MAX_ROWS_DEFAULT
+    return raw.coerceAtMost(PEER_FEEDBACK_MAX_ROWS_CEILING)
+}
