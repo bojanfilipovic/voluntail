@@ -1,12 +1,15 @@
 package io.feedback
 
 import io.ktor.http.HttpStatusCode
+import io.ktor.server.application.ApplicationCall
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondText
+import io.ktor.server.plugins.BadRequestException
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
+import kotlinx.serialization.SerializationException
 
 const val SUGGESTION_MAX_MESSAGE_LENGTH = 4000
 const val SUGGESTION_MAX_CONTACT_LENGTH = 100
@@ -20,35 +23,21 @@ fun Route.feedbackRoutes(
             val body =
                 try {
                     call.receive<SuggestionCreateRequest>()
-                } catch (_: Exception) {
-                    call.respondText(
-                        "Invalid JSON body",
-                        status = HttpStatusCode.BadRequest,
-                    )
+                } catch (_: SerializationException) {
+                    invalidSuggestionBody(call)
+                    return@post
+                } catch (_: BadRequestException) {
+                    invalidSuggestionBody(call)
                     return@post
                 }
 
-            val trimmed = body.message.trim()
-            val contactNormalized =
-                body.contact?.trim()?.takeUnless { it.isEmpty() }
-            when {
-                trimmed.isEmpty() ->
+            when (val outcome = validateSuggestionFields(body)) {
+                is SuggestionValidationOutcome.Invalid ->
                     call.respondText(
-                        "Message is required",
+                        outcome.responseText,
                         status = HttpStatusCode.BadRequest,
                     )
-                trimmed.length > SUGGESTION_MAX_MESSAGE_LENGTH ->
-                    call.respondText(
-                        "Message exceeds maximum length ($SUGGESTION_MAX_MESSAGE_LENGTH characters)",
-                        status = HttpStatusCode.BadRequest,
-                    )
-                contactNormalized != null &&
-                    contactNormalized.length > SUGGESTION_MAX_CONTACT_LENGTH ->
-                    call.respondText(
-                        "Contact exceeds maximum length ($SUGGESTION_MAX_CONTACT_LENGTH characters)",
-                        status = HttpStatusCode.BadRequest,
-                    )
-                else -> {
+                is SuggestionValidationOutcome.Ok -> {
                     val repo =
                         repository
                             ?: run {
@@ -65,10 +54,17 @@ fun Route.feedbackRoutes(
                         )
                         return@post
                     }
-                    val created = repo.insert(trimmed, contactNormalized)
+                    val created = repo.insert(outcome.message, outcome.contact)
                     call.respond(HttpStatusCode.Created, created)
                 }
             }
         }
     }
+}
+
+private suspend fun invalidSuggestionBody(call: ApplicationCall) {
+    call.respondText(
+        "Invalid JSON body",
+        status = HttpStatusCode.BadRequest,
+    )
 }

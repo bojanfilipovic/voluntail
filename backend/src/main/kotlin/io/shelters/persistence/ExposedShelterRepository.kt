@@ -5,6 +5,8 @@ import io.shelters.ShelterRepository
 import io.shelters.ShelterResponse
 import io.shelters.ShelterUpdateRequest
 import io.shelters.applyTo
+import io.shelters.toShelterResponse
+import io.shelters.trimmedNonBlank
 import java.util.UUID
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -19,10 +21,10 @@ import org.jetbrains.exposed.v1.jdbc.transactions.suspendTransaction
 import org.jetbrains.exposed.v1.jdbc.update
 import kotlin.uuid.ExperimentalUuidApi
 
+@OptIn(ExperimentalUuidApi::class)
 class ExposedShelterRepository(
     private val database: Database,
 ) : ShelterRepository {
-    @OptIn(ExperimentalUuidApi::class)
     override suspend fun getAll(): List<ShelterResponse> =
         withContext(Dispatchers.IO) {
             suspendTransaction(db = database, readOnly = true) {
@@ -33,7 +35,6 @@ class ExposedShelterRepository(
             }
         }
 
-    @OptIn(ExperimentalUuidApi::class)
     override suspend fun insert(request: ShelterCreateRequest): ShelterResponse =
         withContext(Dispatchers.IO) {
             suspendTransaction(db = database, readOnly = false) {
@@ -45,26 +46,15 @@ class ExposedShelterRepository(
                     row[latitude] = request.latitude
                     row[longitude] = request.longitude
                     row[species] = request.species
-                    row[signupUrl] = request.signupUrl?.trim()?.takeIf { it.isNotEmpty() }
-                    row[imageUrl] = request.imageUrl?.trim()?.takeIf { it.isNotEmpty() }
-                    row[donationUrl] = request.donationUrl?.trim()?.takeIf { it.isNotEmpty() }
+                    row[signupUrl] = request.signupUrl.trimmedNonBlank()
+                    row[imageUrl] = request.imageUrl.trimmedNonBlank()
+                    row[donationUrl] = request.donationUrl.trimmedNonBlank()
                 }
 
-                ShelterResponse(
-                    id = newId.toString(),
-                    name = request.name.trim(),
-                    description = request.description.trim(),
-                    latitude = request.latitude,
-                    longitude = request.longitude,
-                    species = request.species,
-                    signupUrl = request.signupUrl?.trim()?.takeIf { it.isNotEmpty() },
-                    imageUrl = request.imageUrl?.trim()?.takeIf { it.isNotEmpty() },
-                    donationUrl = request.donationUrl?.trim()?.takeIf { it.isNotEmpty() },
-                )
+                request.toShelterResponse(newId)
             }
         }
 
-    @OptIn(ExperimentalUuidApi::class)
     override suspend fun update(
         id: UUID,
         request: ShelterUpdateRequest,
@@ -92,7 +82,6 @@ class ExposedShelterRepository(
             }
         }
 
-    @OptIn(ExperimentalUuidApi::class)
     override suspend fun delete(id: UUID): Boolean =
         withContext(Dispatchers.IO) {
             suspendTransaction(db = database, readOnly = false) {

@@ -1,16 +1,11 @@
 package io.shelters.persistence
 
 import io.shelters.ShelterSpecies
+import io.voluntail.voluntailJson
 import kotlinx.serialization.builtins.ListSerializer
-import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.java.javaUUID
 import org.jetbrains.exposed.v1.json.jsonb
-
-internal val sheltersTableJson =
-    Json {
-        ignoreUnknownKeys = true
-    }
 
 object SheltersTable : Table("shelters") {
     val id = javaUUID("id")
@@ -21,7 +16,7 @@ object SheltersTable : Table("shelters") {
     val species =
         jsonb(
             "species",
-            sheltersTableJson,
+            voluntailJson,
             ListSerializer(ShelterSpecies.serializer()),
         )
     val signupUrl = text("signup_url").nullable()
