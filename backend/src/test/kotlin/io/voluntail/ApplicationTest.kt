@@ -13,6 +13,9 @@ import io.ktor.server.testing.testApplication
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 
 class ApplicationTest {
 
@@ -23,6 +26,17 @@ class ApplicationTest {
                 module()
             }
             client.get("/").apply {
+                assertEquals(HttpStatusCode.OK, status)
+            }
+        }
+
+    @Test
+    fun testHealth() =
+        testApplication {
+            application {
+                module()
+            }
+            client.get("/health").apply {
                 assertEquals(HttpStatusCode.OK, status)
             }
         }
@@ -70,12 +84,11 @@ class ApplicationTest {
                     )
                 }
             assertEquals(HttpStatusCode.Created, createRes.status)
-            val idRegex = """"id"\s*:\s*"([^"]+)"""".toRegex()
             val id =
-                idRegex
-                    .find(createRes.bodyAsText())
-                    ?.groupValues
-                    ?.get(1)
+                Json.parseToJsonElement(createRes.bodyAsText())
+                    .jsonObject["id"]
+                    ?.jsonPrimitive
+                    ?.content
                     ?: error("no id in body")
             val del =
                 client.delete("/api/shelters/$id") {

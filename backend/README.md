@@ -27,7 +27,8 @@ Uses **JDK 21** via Gradle `kotlin { jvmToolchain(21) }` and Kotlin `jvmTarget` 
 ### Shelters / Postgres (Supabase)
 
 - Versioned DDL: [`supabase/migrations/`](supabase/migrations/) — run files **in name order** in the Supabase SQL editor (create table, then seed), or wire Supabase CLI later. The seed migration is **idempotent** (`ON CONFLICT DO UPDATE`).
-- **JDBC:** set env **`DATABASE_JDBC_URL`** to your full JDBC URL (see [`.env.example`](.env.example)). For legacy setups, **`DB_URL`** is still accepted (with optional **`DB_USERNAME`** / **`DB_PASSWORD`** when the URL does not embed credentials). If all of these are unset or empty, `/api/shelters` uses **in-memory** sample data.
+- **JDBC:** set env **`DB_URL`** to your full JDBC URL for Postgres (Supabase). Optional **`DB_USERNAME`** / **`DB_PASSWORD`** when the URL does not embed credentials. See [`.env.example`](.env.example). If **`DB_URL`** is unset or empty, `/api/shelters` uses **in-memory** sample data.
+- **CORS:** optional comma-separated **`CORS_ORIGINS`** (browser Origins, e.g. `http://localhost:5173,https://myapp.vercel.app`). If unset, defaults to local Vite ports only (`http://localhost:5173`, `http://localhost:4173`).
 - Reads use **JetBrains Exposed** (DSL + JDBC) on top of the same Hikari pool; schema remains owned by Supabase SQL only (no `SchemaUtils` DDL from the app).
 - Pool: **HikariCP** (`maximumPoolSize` 5).
 
@@ -60,22 +61,33 @@ sudo ln -sfn /opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk /Library/Java/Java
 
 **Check:** `./gradlew -version` should report JVM **21** after Option A or after `export JAVA_HOME=$(/usr/libexec/java_home -v 21)`.
 
-To build or run the project, use one of the following tasks:
+### CI (GitHub Actions)
 
-| Task                                    | Description                                                          |
-| -----------------------------------------|---------------------------------------------------------------------- |
-| `./gradlew test`                        | Run the tests                                                        |
-| `./gradlew build`                       | Build everything                                                     |
-| `./gradlew buildFatJar`                 | Build an executable JAR of the server with all dependencies included |
-| `./gradlew buildImage`                  | Build the docker image to use with the fat JAR                       |
-| `./gradlew publishImageToLocalRegistry` | Publish the docker image locally                                     |
-| `./gradlew run`                         | Run the server                                                       |
-| `./gradlew runDocker`                   | Run using the local docker image                                     |
+The repo runs **`./gradlew test`** on `backend/` and **`npm ci` + lint + build** on `frontend/` on pushes and PRs to `main` / `master` — see [`.github/workflows/ci.yml`](../.github/workflows/ci.yml).
 
-If the server starts successfully, you'll see the following output:
+### Docker sample (Railway-ready image)
 
+[`Dockerfile`](Dockerfile) builds a runnable image with `./gradlew shadowJar`. Example:
+
+```bash
+docker build -t voluntail-api -f Dockerfile .
+docker run --rm -p 8080:8080 -e PORT=8080 voluntail-api
 ```
-2024-12-04 14:32:45.584 [main] INFO  Application - Application started in 0.303 seconds.
-2024-12-04 14:32:45.682 [main] INFO  Application - Responding at http://0.0.0.0:8080
-```
+
+The process listens on **`PORT`** (default **8080**). Configure **`DB_URL`**, **`CMS_API_KEY`**, etc. when you deploy.
+
+### Gradle tasks
+
+| Task | Description |
+|------|-------------|
+| `./gradlew test` | Run tests |
+| `./gradlew build` | Build and test |
+| `./gradlew shadowJar` | Fat JAR with runtime deps (`build/libs/voluntail-all.jar`) |
+| `./gradlew run` | Run the server locally |
+
+If the server starts successfully, you'll see log output ending with responding at **`http://0.0.0.0:<port>`** (`PORT` or **8080**).
+
+### Frontend (monorepo)
+
+The React app lives in **`../frontend/`**. **V1 uses plain CSS** (see `frontend/src/App.css`); Tailwind/shadcn are planned later.
 

@@ -1,14 +1,10 @@
-export type Shelter = {
-  id: string
-  name: string
-  description: string
-  latitude: number
-  longitude: number
-  species: string[]
-  signupUrl: string | null
-  imageUrl: string | null
-  donationUrl: string | null
-}
+import {
+  shelterSchema,
+  sheltersListSchema,
+  type Shelter,
+} from '../schemas/shelters'
+
+export type { Shelter }
 
 export type ShelterCreatePayload = {
   name: string
@@ -44,11 +40,7 @@ export async function fetchShelters(): Promise<Shelter[]> {
     throw new Error('Invalid JSON from /api/shelters')
   }
 
-  if (!Array.isArray(raw)) {
-    throw new Error('Expected a JSON array from /api/shelters')
-  }
-
-  return raw as Shelter[]
+  return sheltersListSchema.parse(raw)
 }
 
 export async function createShelter(body: ShelterCreatePayload): Promise<Shelter> {
@@ -64,7 +56,8 @@ export async function createShelter(body: ShelterCreatePayload): Promise<Shelter
     const detail = await res.text().catch(() => '')
     throw new Error(detail || `HTTP ${res.status}`)
   }
-  return (await res.json()) as Shelter
+  const raw: unknown = await res.json()
+  return shelterSchema.parse(raw)
 }
 
 export async function deleteShelter(id: string): Promise<void> {

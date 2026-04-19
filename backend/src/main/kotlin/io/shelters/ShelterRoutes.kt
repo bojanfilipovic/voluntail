@@ -51,16 +51,20 @@ private suspend fun ApplicationCall.ensureCmsAuthorized(): Boolean {
     val expected = System.getenv("CMS_API_KEY")?.trim().orEmpty()
     val provided = request.headers["X-CMS-Key"]?.trim().orEmpty()
     return when {
-        expected.isEmpty() ->
+        expected.isEmpty() -> {
             respondText(
                 "CMS mutations disabled: set CMS_API_KEY on the server",
                 status = HttpStatusCode.Forbidden,
-            ).let { false }
-        provided != expected ->
+            )
+            false
+        }
+        provided != expected -> {
             respondText(
                 "Invalid or missing X-CMS-Key header",
                 status = HttpStatusCode.Unauthorized,
-            ).let { false }
+            )
+            false
+        }
         else -> true
     }
 }
