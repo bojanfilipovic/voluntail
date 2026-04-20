@@ -12,7 +12,7 @@ import {
 import { speciesLabel } from '@/domain/species'
 import { cn } from '@/lib/utils'
 import { XIcon } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 
 function statusLabel(s: Animal['status']): string {
   switch (s) {
@@ -53,10 +53,6 @@ export function AnimalDetailDialog({
 }: Props) {
   const showCms = cmsConfigured
   const [shelterDetailsOpen, setShelterDetailsOpen] = useState(false)
-
-  useEffect(() => {
-    setShelterDetailsOpen(false)
-  }, [animal?.id])
 
   return (
     <Dialog open={Boolean(animal)} onOpenChange={(next) => !next && onClose()}>
