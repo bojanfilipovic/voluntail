@@ -26,7 +26,13 @@ out/
 **/out/
 **/.gradle-home/
 **/.gradle-user/
-**.gradle-local-home
+# Isolated GRADLE_USER_HOME (e.g. ./gradlew with GRADLE_USER_HOME=.../gradle-local-home)
+**/.gradle-local-home/
+
+# Gradle diagnostics / problem reports (redundant with **/build/ but explicit for stragglers)
+**/build/reports/problems/
+**/reports/problems/
+**/problems-report.html
 
 # Kotlin Gradle plugin cache (K2, etc.)
 .kotlin/
@@ -36,6 +42,7 @@ out/
 !**/gradle/wrapper/gradle-wrapper.jar
 
 *.class
+*.hprof
 hs_err_pid*
 replay_pid*
 
@@ -76,4 +83,11 @@ coverage/
 # --- Python tooling ---
 .venv/
 **/.venv/
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
 
