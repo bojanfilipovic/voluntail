@@ -29,7 +29,12 @@ object ShelterSamples {
                         "Gelegen tussen Haarlem en Amsterdam.",
                 latitude = 52.3794501,
                 longitude = 4.7541101,
-                species = listOf(ShelterSpecies.reptile, ShelterSpecies.amphibian),
+                species =
+                    listOf(
+                        ShelterSpecies.reptile,
+                        ShelterSpecies.amphibian,
+                        ShelterSpecies.arachnid,
+                    ),
                 signupUrl = "https://reptielenopvang.nl/contact",
                 imageUrl =
                     "https://reptileessentials.nl/cdn/shop/files/logo3.jpg?height=200&v=1753111538",
