@@ -26,7 +26,7 @@ out/
 **/out/
 **/.gradle-home/
 **/.gradle-user/
-.gradle-local-home
+**.gradle-local-home
 
 # Kotlin Gradle plugin cache (K2, etc.)
 .kotlin/
