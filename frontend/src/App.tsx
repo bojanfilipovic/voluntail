@@ -3,7 +3,6 @@ import {
   lazy,
   Suspense,
   useCallback,
-  useEffect,
   useMemo,
   useState,
 } from 'react'
@@ -193,12 +192,19 @@ function App() {
     setMapShelterHighlightId(null)
   }, [clearSelection])
 
-  useEffect(() => {
-    if (!selectedShelter || !speciesFilter) return
-    if (!selectedShelter.species.includes(speciesFilter)) {
-      clearSelectionAndMapHighlight()
-    }
-  }, [speciesFilter, selectedShelter, clearSelectionAndMapHighlight])
+  const handleShelterSpeciesFilter = useCallback(
+    (nextFilter: ShelterSpecies | null) => {
+      if (
+        nextFilter &&
+        selectedShelter &&
+        !selectedShelter.species.includes(nextFilter)
+      ) {
+        clearSelectionAndMapHighlight()
+      }
+      setSpeciesFilter(nextFilter)
+    },
+    [selectedShelter, clearSelectionAndMapHighlight],
+  )
 
   const handleMapSelectClearingHighlight = useCallback(
     (s: Shelter) => {
@@ -358,7 +364,7 @@ function App() {
                     selectedId={selectedShelter?.id ?? null}
                     onSelectShelter={handleListSelectClearingHighlight}
                     speciesFilter={speciesFilter}
-                    onSpeciesFilter={setSpeciesFilter}
+                    onSpeciesFilter={handleShelterSpeciesFilter}
                     speciesFilters={speciesFilters}
                   />
                 ) : (
@@ -408,6 +414,7 @@ function App() {
         isSubmitting={mutations.updateMutation.isPending}
       />
       <AnimalDetailDialog
+        key={animalForDetailModal?.id ?? 'none'}
         animal={animalForDetailModal}
         shelter={selectedAnimalShelter}
         onClose={handleCloseAnimalDetail}
