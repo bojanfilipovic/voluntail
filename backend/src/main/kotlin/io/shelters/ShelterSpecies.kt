@@ -11,6 +11,8 @@ enum class ShelterSpecies {
     rodent,
     amphibian,
     wildlife,
+    /** Spiders and other arachnids (e.g. ROZ vogelspin listings). */
+    arachnid,
 }
 
 /** Returns null if any non-empty token is not a valid [ShelterSpecies] name. */

@@ -7,6 +7,7 @@ export const SPECIES_VALUES = [
   'rodent',
   'amphibian',
   'wildlife',
+  'arachnid',
 ] as const
 
 export type ShelterSpecies = (typeof SPECIES_VALUES)[number]
@@ -20,6 +21,7 @@ export function speciesLabel(sp: ShelterSpecies): string {
     rodent: 'Rodent',
     amphibian: 'Amphibian',
     wildlife: 'Wildlife',
+    arachnid: 'Arachnid',
   }
   return labels[sp]
 }

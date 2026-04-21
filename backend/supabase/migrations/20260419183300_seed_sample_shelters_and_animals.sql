@@ -32,7 +32,7 @@ values
             || 'Gelegen tussen Haarlem en Amsterdam.',
         52.3794501,
         4.7541101,
-        '["reptile","amphibian"]'::jsonb,
+        '["reptile","amphibian","arachnid"]'::jsonb,
         'https://reptielenopvang.nl/contact',
         'https://reptileessentials.nl/cdn/shop/files/logo3.jpg?height=200&v=1753111538',
         'https://dierenlot.digicollect.nl/stichting-dierenhulpdienst-nederland',
@@ -478,3 +478,848 @@ select s.id,
 from public.shelters s
 where s.name = 'DOA dierenasiel'
 limit 1;
+
+-- Pilot expansion: DOA + ROZ directory animals (snapshot; external_url points at source site).
+
+-- Align placeholder images with AnimalSamples.kt for pilot rows.
+update public.animals a
+set image_url = 'https://picsum.photos/seed/voluntail-ph-dog-milo/400/400'
+from public.shelters s
+where a.shelter_id = s.id and s.name = 'DOA dierenasiel' and a.name = 'Milo';
+
+update public.animals a
+set image_url = 'https://picsum.photos/seed/voluntail-ph-cat-luna/400/400'
+from public.shelters s
+where a.shelter_id = s.id and s.name = 'DOA dierenasiel' and a.name = 'Luna';
+
+update public.animals a
+set image_url = 'https://picsum.photos/seed/voluntail-ph-reptile-rex/400/400'
+from public.shelters s
+where a.shelter_id = s.id and s.name = 'Reptielenopvang Zwanenburg' and a.name = 'Rex';
+
+insert into public.animals (
+    shelter_id,
+    city,
+    name,
+    description,
+    species,
+    status,
+    published,
+    image_url,
+    external_url
+)
+select s.id,
+       'Amsterdam',
+       'Tonic',
+       'Onbekend, vrouwelijk, 1 Mar 2022 Bron: DOA.',
+       'rabbit',
+       'available',
+       true,
+       'https://picsum.photos/seed/voluntail-ph-rabbit-tonic/400/400',
+       'https://doa-dierenasiel.nl/adoptiedieren/tonic/'
+from public.shelters s
+where s.name = 'DOA dierenasiel'
+limit 1;
+
+
+insert into public.animals (
+    shelter_id,
+    city,
+    name,
+    description,
+    species,
+    status,
+    published,
+    image_url,
+    external_url
+)
+select s.id,
+       'Amsterdam',
+       'Zippy',
+       'Konijn, dwerg, mannelijk, 14 Feb 2022 Bron: DOA.',
+       'rabbit',
+       'available',
+       true,
+       'https://picsum.photos/seed/voluntail-ph-rabbit-zippy/400/400',
+       'https://doa-dierenasiel.nl/adoptiedieren/zippy/'
+from public.shelters s
+where s.name = 'DOA dierenasiel'
+limit 1;
+
+
+insert into public.animals (
+    shelter_id,
+    city,
+    name,
+    description,
+    species,
+    status,
+    published,
+    image_url,
+    external_url
+)
+select s.id,
+       'Amsterdam',
+       'Flakey',
+       'Kruising groot, vrouwelijk, 30 Sep 2024 Bron: DOA.',
+       'dog',
+       'available',
+       true,
+       'https://picsum.photos/seed/voluntail-ph-dog-flakey-2/400/400',
+       'https://doa-dierenasiel.nl/adoptiedieren/flakey-2/'
+from public.shelters s
+where s.name = 'DOA dierenasiel'
+limit 1;
+
+
+insert into public.animals (
+    shelter_id,
+    city,
+    name,
+    description,
+    species,
+    status,
+    published,
+    image_url,
+    external_url
+)
+select s.id,
+       'Amsterdam',
+       'Floris',
+       'Europese Korthaar, mannelijk, 1 Jan 2020 Bron: DOA.',
+       'cat',
+       'available',
+       true,
+       'https://picsum.photos/seed/voluntail-ph-cat-floris/400/400',
+       'https://doa-dierenasiel.nl/adoptiedieren/floris/'
+from public.shelters s
+where s.name = 'DOA dierenasiel'
+limit 1;
+
+
+insert into public.animals (
+    shelter_id,
+    city,
+    name,
+    description,
+    species,
+    status,
+    published,
+    image_url,
+    external_url
+)
+select s.id,
+       'Amsterdam',
+       'Brink',
+       'Europese Korthaar, mannelijk, 30 Aug 2024 Bron: DOA.',
+       'cat',
+       'available',
+       true,
+       'https://picsum.photos/seed/voluntail-ph-cat-brink/400/400',
+       'https://doa-dierenasiel.nl/adoptiedieren/brink/'
+from public.shelters s
+where s.name = 'DOA dierenasiel'
+limit 1;
+
+
+insert into public.animals (
+    shelter_id,
+    city,
+    name,
+    description,
+    species,
+    status,
+    published,
+    image_url,
+    external_url
+)
+select s.id,
+       'Amsterdam',
+       'Zorro',
+       'Europese Korthaar, vrouwelijk, 1 May 2021 Bron: DOA.',
+       'cat',
+       'available',
+       true,
+       'https://picsum.photos/seed/voluntail-ph-cat-zorro/400/400',
+       'https://doa-dierenasiel.nl/adoptiedieren/zorro/'
+from public.shelters s
+where s.name = 'DOA dierenasiel'
+limit 1;
+
+
+insert into public.animals (
+    shelter_id,
+    city,
+    name,
+    description,
+    species,
+    status,
+    published,
+    image_url,
+    external_url
+)
+select s.id,
+       'Amsterdam',
+       'Norman',
+       'Kruising kat, mannelijk, 14 Jun 2018 Bron: DOA.',
+       'cat',
+       'available',
+       true,
+       'https://picsum.photos/seed/voluntail-ph-cat-norman/400/400',
+       'https://doa-dierenasiel.nl/adoptiedieren/norman/'
+from public.shelters s
+where s.name = 'DOA dierenasiel'
+limit 1;
+
+
+insert into public.animals (
+    shelter_id,
+    city,
+    name,
+    description,
+    species,
+    status,
+    published,
+    image_url,
+    external_url
+)
+select s.id,
+       'Amsterdam',
+       'Sjatzu',
+       'Shih Tzu, vrouwelijk, 12 Aug 2016 Bron: DOA.',
+       'dog',
+       'available',
+       true,
+       'https://picsum.photos/seed/voluntail-ph-dog-sjatzu/400/400',
+       'https://doa-dierenasiel.nl/adoptiedieren/sjatzu/'
+from public.shelters s
+where s.name = 'DOA dierenasiel'
+limit 1;
+
+
+insert into public.animals (
+    shelter_id,
+    city,
+    name,
+    description,
+    species,
+    status,
+    published,
+    image_url,
+    external_url
+)
+select s.id,
+       'Amsterdam',
+       'Max',
+       'Perzische Kat, mannelijk, 7 Apr 2023 Bron: DOA.',
+       'cat',
+       'available',
+       true,
+       'https://picsum.photos/seed/voluntail-ph-cat-max/400/400',
+       'https://doa-dierenasiel.nl/adoptiedieren/max/'
+from public.shelters s
+where s.name = 'DOA dierenasiel'
+limit 1;
+
+
+insert into public.animals (
+    shelter_id,
+    city,
+    name,
+    description,
+    species,
+    status,
+    published,
+    image_url,
+    external_url
+)
+select s.id,
+       'Amsterdam',
+       'Sara',
+       'Europese Korthaar, vrouwelijk, 26 May 2025 Bron: DOA.',
+       'cat',
+       'available',
+       true,
+       'https://picsum.photos/seed/voluntail-ph-cat-sara/400/400',
+       'https://doa-dierenasiel.nl/adoptiedieren/sara/'
+from public.shelters s
+where s.name = 'DOA dierenasiel'
+limit 1;
+
+
+insert into public.animals (
+    shelter_id,
+    city,
+    name,
+    description,
+    species,
+    status,
+    published,
+    image_url,
+    external_url
+)
+select s.id,
+       'Amsterdam',
+       'Tjemp',
+       'Bengaal, mannelijk, 18 May 2024 Bron: DOA.',
+       'cat',
+       'available',
+       true,
+       'https://picsum.photos/seed/voluntail-ph-cat-tjemp/400/400',
+       'https://doa-dierenasiel.nl/adoptiedieren/tjemp/'
+from public.shelters s
+where s.name = 'DOA dierenasiel'
+limit 1;
+
+
+insert into public.animals (
+    shelter_id,
+    city,
+    name,
+    description,
+    species,
+    status,
+    published,
+    image_url,
+    external_url
+)
+select s.id,
+       'Amsterdam',
+       'Syra',
+       'Europese Korthaar, vrouwelijk, 1 May 2018 Bron: DOA.',
+       'cat',
+       'available',
+       true,
+       'https://picsum.photos/seed/voluntail-ph-cat-syra/400/400',
+       'https://doa-dierenasiel.nl/adoptiedieren/syra/'
+from public.shelters s
+where s.name = 'DOA dierenasiel'
+limit 1;
+
+
+insert into public.animals (
+    shelter_id,
+    city,
+    name,
+    description,
+    species,
+    status,
+    published,
+    image_url,
+    external_url
+)
+select s.id,
+       'Heemskerk',
+       'Zandhagedis',
+       'Binnengekomen via ReptielenOpvang Zwanenburg — zie artikel. Locatie: Heemskerk.',
+       'reptile',
+       'available',
+       true,
+       'https://picsum.photos/seed/voluntail-ph-reptile-1685-19-april-2026-zandhagedis-heemskerk/400/400',
+       'https://reptielenopvang.nl/binnengekomen-dieren/1685-19-april-2026-zandhagedis-heemskerk'
+from public.shelters s
+where s.name = 'Reptielenopvang Zwanenburg'
+limit 1;
+
+
+insert into public.animals (
+    shelter_id,
+    city,
+    name,
+    description,
+    species,
+    status,
+    published,
+    image_url,
+    external_url
+)
+select s.id,
+       'Overveen',
+       'Panter kameleon',
+       'Binnengekomen via ReptielenOpvang Zwanenburg — zie artikel. Locatie: Overveen.',
+       'reptile',
+       'available',
+       true,
+       'https://picsum.photos/seed/voluntail-ph-reptile-1684-15-april-2026-panter-kameleon-overveen/400/400',
+       'https://reptielenopvang.nl/binnengekomen-dieren/1684-15-april-2026-panter-kameleon-overveen'
+from public.shelters s
+where s.name = 'Reptielenopvang Zwanenburg'
+limit 1;
+
+
+insert into public.animals (
+    shelter_id,
+    city,
+    name,
+    description,
+    species,
+    status,
+    published,
+    image_url,
+    external_url
+)
+select s.id,
+       'Leiderdorp',
+       'Hemidactylus freinatus',
+       'Binnengekomen via ReptielenOpvang Zwanenburg — zie artikel. Locatie: Leiderdorp.',
+       'reptile',
+       'available',
+       true,
+       'https://picsum.photos/seed/voluntail-ph-reptile-1683-9-april-2026-hemidactylus-freinatus-leiderdorp/400/400',
+       'https://reptielenopvang.nl/binnengekomen-dieren/1683-9-april-2026-hemidactylus-freinatus-leiderdorp'
+from public.shelters s
+where s.name = 'Reptielenopvang Zwanenburg'
+limit 1;
+
+
+insert into public.animals (
+    shelter_id,
+    city,
+    name,
+    description,
+    species,
+    status,
+    published,
+    image_url,
+    external_url
+)
+select s.id,
+       'Deventer',
+       'Rattenslang',
+       'Binnengekomen via ReptielenOpvang Zwanenburg — zie artikel. Locatie: Deventer.',
+       'reptile',
+       'available',
+       true,
+       'https://picsum.photos/seed/voluntail-ph-reptile-1682-8-april-2026-rattenslang-deventer/400/400',
+       'https://reptielenopvang.nl/binnengekomen-dieren/1682-8-april-2026-rattenslang-deventer'
+from public.shelters s
+where s.name = 'Reptielenopvang Zwanenburg'
+limit 1;
+
+
+insert into public.animals (
+    shelter_id,
+    city,
+    name,
+    description,
+    species,
+    status,
+    published,
+    image_url,
+    external_url
+)
+select s.id,
+       'Almere',
+       'Baardagaam',
+       'Binnengekomen via ReptielenOpvang Zwanenburg — zie artikel. Locatie: Almere.',
+       'reptile',
+       'available',
+       true,
+       'https://picsum.photos/seed/voluntail-ph-reptile-1681-4-april-2026-baardagaam-almere/400/400',
+       'https://reptielenopvang.nl/binnengekomen-dieren/1681-4-april-2026-baardagaam-almere'
+from public.shelters s
+where s.name = 'Reptielenopvang Zwanenburg'
+limit 1;
+
+
+insert into public.animals (
+    shelter_id,
+    city,
+    name,
+    description,
+    species,
+    status,
+    published,
+    image_url,
+    external_url
+)
+select s.id,
+       'Purmerend',
+       'Baardagaam',
+       'Binnengekomen via ReptielenOpvang Zwanenburg — zie artikel. Locatie: Purmerend.',
+       'reptile',
+       'available',
+       true,
+       'https://picsum.photos/seed/voluntail-ph-reptile-1680-31-maart-2026-baardagaam-purmerend/400/400',
+       'https://reptielenopvang.nl/binnengekomen-dieren/1680-31-maart-2026-baardagaam-purmerend'
+from public.shelters s
+where s.name = 'Reptielenopvang Zwanenburg'
+limit 1;
+
+
+insert into public.animals (
+    shelter_id,
+    city,
+    name,
+    description,
+    species,
+    status,
+    published,
+    image_url,
+    external_url
+)
+select s.id,
+       'Amsterdam',
+       '4 dieren (Amsterdam)',
+       'Binnengekomen via ReptielenOpvang Zwanenburg — zie artikel. Locatie: Amsterdam.',
+       'reptile',
+       'available',
+       true,
+       'https://picsum.photos/seed/voluntail-ph-reptile-1679-28-maart-2026-4-dieren-amsterdam/400/400',
+       'https://reptielenopvang.nl/binnengekomen-dieren/1679-28-maart-2026-4-dieren-amsterdam'
+from public.shelters s
+where s.name = 'Reptielenopvang Zwanenburg'
+limit 1;
+
+
+insert into public.animals (
+    shelter_id,
+    city,
+    name,
+    description,
+    species,
+    status,
+    published,
+    image_url,
+    external_url
+)
+select s.id,
+       'Aalsmeer',
+       'Podarcis muralis',
+       'Binnengekomen via ReptielenOpvang Zwanenburg — zie artikel. Locatie: Aalsmeer.',
+       'reptile',
+       'available',
+       true,
+       'https://picsum.photos/seed/voluntail-ph-reptile-1678-25-maart-2026-podarcis-muralis-aalsmeer/400/400',
+       'https://reptielenopvang.nl/binnengekomen-dieren/1678-25-maart-2026-podarcis-muralis-aalsmeer'
+from public.shelters s
+where s.name = 'Reptielenopvang Zwanenburg'
+limit 1;
+
+
+insert into public.animals (
+    shelter_id,
+    city,
+    name,
+    description,
+    species,
+    status,
+    published,
+    image_url,
+    external_url
+)
+select s.id,
+       'Castricum',
+       'Vogelspin (sling)',
+       'Binnengekomen via ReptielenOpvang Zwanenburg — zie artikel. Locatie: Castricum.',
+       'arachnid',
+       'available',
+       true,
+       'https://picsum.photos/seed/voluntail-ph-arachnid-1677-25-maart-2026-vogelspin-sling-castricum/400/400',
+       'https://reptielenopvang.nl/binnengekomen-dieren/1677-25-maart-2026-vogelspin-sling-castricum'
+from public.shelters s
+where s.name = 'Reptielenopvang Zwanenburg'
+limit 1;
+
+
+insert into public.animals (
+    shelter_id,
+    city,
+    name,
+    description,
+    species,
+    status,
+    published,
+    image_url,
+    external_url
+)
+select s.id,
+       'Amsterdam',
+       'Testudo graeca',
+       'Binnengekomen via ReptielenOpvang Zwanenburg — zie artikel. Locatie: Amsterdam.',
+       'reptile',
+       'available',
+       true,
+       'https://picsum.photos/seed/voluntail-ph-reptile-1676-24-maart-2026-testudo-graeca-amsterdam/400/400',
+       'https://reptielenopvang.nl/binnengekomen-dieren/1676-24-maart-2026-testudo-graeca-amsterdam'
+from public.shelters s
+where s.name = 'Reptielenopvang Zwanenburg'
+limit 1;
+
+
+insert into public.animals (
+    shelter_id,
+    city,
+    name,
+    description,
+    species,
+    status,
+    published,
+    image_url,
+    external_url
+)
+select s.id,
+       'Den Haag',
+       'Geelwangschildpad',
+       'Binnengekomen via ReptielenOpvang Zwanenburg — zie artikel. Locatie: Den Haag.',
+       'reptile',
+       'available',
+       true,
+       'https://picsum.photos/seed/voluntail-ph-reptile-1675-21-maart-2026-geelwangschildpad-den-haag/400/400',
+       'https://reptielenopvang.nl/binnengekomen-dieren/1675-21-maart-2026-geelwangschildpad-den-haag'
+from public.shelters s
+where s.name = 'Reptielenopvang Zwanenburg'
+limit 1;
+
+
+insert into public.animals (
+    shelter_id,
+    city,
+    name,
+    description,
+    species,
+    status,
+    published,
+    image_url,
+    external_url
+)
+select s.id,
+       'Noordwijk',
+       'Stigmochelis pardalis',
+       'Binnengekomen via ReptielenOpvang Zwanenburg — zie artikel. Locatie: Noordwijk.',
+       'reptile',
+       'available',
+       true,
+       'https://picsum.photos/seed/voluntail-ph-reptile-1674-21-maart-2026-stigmochelis-pardalis-noordwijk/400/400',
+       'https://reptielenopvang.nl/binnengekomen-dieren/1674-21-maart-2026-stigmochelis-pardalis-noordwijk'
+from public.shelters s
+where s.name = 'Reptielenopvang Zwanenburg'
+limit 1;
+
+
+insert into public.animals (
+    shelter_id,
+    city,
+    name,
+    description,
+    species,
+    status,
+    published,
+    image_url,
+    external_url
+)
+select s.id,
+       'Utrecht',
+       '2 baardagamen',
+       'Binnengekomen via ReptielenOpvang Zwanenburg — zie artikel. Locatie: Utrecht.',
+       'reptile',
+       'available',
+       true,
+       'https://picsum.photos/seed/voluntail-ph-reptile-1673-21-maart-2026-2-baardagamen-utrecht/400/400',
+       'https://reptielenopvang.nl/binnengekomen-dieren/1673-21-maart-2026-2-baardagamen-utrecht'
+from public.shelters s
+where s.name = 'Reptielenopvang Zwanenburg'
+limit 1;
+
+
+insert into public.animals (
+    shelter_id,
+    city,
+    name,
+    description,
+    species,
+    status,
+    published,
+    image_url,
+    external_url
+)
+select s.id,
+       'Wilnis',
+       'Boa constrictor',
+       'Binnengekomen via ReptielenOpvang Zwanenburg — zie artikel. Locatie: Wilnis.',
+       'reptile',
+       'available',
+       true,
+       'https://picsum.photos/seed/voluntail-ph-reptile-1672-17-maart-2026-boa-c-c-wilnis/400/400',
+       'https://reptielenopvang.nl/binnengekomen-dieren/1672-17-maart-2026-boa-c-c-wilnis'
+from public.shelters s
+where s.name = 'Reptielenopvang Zwanenburg'
+limit 1;
+
+
+insert into public.animals (
+    shelter_id,
+    city,
+    name,
+    description,
+    species,
+    status,
+    published,
+    image_url,
+    external_url
+)
+select s.id,
+       'Zwanenburg',
+       'Koningspython',
+       'Binnengekomen via ReptielenOpvang Zwanenburg — zie artikel. Locatie: Zwanenburg.',
+       'reptile',
+       'available',
+       true,
+       'https://picsum.photos/seed/voluntail-ph-reptile-1671-14-maart-2026-koningspython-zwanenburg/400/400',
+       'https://reptielenopvang.nl/binnengekomen-dieren/1671-14-maart-2026-koningspython-zwanenburg'
+from public.shelters s
+where s.name = 'Reptielenopvang Zwanenburg'
+limit 1;
+
+
+insert into public.animals (
+    shelter_id,
+    city,
+    name,
+    description,
+    species,
+    status,
+    published,
+    image_url,
+    external_url
+)
+select s.id,
+       'Noordwijk',
+       '2 baardagamen',
+       'Binnengekomen via ReptielenOpvang Zwanenburg — zie artikel. Locatie: Noordwijk.',
+       'reptile',
+       'available',
+       true,
+       'https://picsum.photos/seed/voluntail-ph-reptile-1670-14-maart-2026-2-baardagamen-noordwijk/400/400',
+       'https://reptielenopvang.nl/binnengekomen-dieren/1670-14-maart-2026-2-baardagamen-noordwijk'
+from public.shelters s
+where s.name = 'Reptielenopvang Zwanenburg'
+limit 1;
+
+
+insert into public.animals (
+    shelter_id,
+    city,
+    name,
+    description,
+    species,
+    status,
+    published,
+    image_url,
+    external_url
+)
+select s.id,
+       'Den Haag',
+       '3 dieren',
+       'Binnengekomen via ReptielenOpvang Zwanenburg — zie artikel. Locatie: Den Haag.',
+       'reptile',
+       'available',
+       true,
+       'https://picsum.photos/seed/voluntail-ph-reptile-1669-13-maart-2026-3-dieren-den-haag/400/400',
+       'https://reptielenopvang.nl/binnengekomen-dieren/1669-13-maart-2026-3-dieren-den-haag'
+from public.shelters s
+where s.name = 'Reptielenopvang Zwanenburg'
+limit 1;
+
+
+insert into public.animals (
+    shelter_id,
+    city,
+    name,
+    description,
+    species,
+    status,
+    published,
+    image_url,
+    external_url
+)
+select s.id,
+       'Zaandam',
+       'Boa''s en koningspythons',
+       'Binnengekomen via ReptielenOpvang Zwanenburg — zie artikel. Locatie: Zaandam.',
+       'reptile',
+       'available',
+       true,
+       'https://picsum.photos/seed/voluntail-ph-reptile-1668-11-maart-2026-2-boa-s-3-koningspythons-zaandam/400/400',
+       'https://reptielenopvang.nl/binnengekomen-dieren/1668-11-maart-2026-2-boa-s-3-koningspythons-zaandam'
+from public.shelters s
+where s.name = 'Reptielenopvang Zwanenburg'
+limit 1;
+
+
+insert into public.animals (
+    shelter_id,
+    city,
+    name,
+    description,
+    species,
+    status,
+    published,
+    image_url,
+    external_url
+)
+select s.id,
+       'Haarlem',
+       'Testudo hermanni',
+       'Binnengekomen via ReptielenOpvang Zwanenburg — zie artikel. Locatie: Haarlem.',
+       'reptile',
+       'available',
+       true,
+       'https://picsum.photos/seed/voluntail-ph-reptile-1667-5-maart-2026-testudo-hermanni-haarlem/400/400',
+       'https://reptielenopvang.nl/binnengekomen-dieren/1667-5-maart-2026-testudo-hermanni-haarlem'
+from public.shelters s
+where s.name = 'Reptielenopvang Zwanenburg'
+limit 1;
+
+
+insert into public.animals (
+    shelter_id,
+    city,
+    name,
+    description,
+    species,
+    status,
+    published,
+    image_url,
+    external_url
+)
+select s.id,
+       'Haarlem',
+       'Salamander',
+       'Binnengekomen via ReptielenOpvang Zwanenburg — zie artikel. Locatie: Haarlem.',
+       'amphibian',
+       'available',
+       true,
+       'https://picsum.photos/seed/voluntail-ph-amphibian-1666-5-maart-2026-salamander-haarlem/400/400',
+       'https://reptielenopvang.nl/binnengekomen-dieren/1666-5-maart-2026-salamander-haarlem'
+from public.shelters s
+where s.name = 'Reptielenopvang Zwanenburg'
+limit 1;
+
+
+insert into public.animals (
+    shelter_id,
+    city,
+    name,
+    description,
+    species,
+    status,
+    published,
+    image_url,
+    external_url
+)
+select s.id,
+       'Aalsmeer',
+       'Katoogslang',
+       'Binnengekomen via ReptielenOpvang Zwanenburg — zie artikel. Locatie: Aalsmeer.',
+       'reptile',
+       'available',
+       true,
+       'https://picsum.photos/seed/voluntail-ph-reptile-1665-4-maart-2026-katoogslang-aalsmeer/400/400',
+       'https://reptielenopvang.nl/binnengekomen-dieren/1665-4-maart-2026-katoogslang-aalsmeer'
+from public.shelters s
+where s.name = 'Reptielenopvang Zwanenburg'
+limit 1;
+
+
+
