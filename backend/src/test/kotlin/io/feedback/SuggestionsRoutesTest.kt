@@ -1,4 +1,4 @@
-package io.voluntail
+package io.feedback
 
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
@@ -11,7 +11,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 /**
- * Public feedback suggestions: validation rules and persistence availability (503 without DB).
+ * HTTP smoke tests for `/api/suggestions` (validation + 503 without DB in default test env).
  */
 class SuggestionsRoutesTest {
 

@@ -1,4 +1,4 @@
-package io.voluntail
+package io.shelters
 
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
@@ -18,8 +18,8 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 /**
- * CMS-gated shelter directory: list, create, patch, delete, and species validation.
- * Uses in-memory repository when DB is not configured (typical local test run).
+ * HTTP smoke tests for `/api/shelters` through the full app module (in-memory repo when DB unset).
+ * CMS-gated mutations, species validation.
  */
 class SheltersRoutesTest {
 

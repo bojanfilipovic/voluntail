@@ -9,5 +9,10 @@ create table if not exists public.shelters (
     signup_url text null,
     image_url text null,
     donation_url text null,
-    city text not null default ''
+    city text not null default '',
+    constraint shelters_name_city_unique unique (name, city)
 );
+
+-- Defence in depth for PostgREST: anon/authenticated have no policies here → deny direct reads via API.
+-- Ktor DB_URL typically bypasses RLS (table owner / service_role).
+alter table public.shelters enable row level security;
