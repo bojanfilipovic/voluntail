@@ -1,4 +1,4 @@
-package io.voluntail
+package io.animals
 
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
@@ -18,7 +18,9 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-/** Animals API: public list filters unpublished; CMS mutations require X-CMS-Key. */
+/**
+ * HTTP smoke tests for `/api/animals` through the full app module (in-memory repo when DB unset).
+ */
 class AnimalsRoutesTest {
 
     private val sampleShelterId = "a0000001-0001-4001-8001-000000000001"

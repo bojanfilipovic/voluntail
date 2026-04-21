@@ -1,13 +1,13 @@
-package io.voluntail
+package io.shelters
 
-import io.shelters.ShelterSpecies
+import io.voluntail.voluntailJson
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.encodeToString
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
 /**
- * Ensures shared [voluntailJson] round-trips [ShelterSpecies] lists the same way Exposed jsonb expects.
+ * Unit-style check: [voluntailJson] round-trips [ShelterSpecies] lists like Exposed `jsonb` expects.
  */
 class VoluntailJsonShelterSpeciesTest {
 
