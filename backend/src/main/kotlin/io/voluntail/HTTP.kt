@@ -2,14 +2,30 @@ package io.voluntail
 
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
+import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
+import io.ktor.server.plugins.calllogging.CallLogging
 import io.ktor.server.plugins.cors.CORSConfig
 import io.ktor.server.plugins.cors.routing.CORS
 import io.ktor.server.plugins.defaultheaders.DefaultHeaders
+import io.ktor.server.plugins.statuspages.StatusPages
+import io.ktor.server.request.path
+import io.ktor.server.response.respondText
+import org.slf4j.event.Level
 import java.net.URI
 
 fun Application.configureHTTP() {
+    install(StatusPages) {
+        exception<Throwable> { call, cause ->
+            logger.error(cause) { "unhandled exception" }
+            call.respondText("Internal server error", status = HttpStatusCode.InternalServerError)
+        }
+    }
+    install(CallLogging) {
+        level = Level.INFO
+        filter { it.request.path() != "/health" }
+    }
     install(DefaultHeaders) {
         header("X-Engine", "Ktor")
     }
