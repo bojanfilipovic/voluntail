@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useState, type FormEvent } from 'react'
 import type { Shelter } from '@/api/shelters'
 import {
   shelterFormDialogContentClassName,
@@ -19,10 +19,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { parseValidatedCoords } from '@/domain/coordinates'
-import {
-  sortShelterSpecies,
-  type ShelterSpecies,
-} from '@/domain/species'
+import { sortShelterSpecies, type ShelterSpecies } from '@/domain/species'
 import type { ShelterPatchPayload } from '@/schemas/shelters'
 import { toQueryError } from '@/lib/queryError'
 
@@ -34,39 +31,29 @@ type Props = {
   isSubmitting: boolean
 }
 
-export function EditShelterDialog({
-  shelter,
-  open,
-  onClose,
-  onSubmit,
-  isSubmitting,
-}: Props) {
-  const [name, setName] = useState('')
-  const [description, setDescription] = useState('')
-  const [speciesPicked, setSpeciesPicked] = useState<ShelterSpecies[]>([])
-  const [latitude, setLatitude] = useState('')
-  const [longitude, setLongitude] = useState('')
-  const [signupUrl, setSignupUrl] = useState('')
-  const [imageUrl, setImageUrl] = useState('')
-  const [donationUrl, setDonationUrl] = useState('')
-  const [city, setCity] = useState('')
-  const [formError, setFormError] = useState<string | null>(null)
+type FormProps = {
+  shelter: Shelter
+  onSubmit: (id: string, body: ShelterPatchPayload) => Promise<unknown>
+  onClose: () => void
+  isSubmitting: boolean
+}
 
-  useEffect(() => {
-    if (!shelter || !open) return
-    /* eslint-disable react-hooks/set-state-in-effect -- hydrate form when dialog opens */
-    setName(shelter.name)
-    setDescription(shelter.description)
-    setSpeciesPicked([...shelter.species])
-    setLatitude(String(shelter.latitude))
-    setLongitude(String(shelter.longitude))
-    setSignupUrl(shelter.signupUrl ?? '')
-    setImageUrl(shelter.imageUrl ?? '')
-    setDonationUrl(shelter.donationUrl ?? '')
-    setCity(shelter.city)
-    setFormError(null)
-    /* eslint-enable react-hooks/set-state-in-effect */
-  }, [shelter, open])
+function EditShelterForm({
+  shelter,
+  onSubmit,
+  onClose,
+  isSubmitting,
+}: FormProps) {
+  const [name, setName] = useState(shelter.name)
+  const [description, setDescription] = useState(shelter.description)
+  const [speciesPicked, setSpeciesPicked] = useState<ShelterSpecies[]>([...shelter.species])
+  const [latitude, setLatitude] = useState(String(shelter.latitude))
+  const [longitude, setLongitude] = useState(String(shelter.longitude))
+  const [signupUrl, setSignupUrl] = useState(shelter.signupUrl ?? '')
+  const [imageUrl, setImageUrl] = useState(shelter.imageUrl ?? '')
+  const [donationUrl, setDonationUrl] = useState(shelter.donationUrl ?? '')
+  const [city, setCity] = useState(shelter.city)
+  const [formError, setFormError] = useState<string | null>(null)
 
   const toggleSpecies = (sp: ShelterSpecies) => {
     setSpeciesPicked((prev) =>
@@ -76,7 +63,6 @@ export function EditShelterDialog({
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
-    if (!shelter) return
     setFormError(null)
     const coords = parseValidatedCoords(latitude, longitude)
     if (!coords.ok) {
@@ -105,133 +91,155 @@ export function EditShelterDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={(next) => !next && onClose()}>
-      <DialogContent className={shelterFormDialogContentClassName}>
-        <DialogHeader className={shelterFormDialogHeaderClassName}>
-          <DialogTitle>Edit shelter</DialogTitle>
-        </DialogHeader>
-        <form
-          className="flex min-h-0 flex-1 flex-col"
-          onSubmit={handleSubmit}
-        >
-          <div className={shelterFormScrollAreaClassName}>
-            <div className="space-y-4">
-              <p className="text-muted-foreground text-sm leading-relaxed">
-                Changes are saved to the API. Empty URL fields clear the link.
+    <>
+      <DialogHeader className={shelterFormDialogHeaderClassName}>
+        <DialogTitle>Edit shelter</DialogTitle>
+      </DialogHeader>
+      <form
+        className="flex min-h-0 flex-1 flex-col"
+        onSubmit={handleSubmit}
+      >
+        <div className={shelterFormScrollAreaClassName}>
+          <div className="space-y-4">
+            <p className="text-muted-foreground text-sm leading-relaxed">
+              Changes are saved to the API. Empty URL fields clear the link.
+            </p>
+            {formError ? (
+              <p className="text-destructive text-sm" role="alert">
+                {formError}
               </p>
-              {formError ? (
-                <p className="text-destructive text-sm" role="alert">
-                  {formError}
-                </p>
-              ) : null}
-              <div className="space-y-1.5">
-                <Label htmlFor="edit-name">Name</Label>
-                <Input
-                  id="edit-name"
-                  name="name"
-                  autoComplete="organization"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  required
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="edit-description">Description</Label>
-                <Textarea
-                  id="edit-description"
-                  name="description"
-                  rows={3}
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  required
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="edit-city">City</Label>
-                <Input
-                  id="edit-city"
-                  name="city"
-                  autoComplete="address-level2"
-                  value={city}
-                  onChange={(e) => setCity(e.target.value)}
-                  required
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <Label htmlFor="edit-lat">Latitude</Label>
-                  <Input
-                    id="edit-lat"
-                    name="latitude"
-                    inputMode="decimal"
-                    required
-                    value={latitude}
-                    onChange={(e) => setLatitude(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="edit-lng">Longitude</Label>
-                  <Input
-                    id="edit-lng"
-                    name="longitude"
-                    inputMode="decimal"
-                    required
-                    value={longitude}
-                    onChange={(e) => setLongitude(e.target.value)}
-                  />
-                </div>
-              </div>
-              <ShelterSpeciesFieldset
-                idPrefix="edit"
-                selected={speciesPicked}
-                onToggle={toggleSpecies}
+            ) : null}
+            <div className="space-y-1.5">
+              <Label htmlFor="edit-name">Name</Label>
+              <Input
+                id="edit-name"
+                name="name"
+                autoComplete="organization"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
               />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="edit-description">Description</Label>
+              <Textarea
+                id="edit-description"
+                name="description"
+                rows={3}
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                required
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="edit-city">City</Label>
+              <Input
+                id="edit-city"
+                name="city"
+                autoComplete="address-level2"
+                value={city}
+                onChange={(e) => setCity(e.target.value)}
+                required
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label htmlFor="edit-signup">Signup URL</Label>
+                <Label htmlFor="edit-lat">Latitude</Label>
                 <Input
-                  id="edit-signup"
-                  name="signupUrl"
-                  inputMode="url"
-                  value={signupUrl}
-                  onChange={(e) => setSignupUrl(e.target.value)}
+                  id="edit-lat"
+                  name="latitude"
+                  inputMode="decimal"
+                  required
+                  value={latitude}
+                  onChange={(e) => setLatitude(e.target.value)}
                 />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="edit-image">Image URL</Label>
+                <Label htmlFor="edit-lng">Longitude</Label>
                 <Input
-                  id="edit-image"
-                  name="imageUrl"
-                  inputMode="url"
-                  value={imageUrl}
-                  onChange={(e) => setImageUrl(e.target.value)}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="edit-donate">Donation URL</Label>
-                <Input
-                  id="edit-donate"
-                  name="donationUrl"
-                  inputMode="url"
-                  value={donationUrl}
-                  onChange={(e) => setDonationUrl(e.target.value)}
+                  id="edit-lng"
+                  name="longitude"
+                  inputMode="decimal"
+                  required
+                  value={longitude}
+                  onChange={(e) => setLongitude(e.target.value)}
                 />
               </div>
             </div>
+            <ShelterSpeciesFieldset
+              idPrefix="edit"
+              selected={speciesPicked}
+              onToggle={toggleSpecies}
+            />
+            <div className="space-y-1.5">
+              <Label htmlFor="edit-signup">Signup URL</Label>
+              <Input
+                id="edit-signup"
+                name="signupUrl"
+                inputMode="url"
+                value={signupUrl}
+                onChange={(e) => setSignupUrl(e.target.value)}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="edit-image">Image URL</Label>
+              <Input
+                id="edit-image"
+                name="imageUrl"
+                inputMode="url"
+                value={imageUrl}
+                onChange={(e) => setImageUrl(e.target.value)}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="edit-donate">Donation URL</Label>
+              <Input
+                id="edit-donate"
+                name="donationUrl"
+                inputMode="url"
+                value={donationUrl}
+                onChange={(e) => setDonationUrl(e.target.value)}
+              />
+            </div>
           </div>
-          <DialogFooter className={shelterFormFooterClassName}>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onClose}
-              disabled={isSubmitting}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Saving…' : 'Save changes'}
-            </Button>
-          </DialogFooter>
-        </form>
+        </div>
+        <DialogFooter className={shelterFormFooterClassName}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onClose}
+            disabled={isSubmitting}
+          >
+            Cancel
+          </Button>
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? 'Saving…' : 'Save changes'}
+          </Button>
+        </DialogFooter>
+      </form>
+    </>
+  )
+}
+
+export function EditShelterDialog({
+  shelter,
+  open,
+  onClose,
+  onSubmit,
+  isSubmitting,
+}: Props) {
+  return (
+    <Dialog open={open} onOpenChange={(next) => !next && onClose()}>
+      <DialogContent className={shelterFormDialogContentClassName}>
+        {open && shelter ? (
+          <EditShelterForm
+            key={shelter.id}
+            shelter={shelter}
+            onSubmit={onSubmit}
+            onClose={onClose}
+            isSubmitting={isSubmitting}
+          />
+        ) : null}
       </DialogContent>
     </Dialog>
   )

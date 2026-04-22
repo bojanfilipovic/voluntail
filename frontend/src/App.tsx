@@ -1,61 +1,31 @@
 import { useQuery } from '@tanstack/react-query'
-import {
-  lazy,
-  Suspense,
-  useCallback,
-  useMemo,
-  useState,
-} from 'react'
+import { lazy, Suspense, useCallback, useMemo, useState } from 'react'
 import { fetchAnimals } from '@/api/animals'
 import type { Animal } from '@/api/animals'
 import { fetchShelters, type Shelter } from '@/api/shelters'
 import { AddAnimalDialog } from '@/components/AddAnimalDialog'
 import { AddShelterDialog } from '@/components/AddShelterDialog'
 import { AnimalDetailDialog } from '@/components/AnimalDetailDialog'
-import { AnimalList } from '@/components/AnimalList'
 import { EditAnimalDialog } from '@/components/EditAnimalDialog'
 import { EditShelterDialog } from '@/components/EditShelterDialog'
 import { ShelterDetailDialog } from '@/components/ShelterDetailDialog'
-import { ShelterList } from '@/components/ShelterList'
 import { ShareFeedbackDialog } from '@/components/ShareFeedbackDialog'
-import { DiscoveryErrorBoundary } from '@/components/layout/DiscoveryErrorBoundary'
-import { DiscoveryGrid } from '@/components/layout/DiscoveryGrid'
 import { DiscoveryHeader } from '@/components/layout/DiscoveryHeader'
-import { MapPlacementToolbar } from '@/components/layout/MapPlacementToolbar'
-import { Button } from '@/components/ui/button'
 import { useAnimalMutations } from '@/hooks/useAnimalMutations'
 import { useShelterDiscoveryState } from '@/hooks/useShelterDiscoveryState'
 import { useShelterMutations } from '@/hooks/useShelterMutations'
 import { SPECIES_VALUES, type ShelterSpecies } from '@/domain/species'
+import { DirectoryLayout } from '@/directory/DirectoryLayout'
+import { getInitialAppView, replaceAppViewInUrl, type AppView } from '@/directory/urlState'
 import { toQueryError } from '@/lib/queryError'
 import { animalQueryKeys, shelterQueryKeys } from '@/lib/queryKeys'
-
-const ShelterMapLazy = lazy(async () => {
-  const mod = await import('@/components/ShelterMap')
-  return { default: mod.ShelterMap }
-})
 
 const ExploreViewLazy = lazy(async () => {
   const mod = await import('@/explore/ExploreView')
   return { default: mod.ExploreView }
 })
 
-function MapLoadingFallback() {
-  return (
-    <div className="bg-muted/40 text-muted-foreground flex min-h-[220px] flex-1 flex-col items-center justify-center gap-2 px-4 py-8 text-sm">
-      <span className="inline-block size-6 animate-spin rounded-full border-2 border-current border-t-transparent" aria-hidden />
-      <span>Loading map…</span>
-    </div>
-  )
-}
-
 type DirectoryTab = 'shelters' | 'animals'
-type AppView = 'directory' | 'explore'
-
-function getInitialAppView(): AppView {
-  if (typeof window === 'undefined') return 'directory'
-  return new URLSearchParams(window.location.search).get('view') === 'explore' ? 'explore' : 'directory'
-}
 
 function App() {
   const mutations = useShelterMutations()
@@ -317,10 +287,7 @@ function App() {
 
   const navigateView = useCallback((next: AppView) => {
     setAppView(next)
-    const u = new URL(window.location.href)
-    if (next === 'explore') u.searchParams.set('view', 'explore')
-    else u.searchParams.delete('view')
-    window.history.replaceState({}, '', u.toString())
+    replaceAppViewInUrl(next)
   }, [])
 
   return (
@@ -339,112 +306,51 @@ function App() {
         }
       >
         {appView === 'directory' ? (
-        <DiscoveryErrorBoundary>
-          <DiscoveryGrid>
-            <section
-              className="border-border flex min-h-0 flex-col overflow-hidden rounded-lg border"
-              aria-label="Map of shelters"
-            >
-              <MapPlacementToolbar
-                placementMode={placementMode}
-                draftLocationKnown={Boolean(draftLocation)}
-                addDialogOpen={addDialogOpen}
-                cmsBusy={mutations.cmsBusy}
-                cancelPlacementDisabled={cancelPlacementDisabled}
-                onStartAddPin={handleStartAddPin}
-                onEnterDetails={handleEnterDetails}
-                onCancelPlacement={handleCancelPlacement}
-              />
-              <div className="flex h-full min-h-0 flex-1 flex-col">
-                <Suspense fallback={<MapLoadingFallback />}>
-                  <ShelterMapLazy
-                    ref={mapRef}
-                    shelters={mapShelters}
-                    selectedId={selectedShelter?.id ?? null}
-                    animalContextShelterId={mapShelterHighlightId}
-                    onSelectShelter={handleMapSelectClearingHighlight}
-                    onClearSelection={clearSelectionAndMapHighlight}
-                    placementOrRelocateActive={placementOrRelocateActive}
-                    draftLocation={draftLocation}
-                    onDraftPosition={handleDraftPosition}
-                  />
-                </Suspense>
-              </div>
-            </section>
-            <section
-              className="border-border flex min-h-0 flex-col overflow-hidden rounded-lg border"
-              aria-label="Directory"
-            >
-              <div
-                className="border-border bg-muted/30 flex flex-shrink-0 flex-wrap items-center gap-2 border-b px-3 py-2"
-                role="tablist"
-                aria-label="Directory view"
-              >
-                <Button
-                  type="button"
-                  size="sm"
-                  variant={directoryTab === 'shelters' ? 'secondary' : 'outline'}
-                  onClick={() => setDirectoryTab('shelters')}
-                  aria-pressed={directoryTab === 'shelters'}
-                >
-                  Shelters
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant={directoryTab === 'animals' ? 'secondary' : 'outline'}
-                  onClick={() => setDirectoryTab('animals')}
-                  aria-pressed={directoryTab === 'animals'}
-                >
-                  Animals
-                </Button>
-                {directoryTab === 'animals' && cmsConfigured ? (
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="default"
-                    disabled={animalMutations.cmsBusy || !data?.length}
-                    onClick={() => setAddAnimalOpen(true)}
-                  >
-                    Add animal
-                  </Button>
-                ) : null}
-              </div>
-              <div className="flex min-h-0 flex-1 flex-col overflow-y-auto p-4">
-                {directoryTab === 'shelters' ? (
-                  <ShelterList
-                    shelters={filteredShelters}
-                    error={directoryAlert}
-                    isPending={isPending}
-                    totalShelterCount={data?.length}
-                    selectedId={selectedShelter?.id ?? null}
-                    onSelectShelter={handleListSelectClearingHighlight}
-                    speciesFilter={speciesFilter}
-                    onSpeciesFilter={handleShelterSpeciesFilter}
-                    speciesFilters={speciesFilters}
-                  />
-                ) : (
-                  <AnimalList
-                    animals={animals}
-                    shelters={data}
-                    error={directoryAlert}
-                    isPending={animalsPending}
-                    selectedId={selectedAnimal?.id ?? null}
-                    onSelectAnimal={handleSelectAnimal}
-                    cityFilter={animalCityFilter}
-                    onCityFilter={setAnimalCityFilter}
-                    shelterFilter={animalShelterFilter}
-                    onShelterFilter={setAnimalShelterFilter}
-                    speciesFilter={animalSpeciesFilter}
-                    onSpeciesFilter={setAnimalSpeciesFilter}
-                    cityOptions={shelterCityOptions}
-                    speciesCounts={animalSpeciesCounts}
-                  />
-                )}
-              </div>
-            </section>
-          </DiscoveryGrid>
-        </DiscoveryErrorBoundary>
+          <DirectoryLayout
+            shelterMapRef={mapRef}
+            placementMode={placementMode}
+            draftLocation={draftLocation}
+            addDialogOpen={addDialogOpen}
+            cmsBusy={mutations.cmsBusy}
+            cancelPlacementDisabled={cancelPlacementDisabled}
+            onStartAddPin={handleStartAddPin}
+            onEnterDetails={handleEnterDetails}
+            onCancelPlacement={handleCancelPlacement}
+            mapShelters={mapShelters}
+            selectedShelter={selectedShelter}
+            mapShelterHighlightId={mapShelterHighlightId}
+            onMapSelectShelter={handleMapSelectClearingHighlight}
+            onClearMapSelection={clearSelectionAndMapHighlight}
+            placementOrRelocateActive={placementOrRelocateActive}
+            onDraftPosition={handleDraftPosition}
+            directoryTab={directoryTab}
+            onDirectoryTab={setDirectoryTab}
+            cmsConfigured={cmsConfigured}
+            canAddAnimal={Boolean(data?.length)}
+            onAddAnimalClick={() => setAddAnimalOpen(true)}
+            addAnimalCmsBusy={animalMutations.cmsBusy}
+            filteredShelters={filteredShelters}
+            directoryError={directoryAlert}
+            sheltersLoading={isPending}
+            shelterTotal={data?.length}
+            onSelectShelterFromList={handleListSelectClearingHighlight}
+            speciesFilter={speciesFilter}
+            onShelterSpeciesFilter={handleShelterSpeciesFilter}
+            speciesFilters={speciesFilters}
+            animals={animals}
+            allShelters={data}
+            animalsLoading={animalsPending}
+            onSelectAnimal={handleSelectAnimal}
+            selectedAnimalId={selectedAnimal?.id ?? null}
+            animalCityFilter={animalCityFilter}
+            onAnimalCityFilter={setAnimalCityFilter}
+            animalShelterFilter={animalShelterFilter}
+            onAnimalShelterFilter={setAnimalShelterFilter}
+            animalSpeciesFilter={animalSpeciesFilter}
+            onAnimalSpeciesFilter={setAnimalSpeciesFilter}
+            shelterCityOptions={shelterCityOptions}
+            animalSpeciesCounts={animalSpeciesCounts}
+          />
         ) : (
           <Suspense
             fallback={

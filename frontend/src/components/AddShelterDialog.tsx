@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useState, type FormEvent } from 'react'
 import type { Shelter, ShelterCreatePayload } from '@/api/shelters'
 import {
   shelterFormDialogContentClassName,
@@ -46,6 +46,38 @@ function urlOrDefault(raw: string, fallback: string): string {
   return t || fallback
 }
 
+/**
+ * Remount when `key` (draft position) changes — parent must pass
+ * `key={\`\${lat},\${lon}\`}` so pin moves pick up new defaultValues without
+ * setState in an effect. Lat/lon are submitted via FormData.
+ */
+function DraftPositionInputs({ draftLocation }: { draftLocation: MapCenter }) {
+  return (
+    <div className="grid grid-cols-2 gap-3">
+      <div className="space-y-1.5">
+        <Label htmlFor="add-lat">Latitude</Label>
+        <Input
+          id="add-lat"
+          name="latitude"
+          inputMode="decimal"
+          required
+          defaultValue={String(draftLocation.latitude)}
+        />
+      </div>
+      <div className="space-y-1.5">
+        <Label htmlFor="add-lng">Longitude</Label>
+        <Input
+          id="add-lng"
+          name="longitude"
+          inputMode="decimal"
+          required
+          defaultValue={String(draftLocation.longitude)}
+        />
+      </div>
+    </div>
+  )
+}
+
 export function AddShelterDialog({
   open,
   draftLocation,
@@ -56,26 +88,11 @@ export function AddShelterDialog({
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [speciesPicked, setSpeciesPicked] = useState<ShelterSpecies[]>([])
-  const [latitude, setLatitude] = useState(() =>
-    draftLocation ? String(draftLocation.latitude) : '',
-  )
-  const [longitude, setLongitude] = useState(() =>
-    draftLocation ? String(draftLocation.longitude) : '',
-  )
   const [signupUrl, setSignupUrl] = useState('')
   const [imageUrl, setImageUrl] = useState('')
   const [donationUrl, setDonationUrl] = useState('')
   const [city, setCity] = useState('')
   const [formError, setFormError] = useState<string | null>(null)
-
-  /* Keep coordinate fields in sync when the draft pin moves on the map */
-  useEffect(() => {
-    if (!draftLocation || !open) return
-    /* eslint-disable react-hooks/set-state-in-effect -- intentional sync from map draft */
-    setLatitude(String(draftLocation.latitude))
-    setLongitude(String(draftLocation.longitude))
-    /* eslint-enable react-hooks/set-state-in-effect */
-  }, [draftLocation, open])
 
   const toggleSpecies = (sp: ShelterSpecies) => {
     setSpeciesPicked((prev) =>
@@ -83,10 +100,14 @@ export function AddShelterDialog({
     )
   }
 
-  const handleSubmit = async (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setFormError(null)
-    const coords = parseValidatedCoords(latitude, longitude)
+    const form = e.currentTarget
+    const fd = new FormData(form)
+    const latStr = String(fd.get('latitude') ?? '')
+    const lonStr = String(fd.get('longitude') ?? '')
+    const coords = parseValidatedCoords(latStr, lonStr)
     if (!coords.ok) {
       setFormError(coords.error)
       return
@@ -170,30 +191,12 @@ export function AddShelterDialog({
                     placeholder={DEFAULT_CITY}
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1.5">
-                    <Label htmlFor="add-lat">Latitude</Label>
-                    <Input
-                      id="add-lat"
-                      name="latitude"
-                      inputMode="decimal"
-                      required
-                      value={latitude}
-                      onChange={(e) => setLatitude(e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="add-lng">Longitude</Label>
-                    <Input
-                      id="add-lng"
-                      name="longitude"
-                      inputMode="decimal"
-                      required
-                      value={longitude}
-                      onChange={(e) => setLongitude(e.target.value)}
-                    />
-                  </div>
-                </div>
+                {draftLocation ? (
+                  <DraftPositionInputs
+                    key={`${draftLocation.latitude},${draftLocation.longitude}`}
+                    draftLocation={draftLocation}
+                  />
+                ) : null}
                 <ShelterSpeciesFieldset
                   idPrefix="add"
                   selected={speciesPicked}

@@ -21,6 +21,8 @@ export default defineConfig([
     },
   },
   {
+    // shadcn / Radix-style primitives: variant helpers sit next to components; not “barrel ESM
+    // for HMR” in the way react-refresh assumes. Keep this scoped to the generated layer only.
     files: ['src/components/ui/**/*.{ts,tsx}'],
     rules: {
       'react-refresh/only-export-components': 'off',
