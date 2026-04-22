@@ -3,7 +3,6 @@ import {
   DialogClose,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
@@ -20,6 +19,7 @@ type Props = {
   onEdit: () => void
   removeDisabled?: boolean
   editDisabled?: boolean
+  onShareFeedback: () => void
 }
 
 export function ShelterDetailDialog({
@@ -29,6 +29,7 @@ export function ShelterDetailDialog({
   onEdit,
   removeDisabled = false,
   editDisabled = false,
+  onShareFeedback,
 }: Props) {
   return (
     <Dialog open={Boolean(shelter)} onOpenChange={(open) => !open && onClose()}>
@@ -91,47 +92,78 @@ export function ShelterDetailDialog({
                 official website before you commit.
               </p>
             </div>
-            <DialogFooter className="flex-col gap-2 border-t bg-muted/40 px-4 py-3 sm:flex-row sm:flex-wrap sm:justify-start">
-              {shelter.signupUrl ? (
-                <a
-                  href={shelter.signupUrl}
-                  rel="noreferrer noopener"
-                  target="_blank"
-                  className={cn(buttonVariants({ variant: 'default', size: 'sm' }))}
-                >
-                  Volunteer / signup
-                </a>
-              ) : null}
-              {shelter.donationUrl ? (
-                <a
-                  href={shelter.donationUrl}
-                  rel="noreferrer noopener"
-                  target="_blank"
-                  className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}
-                >
-                  Donate
-                </a>
-              ) : null}
-              <Button
-                type="button"
-                variant="secondary"
-                size="sm"
-                disabled={editDisabled}
-                onClick={onEdit}
+            <div
+              className="border-border/50 flex flex-col gap-2 rounded-b-xl border-t bg-muted/40 px-4 py-3 pb-4"
+              data-slot="dialog-footer"
+            >
+              <div
+                className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto"
+                role="group"
+                aria-label="Directory actions"
               >
-                Edit details
-              </Button>
-              <Button
-                type="button"
-                variant="destructive"
-                size="sm"
-                className="sm:ml-auto"
-                disabled={removeDisabled}
-                onClick={onRemove}
+                {shelter.signupUrl ? (
+                  <a
+                    href={shelter.signupUrl}
+                    rel="noreferrer noopener"
+                    target="_blank"
+                    className={cn(
+                      'shrink-0',
+                      buttonVariants({ variant: 'default', size: 'sm' }),
+                    )}
+                  >
+                    Volunteer / signup
+                  </a>
+                ) : null}
+                {shelter.donationUrl ? (
+                  <a
+                    href={shelter.donationUrl}
+                    rel="noreferrer noopener"
+                    target="_blank"
+                    className={cn(
+                      'shrink-0',
+                      buttonVariants({ variant: 'outline', size: 'sm' }),
+                    )}
+                  >
+                    Donate
+                  </a>
+                ) : null}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="shrink-0"
+                  onClick={onShareFeedback}
+                >
+                  Share feedback
+                </Button>
+              </div>
+              <div
+                className="border-border/50 flex w-full min-w-0 flex-nowrap items-center justify-between gap-2 border-t pt-2"
+                role="group"
+                aria-label="Curation"
               >
-                Remove pin
-              </Button>
-            </DialogFooter>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  className="shrink-0"
+                  disabled={editDisabled}
+                  onClick={onEdit}
+                >
+                  Edit details
+                </Button>
+                <Button
+                  type="button"
+                  variant="destructive"
+                  size="sm"
+                  className="shrink-0"
+                  disabled={removeDisabled}
+                  onClick={onRemove}
+                >
+                  Remove pin
+                </Button>
+              </div>
+            </div>
           </>
         ) : null}
       </DialogContent>

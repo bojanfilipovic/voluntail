@@ -48,4 +48,6 @@ dependencies {
 
 tasks.withType<Test>().configureEach {
     environment("CMS_API_KEY", "test-secret")
+    // Do not inherit a developer/CI DB_URL: tests use in-memory repositories and expect no JDBC pool.
+    environment("DB_URL", "")
 }

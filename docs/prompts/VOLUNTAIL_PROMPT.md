@@ -33,7 +33,7 @@ voluntail/
 - POST /api/shelters, DELETE /api/shelters/{id} — CMS only.
 - GET /api/animals — public; query: `shelterId`, `city`, `species` (as implemented). With `X-CMS-Key`, list may include unpublished (CMS view).
 - POST /api/animals, PATCH /api/animals/{id}, DELETE /api/animals/{id} — CMS only.
-- POST /api/suggestions — public if `DB_URL` is set; otherwise 503. Rate limit in pilot via row cap (see backend).
+- POST /api/suggestions — public if `DB_URL` is set; otherwise 503. JSON: `message`, optional `contact`, optional `shelterId` / `animalId` (UUIDs, triage). Rate limit in pilot via row cap (see backend).
 - Persistence: If `DB_URL` is unset/empty, repository behavior follows backend (in-memory samples / degraded paths per module).
 - Frontend optional CMS key: `VITE_CMS_API_KEY` (see `frontend/src/api/shelters.ts`, `animals`) — must not be present in the public visitor build if only you should curate in-app.
 

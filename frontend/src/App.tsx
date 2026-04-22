@@ -59,6 +59,9 @@ function App() {
 
   const [editOpen, setEditOpen] = useState(false)
   const [feedbackOpen, setFeedbackOpen] = useState(false)
+  const [feedbackContext, setFeedbackContext] = useState<
+    { shelterId?: string; animalId?: string; label?: string } | undefined
+  >(undefined)
 
   const [selectedAnimal, setSelectedAnimal] = useState<Animal | null>(null)
   const [animalDetailOpen, setAnimalDetailOpen] = useState(false)
@@ -279,9 +282,30 @@ function App() {
     handleCloseAnimalDetail()
   }, [selectedAnimal, animalMutations, handleCloseAnimalDetail])
 
+  const openHeaderFeedback = useCallback(() => {
+    setFeedbackContext(undefined)
+    setFeedbackOpen(true)
+  }, [])
+
+  const openShelterFeedback = useCallback(() => {
+    if (!selectedShelter) return
+    setFeedbackContext({ shelterId: selectedShelter.id, label: selectedShelter.name })
+    setFeedbackOpen(true)
+  }, [selectedShelter])
+
+  const openAnimalFeedback = useCallback(() => {
+    if (!selectedAnimal) return
+    setFeedbackContext({
+      shelterId: selectedAnimal.shelterId,
+      animalId: selectedAnimal.id,
+      label: selectedAnimal.name,
+    })
+    setFeedbackOpen(true)
+  }, [selectedAnimal])
+
   return (
     <div className="bg-background text-foreground flex h-full min-h-0 flex-col overflow-hidden">
-      <DiscoveryHeader onShareFeedback={() => setFeedbackOpen(true)} />
+      <DiscoveryHeader onShareFeedback={openHeaderFeedback} />
       <main className="flex min-h-0 flex-1 flex-col overflow-hidden px-6 py-4">
         <DiscoveryErrorBoundary>
           <DiscoveryGrid>
@@ -405,6 +429,7 @@ function App() {
         onEdit={() => setEditOpen(true)}
         removeDisabled={mutations.cmsBusy}
         editDisabled={mutations.cmsBusy}
+        onShareFeedback={openShelterFeedback}
       />
       <EditShelterDialog
         shelter={selectedShelter}
@@ -426,6 +451,7 @@ function App() {
         onDelete={handleDeleteAnimal}
         publishBusy={animalMutations.updateMutation.isPending}
         deleteBusy={animalMutations.deleteMutation.isPending}
+        onShareFeedback={openAnimalFeedback}
       />
       <EditAnimalDialog
         animal={selectedAnimal}
@@ -445,7 +471,14 @@ function App() {
         onSubmit={(payload) => animalMutations.createMutation.mutateAsync(payload)}
         isSubmitting={animalMutations.createMutation.isPending}
       />
-      <ShareFeedbackDialog open={feedbackOpen} onOpenChange={setFeedbackOpen} />
+      <ShareFeedbackDialog
+        open={feedbackOpen}
+        onOpenChange={(o) => {
+          if (!o) setFeedbackContext(undefined)
+          setFeedbackOpen(o)
+        }}
+        context={feedbackContext}
+      />
     </div>
   )
 }
