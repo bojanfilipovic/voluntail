@@ -35,6 +35,11 @@ const ShelterMapLazy = lazy(async () => {
   return { default: mod.ShelterMap }
 })
 
+const ExploreViewLazy = lazy(async () => {
+  const mod = await import('@/explore/ExploreView')
+  return { default: mod.ExploreView }
+})
+
 function MapLoadingFallback() {
   return (
     <div className="bg-muted/40 text-muted-foreground flex min-h-[220px] flex-1 flex-col items-center justify-center gap-2 px-4 py-8 text-sm">
@@ -45,11 +50,18 @@ function MapLoadingFallback() {
 }
 
 type DirectoryTab = 'shelters' | 'animals'
+type AppView = 'directory' | 'explore'
+
+function getInitialAppView(): AppView {
+  if (typeof window === 'undefined') return 'directory'
+  return new URLSearchParams(window.location.search).get('view') === 'explore' ? 'explore' : 'directory'
+}
 
 function App() {
   const mutations = useShelterMutations()
   const animalMutations = useAnimalMutations()
 
+  const [appView, setAppView] = useState<AppView>(getInitialAppView)
   const [directoryTab, setDirectoryTab] = useState<DirectoryTab>('shelters')
   const [speciesFilter, setSpeciesFilter] = useState<ShelterSpecies | null>(null)
 
@@ -303,10 +315,30 @@ function App() {
     setFeedbackOpen(true)
   }, [selectedAnimal])
 
+  const navigateView = useCallback((next: AppView) => {
+    setAppView(next)
+    const u = new URL(window.location.href)
+    if (next === 'explore') u.searchParams.set('view', 'explore')
+    else u.searchParams.delete('view')
+    window.history.replaceState({}, '', u.toString())
+  }, [])
+
   return (
     <div className="bg-background text-foreground flex h-full min-h-0 flex-col overflow-hidden">
-      <DiscoveryHeader onShareFeedback={openHeaderFeedback} />
-      <main className="flex min-h-0 flex-1 flex-col overflow-hidden px-6 py-4">
+      <DiscoveryHeader
+        onShareFeedback={openHeaderFeedback}
+        appView={appView}
+        onGoExplore={() => navigateView('explore')}
+        onGoDirectory={() => navigateView('directory')}
+      />
+      <main
+        className={
+          appView === 'directory'
+            ? 'flex min-h-0 flex-1 flex-col overflow-hidden px-6 py-4'
+            : 'flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden'
+        }
+      >
+        {appView === 'directory' ? (
         <DiscoveryErrorBoundary>
           <DiscoveryGrid>
             <section
@@ -413,6 +445,21 @@ function App() {
             </section>
           </DiscoveryGrid>
         </DiscoveryErrorBoundary>
+        ) : (
+          <Suspense
+            fallback={
+              <div className="text-muted-foreground flex min-h-0 flex-1 flex-col items-center justify-center gap-2 px-4 py-8 text-sm">
+                <span className="inline-block size-6 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                <span>Loading Explore…</span>
+              </div>
+            }
+          >
+            <ExploreViewLazy
+              onBack={() => navigateView('directory')}
+              onOpenAnimal={handleSelectAnimal}
+            />
+          </Suspense>
+        )}
       </main>
       <AddShelterDialog
         key={addDialogNonce}
