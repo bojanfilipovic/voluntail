@@ -21,6 +21,7 @@ export function buildDeck(animals: readonly Animal[], input: BuildDeckInput): An
   const pass = new Set(input.passedIds)
   const noList = new Set(input.sessionYesNotMatchIds)
   return animals.filter((a) => {
+    if (!a.published) return false
     if (short.has(a.id) || pass.has(a.id) || noList.has(a.id)) return false
     if (input.speciesMode !== 'all' && a.species !== input.speciesMode) return false
     return true

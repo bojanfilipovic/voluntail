@@ -57,6 +57,7 @@ export function ExploreFormFields({
             </option>
           ))}
         </select>
+        <p className="text-muted-foreground text-xs">Doesn&apos;t change the deck yet; we use it in the experience later.</p>
       </div>
       <div className="grid gap-2">
         <Label htmlFor={s('species')}>Animals</Label>

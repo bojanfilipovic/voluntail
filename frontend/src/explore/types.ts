@@ -25,4 +25,9 @@ export type ExplorePersisted = {
   passedIds: string[]
   /** After “Start swiping”, show the deck (not pre-deck) on return visits. */
   deckEntered: boolean
+  /**
+   * “Yes” with no match roll: excluded from the deck until new session / reset
+   * as implemented (we clear on full reset to refill the game).
+   */
+  yesNotMatchIds: string[]
 }

@@ -51,6 +51,21 @@ describe('buildDeck', () => {
     ).toEqual(['2'])
   })
 
+  it('excludes unpublished rows', () => {
+    const a = [
+      sample({ id: '1', published: true }),
+      sample({ id: '2', published: false }),
+    ]
+    expect(
+      buildDeck(a, {
+        shortlistIds: [],
+        passedIds: [],
+        sessionYesNotMatchIds: [],
+        speciesMode: 'all',
+      }).map((x) => x.id),
+    ).toEqual(['1'])
+  })
+
   it('filters by species when not all', () => {
     const a = [
       sample({ id: '1', species: 'cat' }),

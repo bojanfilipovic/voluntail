@@ -41,6 +41,21 @@ function buildListUrl(filters: AnimalListQuery): string {
   return q ? `${ANIMALS_URL}?${q}` : ANIMALS_URL
 }
 
+/** Public list only: never send CMS key (no unpublished rows from the server). */
+export async function fetchAnimalsPublic(filters: AnimalListQuery): Promise<Animal[]> {
+  const res = await fetch(buildListUrl(filters), { headers: {} })
+  if (!res.ok) {
+    throw new Error(`HTTP ${res.status}`)
+  }
+  let raw: unknown
+  try {
+    raw = await res.json()
+  } catch {
+    throw new Error('Invalid JSON from /api/animals')
+  }
+  return animalsListSchema.parse(raw)
+}
+
 /** CMS key when set widens listing to unpublished rows (server-side). */
 export async function fetchAnimals(filters: AnimalListQuery): Promise<Animal[]> {
   const res = await fetch(buildListUrl(filters), {
