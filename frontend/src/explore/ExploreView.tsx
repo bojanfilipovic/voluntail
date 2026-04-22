@@ -44,6 +44,7 @@ function ExploreShortlistRow({
     <div
       className={cn(
         'border-border bg-muted/20 w-full shrink-0 rounded-lg border p-3',
+        'animate-in fade-in slide-in-from-bottom-2 duration-300 motion-reduce:animate-none',
         compact && 'max-h-[30vh] min-h-0 sm:max-h-40',
       )}
     >
@@ -59,7 +60,13 @@ function ExploreShortlistRow({
       >
         {animals.map((a) => (
           <li key={a.id}>
-            <Button type="button" size="sm" variant="secondary" onClick={() => onPick(a)}>
+            <Button
+              type="button"
+              size="sm"
+              variant="secondary"
+              className="transition active:scale-95 motion-reduce:active:scale-100"
+              onClick={() => onPick(a)}
+            >
               {a.name}
             </Button>
           </li>
@@ -98,7 +105,7 @@ export function ExploreView({ onBack, onOpenAnimal }: Props) {
   const [matchAnimal, setMatchAnimal] = useState<Animal | null>(null)
   const [lowKeySaveName, setLowKeySaveName] = useState<string | null>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
-  const [resetOpen, setResetOpen] = useState(false)
+  const [localDataConfirm, setLocalDataConfirm] = useState<null | 'clearPassed' | 'clearMatches'>(null)
   /** Bumps to rebuild a freshly shuffled deck: Start swiping, reset, or species while in the deck. */
   const [shuffleKey, setShuffleKey] = useState(0)
   const [deckOrder, setDeckOrder] = useState<string[]>([])
@@ -184,6 +191,12 @@ export function ExploreView({ onBack, onOpenAnimal }: Props) {
       .filter((a): a is Animal => a !== undefined)
   }, [byId, session])
 
+  const hasRejections = useMemo(
+    () => (session.rememberNo ? session.passedIds.length > 0 : sessionPassed.size > 0),
+    [session.rememberNo, session.passedIds, sessionPassed],
+  )
+  const hasMatches = session.shortlistIds.length > 0
+
   useEffect(() => {
     if (topId && !animalsLoading && byId.size > 0 && !byId.has(topId)) {
       queueMicrotask(() => {
@@ -244,29 +257,28 @@ export function ExploreView({ onBack, onOpenAnimal }: Props) {
     setSessionPassed(new Set())
   }
 
-  const doReset = () => {
+  const applyClearPassed = () => {
     clearPassedOnly()
     setMatchAnimal(null)
     setLowKeySaveName(null)
-    setResetOpen(false)
     if (session.deckEntered) setShuffleKey((k) => k + 1)
+    setLocalDataConfirm(null)
   }
 
-  const handleResetRejected = () => {
-    const hasRejections = session.rememberNo
-      ? session.passedIds.length > 0
-      : sessionPassed.size > 0
-    if (!hasRejections) return
-    if (!window.confirm('Forget every animal you marked “not for me” in this browser?')) return
-    clearPassedOnly()
-    if (session.deckEntered) setShuffleKey((k) => k + 1)
-  }
-
-  const handleResetMatches = () => {
-    if (session.shortlistIds.length === 0) return
-    if (!window.confirm('Remove all animals from your saved matches list?')) return
+  const applyClearMatches = () => {
     patch((s) => ({ ...s, shortlistIds: [] }))
     if (session.deckEntered) setShuffleKey((k) => k + 1)
+    setLocalDataConfirm(null)
+  }
+
+  const requestClearPassed = () => {
+    if (!hasRejections) return
+    setLocalDataConfirm('clearPassed')
+  }
+
+  const requestClearMatches = () => {
+    if (!hasMatches) return
+    setLocalDataConfirm('clearMatches')
   }
 
   const skipTop = () => {
@@ -309,8 +321,18 @@ export function ExploreView({ onBack, onOpenAnimal }: Props) {
           onSpeciesModeChange={handleSpeciesModeChange}
           patch={patch}
           onRememberNoChange={handleRememberNoChange}
-          onResetMatches={handleResetMatches}
-          onResetRejected={handleResetRejected}
+          hasRejections={hasRejections}
+          hasMatches={hasMatches}
+          onRequestClearPassed={requestClearPassed}
+          onRequestClearMatches={requestClearMatches}
+        />
+        <LocalDataConfirmDialog
+          kind={localDataConfirm}
+          onOpenChange={(o) => {
+            if (!o) setLocalDataConfirm(null)
+          }}
+          onConfirmClearPassed={applyClearPassed}
+          onConfirmClearMatches={applyClearMatches}
         />
       </div>
     )
@@ -365,7 +387,12 @@ export function ExploreView({ onBack, onOpenAnimal }: Props) {
                 rememberNo={session.rememberNo}
                 onRememberNoChange={handleRememberNoChange}
               />
-              <Button type="button" className="w-full" size="lg" onClick={startDeck}>
+              <Button
+                type="button"
+                className="w-full transition active:scale-[0.99] motion-reduce:active:scale-100"
+                size="lg"
+                onClick={startDeck}
+              >
                 Start swiping
               </Button>
             </div>
@@ -396,7 +423,13 @@ export function ExploreView({ onBack, onOpenAnimal }: Props) {
                       unless you clear those in settings.
                     </p>
                     <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-center">
-                      <Button type="button" onClick={() => setResetOpen(true)}>
+                      <Button
+                        type="button"
+                        disabled={!hasRejections}
+                        title={hasRejections ? undefined : 'No passed animals to clear'}
+                        onClick={requestClearPassed}
+                        className="transition active:scale-[0.99] enabled:opacity-100 disabled:opacity-40 motion-reduce:active:scale-100"
+                      >
                         Clear passed
                       </Button>
                       <Button type="button" variant="secondary" onClick={() => setSettingsOpen(true)}>
@@ -425,7 +458,7 @@ export function ExploreView({ onBack, onOpenAnimal }: Props) {
 
       {lowKeySaveName ? (
         <div
-          className="border-border bg-card text-foreground pointer-events-none fixed right-4 bottom-20 left-4 z-40 max-w-md rounded-lg border p-3 text-sm shadow-md sm:bottom-32 sm:left-auto"
+          className="border-border bg-card text-foreground pointer-events-none fixed right-4 bottom-20 left-4 z-40 max-w-md animate-in slide-in-from-bottom-3 duration-200 zoom-in-95 motion-reduce:animate-none rounded-lg border p-3 text-sm shadow-md sm:bottom-32 sm:left-auto"
           role="status"
         >
           <p className="text-center">
@@ -454,30 +487,20 @@ export function ExploreView({ onBack, onOpenAnimal }: Props) {
         onSpeciesModeChange={handleSpeciesModeChange}
         patch={patch}
         onRememberNoChange={handleRememberNoChange}
-        onResetMatches={handleResetMatches}
-        onResetRejected={handleResetRejected}
+        hasRejections={hasRejections}
+        hasMatches={hasMatches}
+        onRequestClearPassed={requestClearPassed}
+        onRequestClearMatches={requestClearMatches}
       />
 
-      <Dialog open={resetOpen} onOpenChange={setResetOpen}>
-        <DialogContent showCloseButton className="sm:max-w-md" aria-describedby={undefined}>
-          <DialogHeader>
-            <DialogTitle>Clear passed animals?</DialogTitle>
-            <p className="text-muted-foreground text-sm">
-              This only forgets animals you marked <span className="font-medium text-foreground">not for me</span>
-              . It does <span className="font-medium text-foreground">not</span> remove your saved matches or
-              your &ldquo;yes, no match this time&rdquo; list. Display name and filters stay the same.
-            </p>
-          </DialogHeader>
-          <DialogFooter>
-            <Button type="button" variant="secondary" onClick={() => setResetOpen(false)}>
-              Cancel
-            </Button>
-            <Button type="button" variant="destructive" onClick={doReset}>
-              Clear passed
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <LocalDataConfirmDialog
+        kind={localDataConfirm}
+        onOpenChange={(o) => {
+          if (!o) setLocalDataConfirm(null)
+        }}
+        onConfirmClearPassed={applyClearPassed}
+        onConfirmClearMatches={applyClearMatches}
+      />
     </div>
   )
 }
@@ -496,11 +519,72 @@ function ExploreToolbar({ title, onOpenSettings }: ToolbarProps) {
         size="icon-sm"
         variant="secondary"
         onClick={onOpenSettings}
+        className="transition active:scale-95 motion-reduce:active:scale-100"
         aria-label="Explore settings"
       >
         <Settings className="size-4" />
       </Button>
     </div>
+  )
+}
+
+type LocalDataConfirmProps = {
+  kind: null | 'clearPassed' | 'clearMatches'
+  onOpenChange: (open: boolean) => void
+  onConfirmClearPassed: () => void
+  onConfirmClearMatches: () => void
+}
+
+function LocalDataConfirmDialog({
+  kind,
+  onOpenChange,
+  onConfirmClearPassed,
+  onConfirmClearMatches,
+}: LocalDataConfirmProps) {
+  return (
+    <Dialog open={kind !== null} onOpenChange={onOpenChange}>
+      <DialogContent showCloseButton className="sm:max-w-md" aria-describedby={undefined}>
+        {kind === 'clearPassed' ? (
+          <>
+            <DialogHeader>
+              <DialogTitle>Clear passed animals?</DialogTitle>
+              <p className="text-muted-foreground text-sm">
+                This only forgets animals you marked <span className="font-medium text-foreground">not for me</span>
+                . It does <span className="font-medium text-foreground">not</span> remove your saved matches
+                or your &ldquo;yes, no match this time&rdquo; list. Display name and filters stay the same.
+              </p>
+            </DialogHeader>
+            <DialogFooter>
+              <Button type="button" variant="secondary" onClick={() => onOpenChange(false)}>
+                Cancel
+              </Button>
+              <Button type="button" variant="destructive" onClick={onConfirmClearPassed}>
+                Clear passed
+              </Button>
+            </DialogFooter>
+          </>
+        ) : null}
+        {kind === 'clearMatches' ? (
+          <>
+            <DialogHeader>
+              <DialogTitle>Clear saved matches?</DialogTitle>
+              <p className="text-muted-foreground text-sm">
+                This removes every animal from your saved matches list in this browser. It does not change
+                passed animals or your &ldquo;yes, no match this time&rdquo; list.
+              </p>
+            </DialogHeader>
+            <DialogFooter>
+              <Button type="button" variant="secondary" onClick={() => onOpenChange(false)}>
+                Cancel
+              </Button>
+              <Button type="button" variant="destructive" onClick={onConfirmClearMatches}>
+                Clear matches
+              </Button>
+            </DialogFooter>
+          </>
+        ) : null}
+      </DialogContent>
+    </Dialog>
   )
 }
 
@@ -512,8 +596,10 @@ type SProps = {
   onSpeciesModeChange: (m: import('@/explore/types').ExploreSpeciesMode) => void
   patch: (fn: (s: import('@/explore/types').ExplorePersisted) => import('@/explore/types').ExplorePersisted) => void
   onRememberNoChange: (v: boolean) => void
-  onResetMatches: () => void
-  onResetRejected: () => void
+  hasRejections: boolean
+  hasMatches: boolean
+  onRequestClearPassed: () => void
+  onRequestClearMatches: () => void
 }
 
 function SettingsDialog({
@@ -524,8 +610,10 @@ function SettingsDialog({
   onSpeciesModeChange,
   patch,
   onRememberNoChange,
-  onResetMatches,
-  onResetRejected,
+  hasRejections,
+  hasMatches,
+  onRequestClearPassed,
+  onRequestClearMatches,
 }: SProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -548,10 +636,24 @@ function SettingsDialog({
           <p className="text-sm font-medium">Local data in this browser</p>
           <p className="text-muted-foreground text-xs">Reset each list separately. Nothing is sent to a server.</p>
           <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-            <Button type="button" variant="secondary" onClick={onResetRejected} className="w-full sm:w-auto">
+            <Button
+              type="button"
+              variant="secondary"
+              disabled={!hasRejections}
+              title={hasRejections ? undefined : 'No passed animals to clear'}
+              onClick={onRequestClearPassed}
+              className="w-full transition active:scale-[0.99] enabled:opacity-100 disabled:opacity-40 sm:w-auto"
+            >
               Clear passed (not for me)
             </Button>
-            <Button type="button" variant="secondary" onClick={onResetMatches} className="w-full sm:w-auto">
+            <Button
+              type="button"
+              variant="secondary"
+              disabled={!hasMatches}
+              title={hasMatches ? undefined : 'No saved matches to clear'}
+              onClick={onRequestClearMatches}
+              className="w-full transition active:scale-[0.99] enabled:opacity-100 disabled:opacity-40 sm:w-auto"
+            >
               Clear saved matches
             </Button>
           </div>
