@@ -59,7 +59,7 @@ voluntail/
 
 ## Where we are (high level) — *UPDATE AS YOU SHIP*
 
-- Map + list split, shelter & animal modals, species filters, outbound shelter links, animals listing + published filter for public, CMS flows with `X-CMS-Key`, Exposed/Postgres when `DB_URL` is set, peer feedback pipeline when DB is up, GitHub CI, backend Dockerfile, seed/migrations in repo. Backend: kotlin-logging (oshai) + Logback (startup + errors), Ktor `CallLogging` (health excluded) + `StatusPages` for 500s — see [`docs/adr/0001-backend-observability-kotlin-logging.md`](../adr/0001-backend-observability-kotlin-logging.md).
+- Map + list split, shelter & animal modals, species filters, outbound shelter links, animals listing + published filter for public, CMS flows with `X-CMS-Key`, Exposed/Postgres when `DB_URL` is set, peer feedback pipeline when DB is up, GitHub CI, backend Dockerfile, seed/migrations in repo. Backend: kotlin-logging (oshai) + Logback (startup + errors), Ktor `CallLogging` (health excluded) + `StatusPages` for 500s — see [`docs/adr/0001-backend-observability-kotlin-logging.md`](../adr/0001-backend-observability-kotlin-logging.md). Frontend: TypeScript `strict`, `npm test` in CI, `src/directory/` for URL + map/list shell + documented shadcn-only ESLint — see [`docs/adr/0002-frontend-spa-hygiene-and-directory-module.md`](../adr/0002-frontend-spa-hygiene-and-directory-module.md).
 
 ## Things I will not do in a drive-by task (unless explicitly asked)
 

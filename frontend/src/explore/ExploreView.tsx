@@ -195,6 +195,8 @@ export function ExploreView({ onBack, onOpenAnimal }: Props) {
     () => (session.rememberNo ? session.passedIds.length > 0 : sessionPassed.size > 0),
     [session.rememberNo, session.passedIds, sessionPassed],
   )
+  /** “Yes” without match moment — these block the deck but are not “passed” (not for me). */
+  const hasNoMatchStash = session.yesNotMatchIds.length > 0
   const hasMatches = session.shortlistIds.length > 0
 
   useEffect(() => {
@@ -271,6 +273,14 @@ export function ExploreView({ onBack, onOpenAnimal }: Props) {
     setLocalDataConfirm(null)
   }
 
+  /** “Yes, no match this time” stashes; clearing brings those animals back into the shuffle. */
+  const clearYesNotMatchStash = () => {
+    patch((s) => ({ ...s, yesNotMatchIds: [] }))
+    setMatchAnimal(null)
+    setLowKeySaveName(null)
+    if (session.deckEntered) setShuffleKey((k) => k + 1)
+  }
+
   const requestClearPassed = () => {
     if (!hasRejections) return
     setLocalDataConfirm('clearPassed')
@@ -322,9 +332,11 @@ export function ExploreView({ onBack, onOpenAnimal }: Props) {
           patch={patch}
           onRememberNoChange={handleRememberNoChange}
           hasRejections={hasRejections}
+          hasNoMatchStash={hasNoMatchStash}
           hasMatches={hasMatches}
           onRequestClearPassed={requestClearPassed}
           onRequestClearMatches={requestClearMatches}
+          onClearYesNotMatchStash={clearYesNotMatchStash}
         />
         <LocalDataConfirmDialog
           kind={localDataConfirm}
@@ -418,19 +430,35 @@ export function ExploreView({ onBack, onOpenAnimal }: Props) {
                   <div className="text-center">
                     <p className="text-foreground text-base font-medium">You&apos;re caught up (for now).</p>
                     <p className="text-muted-foreground mt-1 text-sm">
-                      Try a different filter in settings, or clear only the animals you passed (in settings
-                      or below) to get a shuffled run again. Your “yes, no match” and saved matches stay
-                      unless you clear those in settings.
+                      If you only swiped <span className="font-medium text-foreground">not for me</span>, use
+                      <span className="font-medium text-foreground"> Clear passed</span>. If you said yes
+                      and got &ldquo;no match this time&rdquo; (those animals are set aside from the
+                      deck), use <span className="font-medium text-foreground">Get more cards</span>. Your
+                      saved matches stay until you clear them in settings. You can also change the filter
+                      in settings.
                     </p>
-                    <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-center">
+                    <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-center sm:flex-wrap">
                       <Button
                         type="button"
                         disabled={!hasRejections}
-                        title={hasRejections ? undefined : 'No passed animals to clear'}
+                        title={hasRejections ? undefined : 'No "not for me" swipes to clear'}
                         onClick={requestClearPassed}
                         className="transition active:scale-[0.99] enabled:opacity-100 disabled:opacity-40 motion-reduce:active:scale-100"
                       >
                         Clear passed
+                      </Button>
+                      <Button
+                        type="button"
+                        disabled={!hasNoMatchStash}
+                        title={
+                          hasNoMatchStash
+                            ? undefined
+                            : 'No “no match this time” animals in this session to bring back'
+                        }
+                        onClick={clearYesNotMatchStash}
+                        className="transition active:scale-[0.99] enabled:opacity-100 disabled:opacity-40 motion-reduce:active:scale-100"
+                      >
+                        Get more cards
                       </Button>
                       <Button type="button" variant="secondary" onClick={() => setSettingsOpen(true)}>
                         Open settings
@@ -488,9 +516,11 @@ export function ExploreView({ onBack, onOpenAnimal }: Props) {
         patch={patch}
         onRememberNoChange={handleRememberNoChange}
         hasRejections={hasRejections}
+        hasNoMatchStash={hasNoMatchStash}
         hasMatches={hasMatches}
         onRequestClearPassed={requestClearPassed}
         onRequestClearMatches={requestClearMatches}
+        onClearYesNotMatchStash={clearYesNotMatchStash}
       />
 
       <LocalDataConfirmDialog
@@ -597,9 +627,11 @@ type SProps = {
   patch: (fn: (s: import('@/explore/types').ExplorePersisted) => import('@/explore/types').ExplorePersisted) => void
   onRememberNoChange: (v: boolean) => void
   hasRejections: boolean
+  hasNoMatchStash: boolean
   hasMatches: boolean
   onRequestClearPassed: () => void
   onRequestClearMatches: () => void
+  onClearYesNotMatchStash: () => void
 }
 
 function SettingsDialog({
@@ -611,9 +643,11 @@ function SettingsDialog({
   patch,
   onRememberNoChange,
   hasRejections,
+  hasNoMatchStash,
   hasMatches,
   onRequestClearPassed,
   onRequestClearMatches,
+  onClearYesNotMatchStash,
 }: SProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -640,11 +674,21 @@ function SettingsDialog({
               type="button"
               variant="secondary"
               disabled={!hasRejections}
-              title={hasRejections ? undefined : 'No passed animals to clear'}
+              title={hasRejections ? undefined : 'No “not for me” swipes to clear'}
               onClick={onRequestClearPassed}
               className="w-full transition active:scale-[0.99] enabled:opacity-100 disabled:opacity-40 sm:w-auto"
             >
               Clear passed (not for me)
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              disabled={!hasNoMatchStash}
+              title={hasNoMatchStash ? undefined : 'No “no match this time” animals in this session'}
+              onClick={onClearYesNotMatchStash}
+              className="w-full transition active:scale-[0.99] enabled:opacity-100 disabled:opacity-40 sm:w-auto"
+            >
+              Get more cards (clear “no match this time”)
             </Button>
             <Button
               type="button"
