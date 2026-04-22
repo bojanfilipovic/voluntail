@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import type { Animal } from '@/api/animals'
-import { fetchAnimals } from '@/api/animals'
+import { fetchAnimalsPublic } from '@/api/animals'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import {
@@ -18,7 +18,9 @@ import { ExploreFormFields } from '@/explore/components/ExploreFormFields'
 import { ExploreSwipeStack } from '@/explore/components/ExploreSwipeStack'
 import { MatchMomentOverlay } from '@/explore/components/MatchMomentOverlay'
 import { MATCH_MOMENT_PROBABILITY, rollMatchMoment } from '@/explore/matchMomentConfig'
+import { shuffleIdsInPlace } from '@/explore/shuffleIds'
 import { useExploreSessionState } from '@/explore/useExploreSessionState'
+import type { ExploreSpeciesMode } from '@/explore/types'
 import { cn } from '@/lib/utils'
 import { Heart, Settings } from 'lucide-react'
 
@@ -42,6 +44,7 @@ function ExploreShortlistRow({
     <div
       className={cn(
         'border-border bg-muted/20 w-full shrink-0 rounded-lg border p-3',
+        'animate-in fade-in slide-in-from-bottom-2 duration-300 motion-reduce:animate-none',
         compact && 'max-h-[30vh] min-h-0 sm:max-h-40',
       )}
     >
@@ -57,7 +60,13 @@ function ExploreShortlistRow({
       >
         {animals.map((a) => (
           <li key={a.id}>
-            <Button type="button" size="sm" variant="secondary" onClick={() => onPick(a)}>
+            <Button
+              type="button"
+              size="sm"
+              variant="secondary"
+              className="transition active:scale-95 motion-reduce:active:scale-100"
+              onClick={() => onPick(a)}
+            >
               {a.name}
             </Button>
           </li>
@@ -88,18 +97,31 @@ export function ExploreView({ onBack, onOpenAnimal }: Props) {
     [session, sessionPassed, patch, setRememberNo],
   )
 
+  const handleSpeciesModeChange = (speciesMode: ExploreSpeciesMode) => {
+    patch((s) => ({ ...s, speciesMode }))
+    if (session.deckEntered) setShuffleKey((k) => k + 1)
+  }
+
   const [matchAnimal, setMatchAnimal] = useState<Animal | null>(null)
-  /** “Yes” without a match roll — out of deck for this visit only. */
-  const [yesNotMatchSession, setYesNotMatchSession] = useState<Set<string>>(() => new Set())
   const [lowKeySaveName, setLowKeySaveName] = useState<string | null>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
-  const [resetOpen, setResetOpen] = useState(false)
+  const [localDataConfirm, setLocalDataConfirm] = useState<null | 'clearPassed' | 'clearMatches'>(null)
+  /** Bumps to rebuild a freshly shuffled deck: Start swiping, reset, or species while in the deck. */
+  const [shuffleKey, setShuffleKey] = useState(0)
+  const [deckOrder, setDeckOrder] = useState<string[]>([])
+  const [singleSkipNudge, setSingleSkipNudge] = useState(false)
 
   useEffect(() => {
     if (!lowKeySaveName) return
     const t = window.setTimeout(() => setLowKeySaveName(null), 2800)
     return () => window.clearTimeout(t)
   }, [lowKeySaveName])
+
+  useEffect(() => {
+    if (!singleSkipNudge) return
+    const t = window.setTimeout(() => setSingleSkipNudge(false), 3200)
+    return () => window.clearTimeout(t)
+  }, [singleSkipNudge])
 
   const listQuery = useMemo(
     () => ({
@@ -116,9 +138,11 @@ export function ExploreView({ onBack, onOpenAnimal }: Props) {
     isPending: animalsLoading,
     error: animalsError,
   } = useQuery({
-    queryKey: animalQueryKeys.list(listQuery),
-    queryFn: () => fetchAnimals(listQuery),
+    queryKey: animalQueryKeys.explore(listQuery),
+    queryFn: () => fetchAnimalsPublic(listQuery),
   })
+
+  const publishedAnimals = useMemo(() => (animals ?? []).filter((a) => a.published), [animals])
 
   const effectivePassed = useMemo(() => {
     if (!session) return [] as const
@@ -126,25 +150,39 @@ export function ExploreView({ onBack, onOpenAnimal }: Props) {
     return [...sessionPassed] as const
   }, [session, sessionPassed])
 
-  const candidates = useMemo(
-    () =>
-      buildDeck(animals ?? [], {
-        shortlistIds: session?.shortlistIds ?? [],
-        passedIds: effectivePassed,
-        sessionYesNotMatchIds: [...yesNotMatchSession],
-        speciesMode: session?.speciesMode ?? 'all',
-      }),
-    [animals, session, effectivePassed, yesNotMatchSession],
-  )
+  const latestDeckInputsRef = useRef({ session, effectivePassed, publishedAnimals })
+  useLayoutEffect(() => {
+    latestDeckInputsRef.current = { session, effectivePassed, publishedAnimals }
+  }, [session, effectivePassed, publishedAnimals])
 
-  const current = candidates[0] ?? null
-  const animalsErrorNorm = toQueryError(animalsError)
+  useLayoutEffect(() => {
+    if (!session.deckEntered || animalsLoading) return
+    const { session: s, effectivePassed: passed, publishedAnimals: pub } = latestDeckInputsRef.current
+    const base = buildDeck(pub, {
+      shortlistIds: s.shortlistIds,
+      passedIds: passed,
+      sessionYesNotMatchIds: s.yesNotMatchIds,
+      speciesMode: s.speciesMode,
+    })
+    const next = shuffleIdsInPlace(base.map((a) => a.id))
+    queueMicrotask(() => {
+      setDeckOrder(next)
+    })
+  }, [shuffleKey, session.deckEntered, animalsLoading])
 
   const byId = useMemo(() => {
     const m = new Map<string, Animal>()
     for (const a of animals ?? []) m.set(a.id, a)
     return m
   }, [animals])
+
+  const topId = (session.deckEntered ? deckOrder : [])[0] ?? null
+  const current = topId ? (byId.get(topId) ?? null) : null
+  const resolvingStaleTop = useMemo(() => {
+    if (!session.deckEntered || animalsLoading || topId == null) return false
+    if (byId.size === 0) return false
+    return !byId.has(topId)
+  }, [session.deckEntered, animalsLoading, topId, byId])
 
   const shortlistAnimals = useMemo(() => {
     if (!session) return []
@@ -153,6 +191,19 @@ export function ExploreView({ onBack, onOpenAnimal }: Props) {
       .filter((a): a is Animal => a !== undefined)
   }, [byId, session])
 
+  const hasRejections = useMemo(
+    () => (session.rememberNo ? session.passedIds.length > 0 : sessionPassed.size > 0),
+    [session.rememberNo, session.passedIds, sessionPassed],
+  )
+  const hasMatches = session.shortlistIds.length > 0
+
+  useEffect(() => {
+    if (topId && !animalsLoading && byId.size > 0 && !byId.has(topId)) {
+      queueMicrotask(() => {
+        setDeckOrder((d) => d.slice(1))
+      })
+    }
+  }, [topId, byId, animalsLoading])
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -167,6 +218,7 @@ export function ExploreView({ onBack, onOpenAnimal }: Props) {
 
   const startDeck = () => {
     patch((s) => ({ ...s, deckEntered: true }))
+    setShuffleKey((k) => k + 1)
   }
 
   const passCurrent = (id: string) => {
@@ -188,19 +240,66 @@ export function ExploreView({ onBack, onOpenAnimal }: Props) {
       }))
       setMatchAnimal(a)
     } else {
-      setYesNotMatchSession((prev) => new Set(prev).add(a.id))
+      patch((s) => ({
+        ...s,
+        yesNotMatchIds: s.yesNotMatchIds.includes(a.id)
+          ? s.yesNotMatchIds
+          : [...s.yesNotMatchIds, a.id],
+      }))
       setLowKeySaveName(a.name)
     }
+    setDeckOrder((d) => d.slice(1))
   }
 
-  const doReset = () => {
-    patch((s) => ({ ...s, shortlistIds: [], passedIds: [] }))
+  /** Clear only “not for me” / passed state (not matches, not “yes, no match” stash). */
+  const clearPassedOnly = () => {
+    patch((s) => ({ ...s, passedIds: [] }))
     setSessionPassed(new Set())
-    setYesNotMatchSession(new Set())
+  }
+
+  const applyClearPassed = () => {
+    clearPassedOnly()
     setMatchAnimal(null)
     setLowKeySaveName(null)
-    setResetOpen(false)
+    if (session.deckEntered) setShuffleKey((k) => k + 1)
+    setLocalDataConfirm(null)
   }
+
+  const applyClearMatches = () => {
+    patch((s) => ({ ...s, shortlistIds: [] }))
+    if (session.deckEntered) setShuffleKey((k) => k + 1)
+    setLocalDataConfirm(null)
+  }
+
+  const requestClearPassed = () => {
+    if (!hasRejections) return
+    setLocalDataConfirm('clearPassed')
+  }
+
+  const requestClearMatches = () => {
+    if (!hasMatches) return
+    setLocalDataConfirm('clearMatches')
+  }
+
+  const skipTop = () => {
+    if (deckOrder.length <= 1) {
+      setSingleSkipNudge(true)
+      return
+    }
+    setDeckOrder((d) => (d.length <= 1 ? d : [...d.slice(1), d[0]!]))
+  }
+
+  const onPassSwipe = () => {
+    if (!current) return
+    passCurrent(current.id)
+    setDeckOrder((d) => d.slice(1))
+  }
+
+  const onLikeSwipe = () => {
+    if (current) likeCurrent(current)
+  }
+
+  const animalsErrorNorm = toQueryError(animalsError)
 
   if (animalsErrorNorm) {
     return (
@@ -219,8 +318,21 @@ export function ExploreView({ onBack, onOpenAnimal }: Props) {
           onOpenChange={setSettingsOpen}
           session={session}
           setDisplayName={setDisplayName}
+          onSpeciesModeChange={handleSpeciesModeChange}
           patch={patch}
           onRememberNoChange={handleRememberNoChange}
+          hasRejections={hasRejections}
+          hasMatches={hasMatches}
+          onRequestClearPassed={requestClearPassed}
+          onRequestClearMatches={requestClearMatches}
+        />
+        <LocalDataConfirmDialog
+          kind={localDataConfirm}
+          onOpenChange={(o) => {
+            if (!o) setLocalDataConfirm(null)
+          }}
+          onConfirmClearPassed={applyClearPassed}
+          onConfirmClearMatches={applyClearMatches}
         />
       </div>
     )
@@ -256,12 +368,13 @@ export function ExploreView({ onBack, onOpenAnimal }: Props) {
           {!session.deckEntered ? (
             <div className="space-y-4">
               <p className="text-muted-foreground text-sm leading-relaxed">
-                Set your preferences, then swipe through real animals from the public directory. A
+                Set your preferences, then get a <span className="font-medium text-foreground"> shuffled</span> deck
+                of real animals from the public directory. A
                 <span className="font-medium text-foreground"> match </span>
                 (roughly {Math.round(MATCH_MOMENT_PROBABILITY * 10)} in 10 of your yeses) adds to
                 <span className="font-medium text-foreground"> your matches</span> and can show the full
-                celebration. Other yeses are just for fun and don&apos;t add to your list. Matches stay
-                in this browser until you reset.
+                celebration. Other yeses are for fun. In <span className="font-medium">settings</span>, you
+                can clear passed animals, clear saved matches, or both — separately.
               </p>
               <ExploreFormFields
                 idSuffix="pre"
@@ -270,11 +383,16 @@ export function ExploreView({ onBack, onOpenAnimal }: Props) {
                 intent={session.intent}
                 onIntentChange={(intent) => patch((s) => ({ ...s, intent }))}
                 speciesMode={session.speciesMode}
-                onSpeciesModeChange={(speciesMode) => patch((s) => ({ ...s, speciesMode }))}
+                onSpeciesModeChange={handleSpeciesModeChange}
                 rememberNo={session.rememberNo}
                 onRememberNoChange={handleRememberNoChange}
               />
-              <Button type="button" className="w-full" size="lg" onClick={startDeck}>
+              <Button
+                type="button"
+                className="w-full transition active:scale-[0.99] motion-reduce:active:scale-100"
+                size="lg"
+                onClick={startDeck}
+              >
                 Start swiping
               </Button>
             </div>
@@ -288,16 +406,31 @@ export function ExploreView({ onBack, onOpenAnimal }: Props) {
                   </div>
                 )
               }
-              if (!current) {
+              if (resolvingStaleTop) {
+                return (
+                  <div className="text-muted-foreground flex items-center justify-center py-8 text-sm">
+                    Updating…
+                  </div>
+                )
+              }
+              if (deckOrder.length === 0 || !current) {
                 return (
                   <div className="text-center">
                     <p className="text-foreground text-base font-medium">You&apos;re caught up (for now).</p>
                     <p className="text-muted-foreground mt-1 text-sm">
-                      Try changing filters in settings, or start over to clear your matches and pass history.
+                      Try a different filter in settings, or clear only the animals you passed (in settings
+                      or below) to get a shuffled run again. Your “yes, no match” and saved matches stay
+                      unless you clear those in settings.
                     </p>
                     <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-center">
-                      <Button type="button" onClick={() => setResetOpen(true)}>
-                        Reset
+                      <Button
+                        type="button"
+                        disabled={!hasRejections}
+                        title={hasRejections ? undefined : 'No passed animals to clear'}
+                        onClick={requestClearPassed}
+                        className="transition active:scale-[0.99] enabled:opacity-100 disabled:opacity-40 motion-reduce:active:scale-100"
+                      >
+                        Clear passed
                       </Button>
                       <Button type="button" variant="secondary" onClick={() => setSettingsOpen(true)}>
                         Open settings
@@ -310,12 +443,10 @@ export function ExploreView({ onBack, onOpenAnimal }: Props) {
                 <div className="min-h-0 w-full min-w-0 flex-1">
                   <ExploreSwipeStack
                     current={current}
-                    onPass={() => {
-                      if (current) passCurrent(current.id)
-                    }}
-                    onLike={() => {
-                      if (current) likeCurrent(current)
-                    }}
+                    onPass={onPassSwipe}
+                    onLike={onLikeSwipe}
+                    onSkip={skipTop}
+                    singleCardSkipNudge={singleSkipNudge}
                     busy={Boolean(matchAnimal)}
                   />
                 </div>
@@ -327,7 +458,7 @@ export function ExploreView({ onBack, onOpenAnimal }: Props) {
 
       {lowKeySaveName ? (
         <div
-          className="border-border bg-card text-foreground pointer-events-none fixed right-4 bottom-20 left-4 z-40 max-w-md rounded-lg border p-3 text-sm shadow-md sm:bottom-24 sm:left-auto"
+          className="border-border bg-card text-foreground pointer-events-none fixed right-4 bottom-20 left-4 z-40 max-w-md animate-in slide-in-from-bottom-3 duration-200 zoom-in-95 motion-reduce:animate-none rounded-lg border p-3 text-sm shadow-md sm:bottom-32 sm:left-auto"
           role="status"
         >
           <p className="text-center">
@@ -353,29 +484,23 @@ export function ExploreView({ onBack, onOpenAnimal }: Props) {
         onOpenChange={setSettingsOpen}
         session={session}
         setDisplayName={setDisplayName}
+        onSpeciesModeChange={handleSpeciesModeChange}
         patch={patch}
         onRememberNoChange={handleRememberNoChange}
+        hasRejections={hasRejections}
+        hasMatches={hasMatches}
+        onRequestClearPassed={requestClearPassed}
+        onRequestClearMatches={requestClearMatches}
       />
 
-      <Dialog open={resetOpen} onOpenChange={setResetOpen}>
-        <DialogContent showCloseButton className="sm:max-w-md" aria-describedby={undefined}>
-          <DialogHeader>
-            <DialogTitle>Start over?</DialogTitle>
-            <p className="text-muted-foreground text-sm">
-              This clears your saved matches and your pass history for the current settings. Your
-              display name and filters stay as they are.
-            </p>
-          </DialogHeader>
-          <DialogFooter>
-            <Button type="button" variant="secondary" onClick={() => setResetOpen(false)}>
-              Cancel
-            </Button>
-            <Button type="button" variant="destructive" onClick={doReset}>
-              Reset
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <LocalDataConfirmDialog
+        kind={localDataConfirm}
+        onOpenChange={(o) => {
+          if (!o) setLocalDataConfirm(null)
+        }}
+        onConfirmClearPassed={applyClearPassed}
+        onConfirmClearMatches={applyClearMatches}
+      />
     </div>
   )
 }
@@ -394,6 +519,7 @@ function ExploreToolbar({ title, onOpenSettings }: ToolbarProps) {
         size="icon-sm"
         variant="secondary"
         onClick={onOpenSettings}
+        className="transition active:scale-95 motion-reduce:active:scale-100"
         aria-label="Explore settings"
       >
         <Settings className="size-4" />
@@ -402,16 +528,93 @@ function ExploreToolbar({ title, onOpenSettings }: ToolbarProps) {
   )
 }
 
+type LocalDataConfirmProps = {
+  kind: null | 'clearPassed' | 'clearMatches'
+  onOpenChange: (open: boolean) => void
+  onConfirmClearPassed: () => void
+  onConfirmClearMatches: () => void
+}
+
+function LocalDataConfirmDialog({
+  kind,
+  onOpenChange,
+  onConfirmClearPassed,
+  onConfirmClearMatches,
+}: LocalDataConfirmProps) {
+  return (
+    <Dialog open={kind !== null} onOpenChange={onOpenChange}>
+      <DialogContent showCloseButton className="sm:max-w-md" aria-describedby={undefined}>
+        {kind === 'clearPassed' ? (
+          <>
+            <DialogHeader>
+              <DialogTitle>Clear passed animals?</DialogTitle>
+              <p className="text-muted-foreground text-sm">
+                This only forgets animals you marked <span className="font-medium text-foreground">not for me</span>
+                . It does <span className="font-medium text-foreground">not</span> remove your saved matches
+                or your &ldquo;yes, no match this time&rdquo; list. Display name and filters stay the same.
+              </p>
+            </DialogHeader>
+            <DialogFooter>
+              <Button type="button" variant="secondary" onClick={() => onOpenChange(false)}>
+                Cancel
+              </Button>
+              <Button type="button" variant="destructive" onClick={onConfirmClearPassed}>
+                Clear passed
+              </Button>
+            </DialogFooter>
+          </>
+        ) : null}
+        {kind === 'clearMatches' ? (
+          <>
+            <DialogHeader>
+              <DialogTitle>Clear saved matches?</DialogTitle>
+              <p className="text-muted-foreground text-sm">
+                This removes every animal from your saved matches list in this browser. It does not change
+                passed animals or your &ldquo;yes, no match this time&rdquo; list.
+              </p>
+            </DialogHeader>
+            <DialogFooter>
+              <Button type="button" variant="secondary" onClick={() => onOpenChange(false)}>
+                Cancel
+              </Button>
+              <Button type="button" variant="destructive" onClick={onConfirmClearMatches}>
+                Clear matches
+              </Button>
+            </DialogFooter>
+          </>
+        ) : null}
+      </DialogContent>
+    </Dialog>
+  )
+}
+
 type SProps = {
   open: boolean
   onOpenChange: (o: boolean) => void
   session: import('@/explore/types').ExplorePersisted
   setDisplayName: (s: string) => void
+  onSpeciesModeChange: (m: import('@/explore/types').ExploreSpeciesMode) => void
   patch: (fn: (s: import('@/explore/types').ExplorePersisted) => import('@/explore/types').ExplorePersisted) => void
   onRememberNoChange: (v: boolean) => void
+  hasRejections: boolean
+  hasMatches: boolean
+  onRequestClearPassed: () => void
+  onRequestClearMatches: () => void
 }
 
-function SettingsDialog({ open, onOpenChange, session, setDisplayName, patch, onRememberNoChange }: SProps) {
+function SettingsDialog({
+  open,
+  onOpenChange,
+  session,
+  setDisplayName,
+  onSpeciesModeChange,
+  patch,
+  onRememberNoChange,
+  hasRejections,
+  hasMatches,
+  onRequestClearPassed,
+  onRequestClearMatches,
+}: SProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent showCloseButton className="sm:max-w-md" aria-describedby={undefined}>
@@ -425,10 +628,36 @@ function SettingsDialog({ open, onOpenChange, session, setDisplayName, patch, on
           intent={session.intent}
           onIntentChange={(intent) => patch((s) => ({ ...s, intent }))}
           speciesMode={session.speciesMode}
-          onSpeciesModeChange={(speciesMode) => patch((s) => ({ ...s, speciesMode }))}
+          onSpeciesModeChange={onSpeciesModeChange}
           rememberNo={session.rememberNo}
           onRememberNoChange={onRememberNoChange}
         />
+        <div className="grid gap-2 border-t pt-4">
+          <p className="text-sm font-medium">Local data in this browser</p>
+          <p className="text-muted-foreground text-xs">Reset each list separately. Nothing is sent to a server.</p>
+          <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+            <Button
+              type="button"
+              variant="secondary"
+              disabled={!hasRejections}
+              title={hasRejections ? undefined : 'No passed animals to clear'}
+              onClick={onRequestClearPassed}
+              className="w-full transition active:scale-[0.99] enabled:opacity-100 disabled:opacity-40 sm:w-auto"
+            >
+              Clear passed (not for me)
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              disabled={!hasMatches}
+              title={hasMatches ? undefined : 'No saved matches to clear'}
+              onClick={onRequestClearMatches}
+              className="w-full transition active:scale-[0.99] enabled:opacity-100 disabled:opacity-40 sm:w-auto"
+            >
+              Clear saved matches
+            </Button>
+          </div>
+        </div>
         <DialogFooter>
           <Button type="button" onClick={() => onOpenChange(false)}>
             Done

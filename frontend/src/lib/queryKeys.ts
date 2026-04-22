@@ -12,4 +12,6 @@ export type AnimalListQuery = {
 
 export const animalQueryKeys = {
   list: (filters: AnimalListQuery) => ['animals', filters] as const,
+  /** No CMS: public directory only. Used by Explore so drafts are never mixed into swipes. */
+  explore: (filters: AnimalListQuery) => ['animals', 'public', filters] as const,
 }

@@ -45,6 +45,7 @@ export function defaultExploreSession(): ExplorePersisted {
     shortlistIds: [],
     passedIds: [],
     deckEntered: false,
+    yesNotMatchIds: [],
   }
 }
 
@@ -70,6 +71,7 @@ export function loadExploreSession(): ExplorePersisted {
           shortlistIds: parseStringArray(o.shortlistIds),
           passedIds: parseStringArray(o.passedIds),
           deckEntered: o.deckEntered === true,
+          yesNotMatchIds: parseStringArray(o.yesNotMatchIds),
         }
       }
     }
