@@ -54,7 +54,21 @@ fun Route.feedbackRoutes(
                         )
                         return@post
                     }
-                    val created = repo.insert(outcome.message, outcome.contact)
+                    val created =
+                        try {
+                            repo.insert(
+                                outcome.message,
+                                outcome.contact,
+                                outcome.shelterId,
+                                outcome.animalId,
+                            )
+                        } catch (e: BadFeedbackContext) {
+                            call.respondText(
+                                e.message ?: "Invalid feedback context",
+                                status = HttpStatusCode.BadRequest,
+                            )
+                            return@post
+                        }
                     call.respond(HttpStatusCode.Created, created)
                 }
             }

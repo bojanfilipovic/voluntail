@@ -6,6 +6,7 @@ Discovery platform for animal shelters (Netherlands-first). Monorepo:
 |-----------|--------|
 | [`backend/`](backend/) | Kotlin, Ktor, Supabase Postgres (optional), GitHub Actions tests |
 | [`frontend/`](frontend/) | React, TypeScript, Vite, TanStack Query, Mapbox |
+| [`docs/`](docs/) | [Product/engineering prompt](docs/prompts/VOLUNTAIL_PROMPT.md), [ADRs](docs/adr/README.md) |
 
 ## Local dev
 

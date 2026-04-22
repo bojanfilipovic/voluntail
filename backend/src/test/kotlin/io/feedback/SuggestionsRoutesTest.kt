@@ -57,6 +57,34 @@ class SuggestionsRoutesTest {
     }
 
     @Test
+    fun `POST suggestion with invalid shelterId returns 400`() {
+        voluntailTest {
+            client
+                .post("/api/suggestions") {
+                    contentType(ContentType.Application.Json)
+                    setBody("""{"message":"Hi","shelterId":"nope"}""")
+                }.apply {
+                    assertEquals(HttpStatusCode.BadRequest, status)
+                    assertEquals("shelterId must be a valid UUID", bodyAsText())
+                }
+        }
+    }
+
+    @Test
+    fun `POST suggestion with invalid animalId returns 400`() {
+        voluntailTest {
+            client
+                .post("/api/suggestions") {
+                    contentType(ContentType.Application.Json)
+                    setBody("""{"message":"Hi","animalId":"nope-uuid"}""")
+                }.apply {
+                    assertEquals(HttpStatusCode.BadRequest, status)
+                    assertEquals("animalId must be a valid UUID", bodyAsText())
+                }
+        }
+    }
+
+    @Test
     fun `POST suggestion with malformed JSON returns 400`() {
         voluntailTest {
             client

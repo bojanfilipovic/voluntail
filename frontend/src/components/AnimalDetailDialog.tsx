@@ -38,6 +38,7 @@ type Props = {
   onDelete: () => void
   publishBusy: boolean
   deleteBusy: boolean
+  onShareFeedback: () => void
 }
 
 export function AnimalDetailDialog({
@@ -50,6 +51,7 @@ export function AnimalDetailDialog({
   onDelete,
   publishBusy,
   deleteBusy,
+  onShareFeedback,
 }: Props) {
   const showCms = cmsConfigured
   const [shelterDetailsOpen, setShelterDetailsOpen] = useState(false)
@@ -183,37 +185,56 @@ export function AnimalDetailDialog({
                 </p>
               ) : null}
             </div>
-            {showCms ? (
-              <DialogFooter className="flex flex-col gap-2 border-t px-4 py-3 sm:flex-row sm:justify-between">
-                <div className="flex flex-wrap gap-2">
-                  <Button type="button" size="sm" variant="secondary" onClick={onEdit}>
-                    Edit
-                  </Button>
+            <DialogFooter
+              className={cn(
+                'border-t bg-muted/40 flex flex-col gap-3 px-4 py-3',
+                showCms && 'sm:flex-row sm:items-center sm:justify-between sm:gap-4',
+              )}
+            >
+              <div className="flex min-w-0 flex-1 flex-wrap gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={onShareFeedback}
+                >
+                  Share feedback
+                </Button>
+                {showCms ? (
+                  <>
+                    <Button type="button" size="sm" variant="secondary" onClick={onEdit}>
+                      Edit
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={onPublishToggle}
+                      disabled={publishBusy}
+                    >
+                      {publishBusy
+                        ? 'Updating…'
+                        : animal.published
+                          ? 'Unpublish'
+                          : 'Publish'}
+                    </Button>
+                  </>
+                ) : null}
+              </div>
+              {showCms ? (
+                <div className="flex w-full justify-end sm:w-auto sm:shrink-0">
                   <Button
                     type="button"
                     size="sm"
-                    variant="outline"
-                    onClick={onPublishToggle}
-                    disabled={publishBusy}
+                    variant="destructive"
+                    onClick={onDelete}
+                    disabled={deleteBusy}
                   >
-                    {publishBusy
-                      ? 'Updating…'
-                      : animal.published
-                        ? 'Unpublish'
-                        : 'Publish'}
+                    {deleteBusy ? 'Removing…' : 'Delete'}
                   </Button>
                 </div>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="destructive"
-                  onClick={onDelete}
-                  disabled={deleteBusy}
-                >
-                  {deleteBusy ? 'Removing…' : 'Delete'}
-                </Button>
-              </DialogFooter>
-            ) : null}
+              ) : null}
+            </DialogFooter>
           </>
         ) : null}
       </DialogContent>

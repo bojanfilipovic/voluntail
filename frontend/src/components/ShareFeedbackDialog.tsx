@@ -19,12 +19,19 @@ import {
 } from '@/domain/feedbackLimits'
 import { PartyPopper } from 'lucide-react'
 
+export type ShareFeedbackContext = {
+  shelterId?: string
+  animalId?: string
+  label?: string
+} | undefined
+
 type Props = {
   open: boolean
   onOpenChange: (open: boolean) => void
+  context?: ShareFeedbackContext
 }
 
-export function ShareFeedbackDialog({ open, onOpenChange }: Props) {
+export function ShareFeedbackDialog({ open, onOpenChange, context }: Props) {
   const [message, setMessage] = useState('')
   const [contact, setContact] = useState('')
   const mutation = useMutation({
@@ -52,7 +59,12 @@ export function ShareFeedbackDialog({ open, onOpenChange }: Props) {
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     if (submitDisabled) return
-    mutation.mutate({ message: trimmed, contact })
+    mutation.mutate({
+      message: trimmed,
+      contact,
+      shelterId: context?.shelterId,
+      animalId: context?.animalId,
+    })
   }
 
   return (
@@ -63,6 +75,9 @@ export function ShareFeedbackDialog({ open, onOpenChange }: Props) {
           <DialogDescription>
             Share what works, what doesn&apos;t, and what you&apos;d like next.
           </DialogDescription>
+          {context?.label ? (
+            <p className="text-foreground/90 pt-1 text-sm">About: {context.label}</p>
+          ) : null}
         </DialogHeader>
         <form
           className="flex min-h-0 flex-1 flex-col"

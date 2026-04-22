@@ -13,13 +13,26 @@ export type { SuggestionCreated }
 export async function postSuggestion(payload: {
   message: string
   contact?: string
+  shelterId?: string
+  animalId?: string
 }): Promise<SuggestionCreated> {
-  const body: { message: string; contact?: string } = {
+  const body: {
+    message: string
+    contact?: string
+    shelterId?: string
+    animalId?: string
+  } = {
     message: payload.message,
   }
   const c = payload.contact?.trim()
   if (c) {
     body.contact = c
+  }
+  if (payload.shelterId) {
+    body.shelterId = payload.shelterId
+  }
+  if (payload.animalId) {
+    body.animalId = payload.animalId
   }
 
   let res: Response
