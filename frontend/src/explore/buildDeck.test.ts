@@ -21,6 +21,7 @@ describe('buildDeck', () => {
       buildDeck([], {
         shortlistIds: [],
         passedIds: [],
+        sessionYesNotMatchIds: [],
         speciesMode: 'all',
       }),
     ).toEqual([])
@@ -32,9 +33,22 @@ describe('buildDeck', () => {
       buildDeck(a, {
         shortlistIds: ['1'],
         passedIds: ['2'],
+        sessionYesNotMatchIds: [],
         speciesMode: 'all',
       }).map((x) => x.id),
     ).toEqual(['3'])
+  })
+
+  it('excludes session yes-without-match ids', () => {
+    const a = [sample({ id: '1' }), sample({ id: '2' })]
+    expect(
+      buildDeck(a, {
+        shortlistIds: [],
+        passedIds: [],
+        sessionYesNotMatchIds: ['1'],
+        speciesMode: 'all',
+      }).map((x) => x.id),
+    ).toEqual(['2'])
   })
 
   it('filters by species when not all', () => {
@@ -46,6 +60,7 @@ describe('buildDeck', () => {
       buildDeck(a, {
         shortlistIds: [],
         passedIds: [],
+        sessionYesNotMatchIds: [],
         speciesMode: 'cat',
       }).map((x) => x.id),
     ).toEqual(['1'])

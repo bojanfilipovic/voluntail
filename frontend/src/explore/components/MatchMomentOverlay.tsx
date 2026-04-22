@@ -4,7 +4,7 @@ import { useId } from 'react'
 
 const MESSAGES = [
   "The vibe check passed. (It's mostly you.)",
-  'A solid yes — your shortlist is getting more interesting by the second.',
+  'A solid match — your list of wins is getting more interesting by the second.',
   'We’re not an algorithm, but if we were, this would be a “chef’s kiss”.',
   "Plot twist: you have excellent taste. Who knew?",
 ] as const
@@ -40,8 +40,11 @@ export function MatchMomentOverlay({ animal, displayName, onOpen, onKeepSwiping 
           That’s a match moment!
         </p>
         <p className="text-muted-foreground mt-2 text-sm leading-relaxed">{line}</p>
+        <p className="text-muted-foreground mt-2 text-xs">
+          Only a rolled match is saved to your matches — that&apos;s this moment.
+        </p>
         <p className="mt-4 text-base">
-          {animal.name} is on your list, {displayName}.
+          {animal.name} is in your matches, {displayName}.
         </p>
         <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-center">
           <Button type="button" className="bg-emerald-600 text-white hover:bg-emerald-700" onClick={() => onOpen(animal)}>

@@ -17,7 +17,9 @@ import { buildDeck } from '@/explore/buildDeck'
 import { ExploreFormFields } from '@/explore/components/ExploreFormFields'
 import { ExploreSwipeStack } from '@/explore/components/ExploreSwipeStack'
 import { MatchMomentOverlay } from '@/explore/components/MatchMomentOverlay'
+import { MATCH_MOMENT_PROBABILITY, rollMatchMoment } from '@/explore/matchMomentConfig'
 import { useExploreSessionState } from '@/explore/useExploreSessionState'
+import { cn } from '@/lib/utils'
 import { Heart, Settings } from 'lucide-react'
 
 type Props = {
@@ -28,18 +30,31 @@ type Props = {
 function ExploreShortlistRow({
   animals,
   onPick,
+  compact = false,
 }: {
   animals: Animal[]
   onPick: (a: Animal) => void
+  /** Cap height so the swipe actions stay on screen on small viewports. */
+  compact?: boolean
 }) {
   if (animals.length === 0) return null
   return (
-    <div className="border-border bg-muted/20 w-full rounded-lg border p-3">
+    <div
+      className={cn(
+        'border-border bg-muted/20 w-full shrink-0 rounded-lg border p-3',
+        compact && 'max-h-[30vh] min-h-0 sm:max-h-40',
+      )}
+    >
       <p className="text-muted-foreground flex items-center gap-2 text-xs font-medium">
         <Heart className="size-4" aria-hidden />
-        Your picks
+        Your matches ({animals.length})
       </p>
-      <ul className="mt-2 flex max-h-32 flex-wrap gap-2 overflow-y-auto">
+      <ul
+        className={cn(
+          'mt-2 flex flex-wrap gap-2',
+          compact ? 'max-h-24 overflow-y-auto sm:max-h-28' : 'max-h-32 overflow-y-auto',
+        )}
+      >
         {animals.map((a) => (
           <li key={a.id}>
             <Button type="button" size="sm" variant="secondary" onClick={() => onPick(a)}>
@@ -74,8 +89,17 @@ export function ExploreView({ onBack, onOpenAnimal }: Props) {
   )
 
   const [matchAnimal, setMatchAnimal] = useState<Animal | null>(null)
+  /** “Yes” without a match roll — out of deck for this visit only. */
+  const [yesNotMatchSession, setYesNotMatchSession] = useState<Set<string>>(() => new Set())
+  const [lowKeySaveName, setLowKeySaveName] = useState<string | null>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [resetOpen, setResetOpen] = useState(false)
+
+  useEffect(() => {
+    if (!lowKeySaveName) return
+    const t = window.setTimeout(() => setLowKeySaveName(null), 2800)
+    return () => window.clearTimeout(t)
+  }, [lowKeySaveName])
 
   const listQuery = useMemo(
     () => ({
@@ -107,9 +131,10 @@ export function ExploreView({ onBack, onOpenAnimal }: Props) {
       buildDeck(animals ?? [], {
         shortlistIds: session?.shortlistIds ?? [],
         passedIds: effectivePassed,
+        sessionYesNotMatchIds: [...yesNotMatchSession],
         speciesMode: session?.speciesMode ?? 'all',
       }),
-    [animals, session, effectivePassed],
+    [animals, session, effectivePassed, yesNotMatchSession],
   )
 
   const current = candidates[0] ?? null
@@ -156,14 +181,24 @@ export function ExploreView({ onBack, onOpenAnimal }: Props) {
   }
 
   const likeCurrent = (a: Animal) => {
-    patch((s) => ({ ...s, shortlistIds: s.shortlistIds.includes(a.id) ? s.shortlistIds : [...s.shortlistIds, a.id] }))
-    setMatchAnimal(a)
+    if (rollMatchMoment()) {
+      patch((s) => ({
+        ...s,
+        shortlistIds: s.shortlistIds.includes(a.id) ? s.shortlistIds : [...s.shortlistIds, a.id],
+      }))
+      setMatchAnimal(a)
+    } else {
+      setYesNotMatchSession((prev) => new Set(prev).add(a.id))
+      setLowKeySaveName(a.name)
+    }
   }
 
   const doReset = () => {
     patch((s) => ({ ...s, shortlistIds: [], passedIds: [] }))
     setSessionPassed(new Set())
+    setYesNotMatchSession(new Set())
     setMatchAnimal(null)
+    setLowKeySaveName(null)
     setResetOpen(false)
   }
 
@@ -191,19 +226,42 @@ export function ExploreView({ onBack, onOpenAnimal }: Props) {
     )
   }
 
+  const showSwipeLayout =
+    session.deckEntered && !animalsLoading && Boolean(current)
+
   return (
     <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
       <ExploreToolbar onOpenSettings={() => setSettingsOpen(true)} title="Explore" />
 
-      <div className="min-h-0 flex-1 overflow-y-auto p-4">
-        <div className="mx-auto flex w-full max-w-md flex-col gap-6">
-          <ExploreShortlistRow animals={shortlistAnimals} onPick={onOpenAnimal} />
+      <div
+        className={cn(
+          'min-h-0 min-w-0 flex-1',
+          showSwipeLayout ? 'flex flex-col overflow-hidden' : 'overflow-y-auto p-4',
+        )}
+      >
+        <div
+          className={cn(
+            'mx-auto w-full max-w-md',
+            showSwipeLayout
+              ? 'flex min-h-0 min-w-0 flex-1 flex-col gap-2 px-4 py-2'
+              : 'flex flex-col gap-6',
+          )}
+        >
+          <ExploreShortlistRow
+            animals={shortlistAnimals}
+            onPick={onOpenAnimal}
+            compact={showSwipeLayout}
+          />
 
           {!session.deckEntered ? (
             <div className="space-y-4">
               <p className="text-muted-foreground text-sm leading-relaxed">
-                Set your preferences, then swipe through real animals from the public directory. Matches are
-                for fun here — your shortlist stays in this browser until you clear it.
+                Set your preferences, then swipe through real animals from the public directory. A
+                <span className="font-medium text-foreground"> match </span>
+                (roughly {Math.round(MATCH_MOMENT_PROBABILITY * 10)} in 10 of your yeses) adds to
+                <span className="font-medium text-foreground"> your matches</span> and can show the full
+                celebration. Other yeses are just for fun and don&apos;t add to your list. Matches stay
+                in this browser until you reset.
               </p>
               <ExploreFormFields
                 idSuffix="pre"
@@ -235,7 +293,7 @@ export function ExploreView({ onBack, onOpenAnimal }: Props) {
                   <div className="text-center">
                     <p className="text-foreground text-base font-medium">You&apos;re caught up (for now).</p>
                     <p className="text-muted-foreground mt-1 text-sm">
-                      Try changing filters in settings, or start over to clear your shortlist and pass history.
+                      Try changing filters in settings, or start over to clear your matches and pass history.
                     </p>
                     <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-center">
                       <Button type="button" onClick={() => setResetOpen(true)}>
@@ -249,21 +307,34 @@ export function ExploreView({ onBack, onOpenAnimal }: Props) {
                 )
               }
               return (
-                <ExploreSwipeStack
-                  current={current}
-                  onPass={() => {
-                    if (current) passCurrent(current.id)
-                  }}
-                  onLike={() => {
-                    if (current) likeCurrent(current)
-                  }}
-                  busy={Boolean(matchAnimal)}
-                />
+                <div className="min-h-0 w-full min-w-0 flex-1">
+                  <ExploreSwipeStack
+                    current={current}
+                    onPass={() => {
+                      if (current) passCurrent(current.id)
+                    }}
+                    onLike={() => {
+                      if (current) likeCurrent(current)
+                    }}
+                    busy={Boolean(matchAnimal)}
+                  />
+                </div>
               )
             })()
           )}
         </div>
       </div>
+
+      {lowKeySaveName ? (
+        <div
+          className="border-border bg-card text-foreground pointer-events-none fixed right-4 bottom-20 left-4 z-40 max-w-md rounded-lg border p-3 text-sm shadow-md sm:bottom-24 sm:left-auto"
+          role="status"
+        >
+          <p className="text-center">
+            <span className="font-medium">{lowKeySaveName}</span> — no match this time. Keep swiping.
+          </p>
+        </div>
+      ) : null}
 
       {matchAnimal ? (
         <MatchMomentOverlay
@@ -291,8 +362,8 @@ export function ExploreView({ onBack, onOpenAnimal }: Props) {
           <DialogHeader>
             <DialogTitle>Start over?</DialogTitle>
             <p className="text-muted-foreground text-sm">
-              This clears your shortlist and your pass history for the current settings. Your display name
-              and filters stay as they are.
+              This clears your saved matches and your pass history for the current settings. Your
+              display name and filters stay as they are.
             </p>
           </DialogHeader>
           <DialogFooter>

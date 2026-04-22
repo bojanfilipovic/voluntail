@@ -41,7 +41,7 @@ export function ExploreFormFields({
           onChange={(e) => onDisplayNameChange(e.target.value)}
           autoComplete="nickname"
         />
-        <p className="text-muted-foreground text-xs">Leave as-is, or set your own. We use this on match moments and your list.</p>
+        <p className="text-muted-foreground text-xs">Leave as-is, or set your own. We use this on match moments and your matches row.</p>
       </div>
       <div className="grid gap-2">
         <Label htmlFor={s('intent')}>I&apos;m here to…</Label>

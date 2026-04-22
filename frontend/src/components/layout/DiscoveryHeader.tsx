@@ -24,7 +24,7 @@ export function DiscoveryHeader({ onShareFeedback, appView, onGoExplore, onGoDir
             </p>
           ) : (
             <p className="text-muted-foreground mt-1 max-w-2xl text-sm leading-relaxed">
-              Browsing the shelter animal list for fun. Your shortlist is stored in this browser only.
+              Browsing the shelter animal list for fun. Rolled matches are stored in this browser only.
             </p>
           )}
         </div>
