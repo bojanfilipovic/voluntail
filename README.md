@@ -31,3 +31,6 @@ If you open **pull requests against `production`**, CI is configured to run for 
 ## CI
 
 [`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs backend tests and frontend lint + production build on **push/PR to `main`, `master`, or `production`.**
+
+## RELEASES
+- test versions for now
