@@ -45,7 +45,7 @@ export async function fetchShelters(): Promise<Shelter[]> {
     throw errorFromFetchFailure(e)
   }
   if (!res.ok) {
-    throw new Error(await errorMessageFromResponse(res))
+    throw new Error(await errorMessageFromResponse(res, 'publicRead'))
   }
   const raw = await parseJsonResponse(res, INVALID_JSON_SHELTERS)
   return sheltersListSchema.parse(raw)

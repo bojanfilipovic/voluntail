@@ -40,9 +40,7 @@ export function ShelterList({
         Shelters
       </h2>
       <p className="text-muted-foreground mb-3 text-sm leading-relaxed">
-        Tap a pin or a row to open details and outbound links. Requires the Ktor API (e.g.{' '}
-        <code className="bg-muted rounded px-1 py-0.5 font-mono text-xs">localhost:8080</code>)
-        proxied by Vite.
+        Tap a pin on the map or a row here to open details, volunteer and donation links, and more.
       </p>
 
       {error ? (

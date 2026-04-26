@@ -1,4 +1,9 @@
-import { errorFromFetchFailure, friendlyHttpStatusMessage, plainTextErrorBody } from '@/lib/apiErrors'
+import {
+  errorFromFetchFailure,
+  friendlyHttpStatusMessage,
+  isProbablyInfrastructureErrorBody,
+  plainTextErrorBody,
+} from '@/lib/apiErrors'
 import { parseJsonResponse } from '@/lib/http'
 import {
   suggestionCreatedSchema,
@@ -49,16 +54,19 @@ export async function postSuggestion(payload: {
   if (!res.ok) {
     const rawText = await res.text().catch(() => '')
     const plain = plainTextErrorBody(rawText)
+    const usePlain = plain && !isProbablyInfrastructureErrorBody(plain)
     if (res.status === 503) {
-      throw new Error(plain ?? 'Feedback is temporarily unavailable.')
+      throw new Error(
+        (usePlain ? plain : null) ?? 'Feedback is temporarily unavailable.',
+      )
     }
     if (res.status === 429) {
-      throw new Error(plain ?? 'Feedback inbox is full for this pilot.')
+      throw new Error((usePlain ? plain : null) ?? 'Feedback inbox is full for this pilot.')
     }
     if (res.status === 400) {
-      throw new Error(plain ?? 'Invalid suggestion.')
+      throw new Error((usePlain ? plain : null) ?? 'Invalid suggestion.')
     }
-    throw new Error(plain ?? friendlyHttpStatusMessage(res.status))
+    throw new Error((usePlain ? plain : null) ?? friendlyHttpStatusMessage(res.status))
   }
 
   const raw = await parseJsonResponse(res, INVALID_JSON_SUGGESTIONS)

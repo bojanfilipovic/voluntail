@@ -317,7 +317,15 @@ export function ExploreView({ onBack, onOpenAnimal }: Props) {
         <ExploreToolbar onOpenSettings={() => setSettingsOpen(true)} title="Explore" />
         <Card>
           <CardContent className="p-4 text-sm">
-            <p className="text-destructive">Couldn’t load animals. {animalsErrorNorm.message}</p>
+            <p className="text-foreground">
+              We can’t load the animal list right now. Please try again later or go back to the
+              directory.
+            </p>
+            {import.meta.env.DEV ? (
+              <p className="text-muted-foreground mt-2 text-xs" role="status">
+                {animalsErrorNorm.message}
+              </p>
+            ) : null}
             <Button type="button" className="mt-3" onClick={onBack}>
               Back to directory
             </Button>
