@@ -63,7 +63,7 @@ sudo ln -sfn /opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk /Library/Java/Java
 
 ### CI (GitHub Actions)
 
-The repo runs **`./gradlew test`** on `backend/` and **`npm ci` + lint + build** on `frontend/` on pushes and PRs to `main` / `master` — see [`.github/workflows/ci.yml`](../.github/workflows/ci.yml).
+The repo runs **`./gradlew test`** on `backend/` and **`npm ci` + lint + build** on `frontend/` on pushes and PRs to `main` / `master` / `production` — see [`.github/workflows/ci.yml`](../.github/workflows/ci.yml).
 
 ### Docker sample (Railway-ready image)
 
@@ -89,5 +89,5 @@ If the server starts successfully, you'll see log output ending with responding 
 
 ### Frontend (monorepo)
 
-The React app lives in **`../frontend/`**. **V1 uses plain CSS** (see `frontend/src/App.css`); Tailwind/shadcn are planned later.
+The React app lives in **`../frontend/`** (Vite, Tailwind, shadcn-style `ui/`, Mapbox) — see [`../frontend/README.md`](../frontend/README.md).
 
