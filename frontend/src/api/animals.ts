@@ -6,6 +6,8 @@ import {
 } from '@/schemas/animals'
 import type { ShelterSpecies } from '@/domain/species'
 import type { AnimalListQuery } from '@/lib/queryKeys'
+import { errorFromFetchFailure, errorMessageFromResponse } from '@/lib/apiErrors'
+import { parseJsonResponse } from '@/lib/http'
 import type { AnimalStatus } from '@/schemas/animals'
 
 export type { Animal }
@@ -23,6 +25,7 @@ export type AnimalCreatePayload = {
 }
 
 const ANIMALS_URL = '/api/animals'
+const INVALID_JSON_ANIMALS = 'Invalid JSON from /api/animals'
 
 const CMS_HEADER = 'X-CMS-Key'
 
@@ -43,50 +46,54 @@ function buildListUrl(filters: AnimalListQuery): string {
 
 /** Public list only: never send CMS key (no unpublished rows from the server). */
 export async function fetchAnimalsPublic(filters: AnimalListQuery): Promise<Animal[]> {
-  const res = await fetch(buildListUrl(filters), { headers: {} })
-  if (!res.ok) {
-    throw new Error(`HTTP ${res.status}`)
-  }
-  let raw: unknown
+  let res: Response
   try {
-    raw = await res.json()
-  } catch {
-    throw new Error('Invalid JSON from /api/animals')
+    res = await fetch(buildListUrl(filters), { headers: {} })
+  } catch (e) {
+    throw errorFromFetchFailure(e)
   }
+  if (!res.ok) {
+    throw new Error(await errorMessageFromResponse(res, 'publicRead'))
+  }
+  const raw = await parseJsonResponse(res, INVALID_JSON_ANIMALS)
   return animalsListSchema.parse(raw)
 }
 
 /** CMS key when set widens listing to unpublished rows (server-side). */
 export async function fetchAnimals(filters: AnimalListQuery): Promise<Animal[]> {
-  const res = await fetch(buildListUrl(filters), {
-    headers: { ...cmsHeaders() },
-  })
-  if (!res.ok) {
-    throw new Error(`HTTP ${res.status}`)
-  }
-  let raw: unknown
+  let res: Response
   try {
-    raw = await res.json()
-  } catch {
-    throw new Error('Invalid JSON from /api/animals')
+    res = await fetch(buildListUrl(filters), {
+      headers: { ...cmsHeaders() },
+    })
+  } catch (e) {
+    throw errorFromFetchFailure(e)
   }
+  if (!res.ok) {
+    throw new Error(await errorMessageFromResponse(res, 'publicRead'))
+  }
+  const raw = await parseJsonResponse(res, INVALID_JSON_ANIMALS)
   return animalsListSchema.parse(raw)
 }
 
 export async function createAnimal(body: AnimalCreatePayload): Promise<Animal> {
-  const res = await fetch(ANIMALS_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      ...cmsHeaders(),
-    },
-    body: JSON.stringify(body),
-  })
-  if (!res.ok) {
-    const detail = await res.text().catch(() => '')
-    throw new Error(detail || `HTTP ${res.status}`)
+  let res: Response
+  try {
+    res = await fetch(ANIMALS_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...cmsHeaders(),
+      },
+      body: JSON.stringify(body),
+    })
+  } catch (e) {
+    throw errorFromFetchFailure(e)
   }
-  const raw: unknown = await res.json()
+  if (!res.ok) {
+    throw new Error(await errorMessageFromResponse(res, 'default'))
+  }
+  const raw = await parseJsonResponse(res, INVALID_JSON_ANIMALS)
   return animalSchema.parse(raw)
 }
 
@@ -94,30 +101,38 @@ export async function updateAnimal(
   id: string,
   body: AnimalPatchPayload,
 ): Promise<Animal> {
-  const res = await fetch(`${ANIMALS_URL}/${encodeURIComponent(id)}`, {
-    method: 'PATCH',
-    headers: {
-      'Content-Type': 'application/json',
-      ...cmsHeaders(),
-    },
-    body: JSON.stringify(body),
-  })
-  if (!res.ok) {
-    const detail = await res.text().catch(() => '')
-    throw new Error(detail || `HTTP ${res.status}`)
+  let res: Response
+  try {
+    res = await fetch(`${ANIMALS_URL}/${encodeURIComponent(id)}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        ...cmsHeaders(),
+      },
+      body: JSON.stringify(body),
+    })
+  } catch (e) {
+    throw errorFromFetchFailure(e)
   }
-  const raw: unknown = await res.json()
+  if (!res.ok) {
+    throw new Error(await errorMessageFromResponse(res, 'default'))
+  }
+  const raw = await parseJsonResponse(res, INVALID_JSON_ANIMALS)
   return animalSchema.parse(raw)
 }
 
 export async function deleteAnimal(id: string): Promise<void> {
-  const res = await fetch(`${ANIMALS_URL}/${encodeURIComponent(id)}`, {
-    method: 'DELETE',
-    headers: { ...cmsHeaders() },
-  })
+  let res: Response
+  try {
+    res = await fetch(`${ANIMALS_URL}/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+      headers: { ...cmsHeaders() },
+    })
+  } catch (e) {
+    throw errorFromFetchFailure(e)
+  }
   if (res.status === 204) return
   if (!res.ok) {
-    const detail = await res.text().catch(() => '')
-    throw new Error(detail || `HTTP ${res.status}`)
+    throw new Error(await errorMessageFromResponse(res, 'default'))
   }
 }

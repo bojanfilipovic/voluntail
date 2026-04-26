@@ -131,13 +131,22 @@ export const ShelterMap = forwardRef<ShelterMapHandle, Props>(
     )
 
     if (!token) {
+      if (import.meta.env.DEV) {
+        return (
+          <div className="bg-muted/50 flex min-h-[min(55vh,520px)] w-full items-center justify-center p-4">
+            <p className="text-muted-foreground max-w-md text-start text-sm leading-relaxed">
+              Add <code className="bg-muted rounded px-1 py-0.5 font-mono text-xs">VITE_MAPBOX_ACCESS_TOKEN</code>{' '}
+              to <code className="bg-muted rounded px-1 py-0.5 font-mono text-xs">.env.local</code> (see{' '}
+              <code className="bg-muted rounded px-1 py-0.5 font-mono text-xs">.env.example</code>), then restart{' '}
+              <code className="bg-muted rounded px-1 py-0.5 font-mono text-xs">npm run dev</code>.
+            </p>
+          </div>
+        )
+      }
       return (
         <div className="bg-muted/50 flex min-h-[min(55vh,520px)] w-full items-center justify-center p-4">
           <p className="text-muted-foreground max-w-md text-start text-sm leading-relaxed">
-            Add <code className="bg-muted rounded px-1 py-0.5 font-mono text-xs">VITE_MAPBOX_ACCESS_TOKEN</code>{' '}
-            to <code className="bg-muted rounded px-1 py-0.5 font-mono text-xs">.env.local</code> (see{' '}
-            <code className="bg-muted rounded px-1 py-0.5 font-mono text-xs">.env.example</code>), then restart{' '}
-            <code className="bg-muted rounded px-1 py-0.5 font-mono text-xs">npm run dev</code>.
+            The map is not available right now. You can still browse shelters in the list beside the map.
           </p>
         </div>
       )
