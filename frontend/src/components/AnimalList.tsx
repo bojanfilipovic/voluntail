@@ -64,14 +64,7 @@ export function AnimalList({
   }))
 
   return (
-    <section className="text-start" aria-labelledby="animals-heading">
-      <h2
-        id="animals-heading"
-        className="text-foreground mb-3 text-lg font-semibold tracking-tight"
-      >
-        Animals
-      </h2>
-
+    <section className="text-start" aria-label="Animal list">
       {error ? (
         <div
           className="border-destructive/40 bg-destructive/5 text-destructive mb-4 rounded-lg border px-3 py-2 text-sm leading-relaxed"

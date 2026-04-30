@@ -161,7 +161,7 @@ export function DirectoryLayout({
             <Button
               type="button"
               size="sm"
-              variant={directoryTab === 'shelters' ? 'secondary' : 'outline'}
+              variant={directoryTab === 'shelters' ? 'default' : 'outline'}
               onClick={() => onDirectoryTab('shelters')}
               aria-pressed={directoryTab === 'shelters'}
             >
@@ -170,7 +170,7 @@ export function DirectoryLayout({
             <Button
               type="button"
               size="sm"
-              variant={directoryTab === 'animals' ? 'secondary' : 'outline'}
+              variant={directoryTab === 'animals' ? 'default' : 'outline'}
               onClick={() => onDirectoryTab('animals')}
               aria-pressed={directoryTab === 'animals'}
             >
