@@ -23,7 +23,7 @@ export function MapPlacementToolbar({
 }: Props) {
   return (
     <div
-      className="border-border bg-muted/40 flex flex-shrink-0 flex-wrap items-center gap-2 border-b px-3 py-2"
+      className="border-border bg-muted/40 flex flex-shrink-0 flex-wrap items-center gap-2 border-t px-3 py-2"
       role="toolbar"
       aria-label="Shelter CMS"
     >
