@@ -301,7 +301,7 @@ function App() {
       <main
         className={
           appView === 'directory'
-            ? 'flex min-h-0 flex-1 flex-col overflow-hidden px-6 py-4'
+            ? 'flex min-h-0 flex-1 flex-col overflow-hidden px-4 py-3 lg:px-6 lg:py-4'
             : 'flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden'
         }
       >

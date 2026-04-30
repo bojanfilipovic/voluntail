@@ -35,14 +35,7 @@ export function ShelterList({
   speciesFilters,
 }: Props) {
   return (
-    <section className="text-start" aria-labelledby="shelters-heading">
-      <h2 id="shelters-heading" className="text-foreground mb-1 text-lg font-semibold tracking-tight">
-        Shelters
-      </h2>
-      <p className="text-muted-foreground mb-3 text-sm leading-relaxed">
-        Tap a pin on the map or a row here to open details, volunteer and donation links, and more.
-      </p>
-
+    <section className="text-start" aria-label="Shelter list">
       {error ? (
         <div
           className="border-destructive/40 bg-destructive/5 text-destructive mb-4 rounded-lg border px-3 py-2 text-sm leading-relaxed"

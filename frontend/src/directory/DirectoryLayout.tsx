@@ -161,7 +161,7 @@ export function DirectoryLayout({
             <Button
               type="button"
               size="sm"
-              variant={directoryTab === 'shelters' ? 'secondary' : 'outline'}
+              variant={directoryTab === 'shelters' ? 'default' : 'outline'}
               onClick={() => onDirectoryTab('shelters')}
               aria-pressed={directoryTab === 'shelters'}
             >
@@ -170,7 +170,7 @@ export function DirectoryLayout({
             <Button
               type="button"
               size="sm"
-              variant={directoryTab === 'animals' ? 'secondary' : 'outline'}
+              variant={directoryTab === 'animals' ? 'default' : 'outline'}
               onClick={() => onDirectoryTab('animals')}
               aria-pressed={directoryTab === 'animals'}
             >
@@ -188,7 +188,11 @@ export function DirectoryLayout({
               </Button>
             ) : null}
           </div>
-          <div className="flex min-h-0 flex-1 flex-col overflow-y-auto p-4">
+          <div
+            className="flex min-h-0 flex-1 flex-col overflow-y-auto p-4"
+            role="region"
+            aria-label="Shelter and animal directory list"
+          >
             {directoryTab === 'shelters' ? (
               <ShelterList
                 shelters={filteredShelters}

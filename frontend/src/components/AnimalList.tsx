@@ -64,18 +64,7 @@ export function AnimalList({
   }))
 
   return (
-    <section className="text-start" aria-labelledby="animals-heading">
-      <h2
-        id="animals-heading"
-        className="text-foreground mb-1 text-lg font-semibold tracking-tight"
-      >
-        Animals
-      </h2>
-      <p className="text-muted-foreground mb-3 text-sm leading-relaxed">
-        Published profiles for adoption discovery; confirm details with the shelter. Selecting an
-        animal pans the map to that shelter without opening shelter details.
-      </p>
-
+    <section className="text-start" aria-label="Animal list">
       {error ? (
         <div
           className="border-destructive/40 bg-destructive/5 text-destructive mb-4 rounded-lg border px-3 py-2 text-sm leading-relaxed"

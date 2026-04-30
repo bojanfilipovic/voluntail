@@ -13,7 +13,7 @@ export function DiscoveryGrid({ children }: Props) {
   return (
     <div
       className="
-        grid min-h-0 flex-1 gap-4
+        grid min-h-0 flex-1 gap-3 lg:gap-4
         grid-cols-1
         grid-rows-[minmax(220px,min(40svh,420px))_minmax(0,1fr)]
         lg:grid-cols-2
