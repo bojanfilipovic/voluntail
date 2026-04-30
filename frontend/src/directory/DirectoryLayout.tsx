@@ -4,7 +4,9 @@ import type { Shelter } from '@/api/shelters'
 import { AnimalList } from '@/components/AnimalList'
 import { DiscoveryErrorBoundary } from '@/components/layout/DiscoveryErrorBoundary'
 import { DiscoveryGrid } from '@/components/layout/DiscoveryGrid'
+import { AnimalCmsToolbar } from '@/components/layout/AnimalCmsToolbar'
 import { MapPlacementToolbar } from '@/components/layout/MapPlacementToolbar'
+import { MapPublicToolbar } from '@/components/layout/MapPublicToolbar'
 import type { ShelterMapHandle } from '@/components/ShelterMap'
 import { ShelterList } from '@/components/ShelterList'
 import { Button } from '@/components/ui/button'
@@ -123,16 +125,7 @@ export function DirectoryLayout({
           className="border-border flex min-h-0 flex-col overflow-hidden rounded-lg border"
           aria-label="Map of shelters"
         >
-          <MapPlacementToolbar
-            placementMode={placementMode}
-            draftLocationKnown={Boolean(draftLocation)}
-            addDialogOpen={addDialogOpen}
-            cmsBusy={cmsBusy}
-            cancelPlacementDisabled={cancelPlacementDisabled}
-            onStartAddPin={onStartAddPin}
-            onEnterDetails={onEnterDetails}
-            onCancelPlacement={onCancelPlacement}
-          />
+          <MapPublicToolbar />
           <div className="flex h-full min-h-0 flex-1 flex-col">
             <Suspense fallback={<MapLoadingFallback />}>
               <ShelterMapLazy
@@ -148,6 +141,18 @@ export function DirectoryLayout({
               />
             </Suspense>
           </div>
+          {cmsConfigured ? (
+            <MapPlacementToolbar
+              placementMode={placementMode}
+              draftLocationKnown={Boolean(draftLocation)}
+              addDialogOpen={addDialogOpen}
+              cmsBusy={cmsBusy}
+              cancelPlacementDisabled={cancelPlacementDisabled}
+              onStartAddPin={onStartAddPin}
+              onEnterDetails={onEnterDetails}
+              onCancelPlacement={onCancelPlacement}
+            />
+          ) : null}
         </section>
         <section
           className="border-border flex min-h-0 flex-col overflow-hidden rounded-lg border"
@@ -176,17 +181,6 @@ export function DirectoryLayout({
             >
               Animals
             </Button>
-            {directoryTab === 'animals' && cmsConfigured ? (
-              <Button
-                type="button"
-                size="sm"
-                variant="default"
-                disabled={addAnimalCmsBusy || !canAddAnimal}
-                onClick={onAddAnimalClick}
-              >
-                Add animal
-              </Button>
-            ) : null}
           </div>
           <div
             className="flex min-h-0 flex-1 flex-col overflow-y-auto p-4"
@@ -224,6 +218,13 @@ export function DirectoryLayout({
               />
             )}
           </div>
+          {cmsConfigured && directoryTab === 'animals' ? (
+            <AnimalCmsToolbar
+              cmsBusy={addAnimalCmsBusy}
+              canAddAnimal={canAddAnimal}
+              onAddAnimal={onAddAnimalClick}
+            />
+          ) : null}
         </section>
       </DiscoveryGrid>
     </DiscoveryErrorBoundary>

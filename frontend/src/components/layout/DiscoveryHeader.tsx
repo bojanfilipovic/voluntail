@@ -14,9 +14,8 @@ type Props = {
 function DirectoryIntro() {
   return (
     <p className="text-muted-foreground max-w-2xl text-sm leading-relaxed">
-      Try <span className="font-medium text-foreground">Explore</span> for a quick swipe through
-      animals. Please use Share Feedback so I can learn what works or what you&apos;d like me to add
-      to this. Love, B
+      Please use Share Feedback so I can learn what works and what you&apos;d like me to add to
+      this. Love, B 🫶
     </p>
   )
 }
@@ -24,7 +23,8 @@ function DirectoryIntro() {
 function ExploreIntro() {
   return (
     <p className="text-muted-foreground max-w-2xl text-sm leading-relaxed">
-      Browsing the shelter animal list for fun. Rolled matches are stored in this browser only.
+      Swipe through animals that are listed as available and see if you land a match!{' '}
+      {'<3'}
     </p>
   )
 }

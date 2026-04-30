@@ -17,7 +17,7 @@ import { buildDeck } from '@/explore/buildDeck'
 import { ExploreFormFields } from '@/explore/components/ExploreFormFields'
 import { ExploreSwipeStack } from '@/explore/components/ExploreSwipeStack'
 import { MatchMomentOverlay } from '@/explore/components/MatchMomentOverlay'
-import { MATCH_MOMENT_PROBABILITY, rollMatchMoment } from '@/explore/matchMomentConfig'
+import { rollMatchMoment } from '@/explore/matchMomentConfig'
 import { shuffleIdsInPlace } from '@/explore/shuffleIds'
 import { useExploreSessionState } from '@/explore/useExploreSessionState'
 import type { ExploreSpeciesMode } from '@/explore/types'
@@ -28,6 +28,8 @@ type Props = {
   onBack: () => void
   onOpenAnimal: (animal: Animal) => void
 }
+
+const SWIPE_VIEW_TITLE = 'Swipe deck'
 
 function ExploreShortlistRow({
   animals,
@@ -314,7 +316,7 @@ export function ExploreView({ onBack, onOpenAnimal }: Props) {
   if (animalsErrorNorm) {
     return (
       <div className="flex min-h-0 flex-1 flex-col gap-4 p-4">
-        <ExploreToolbar onOpenSettings={() => setSettingsOpen(true)} title="Explore" />
+        <ExploreToolbar onOpenSettings={() => setSettingsOpen(true)} title={SWIPE_VIEW_TITLE} />
         <Card>
           <CardContent className="p-4 text-sm">
             <p className="text-foreground">
@@ -363,7 +365,7 @@ export function ExploreView({ onBack, onOpenAnimal }: Props) {
 
   return (
     <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-      <ExploreToolbar onOpenSettings={() => setSettingsOpen(true)} title="Explore" />
+      <ExploreToolbar onOpenSettings={() => setSettingsOpen(true)} title={SWIPE_VIEW_TITLE} />
 
       <div
         className={cn(
@@ -388,13 +390,9 @@ export function ExploreView({ onBack, onOpenAnimal }: Props) {
           {!session.deckEntered ? (
             <div className="space-y-4">
               <p className="text-muted-foreground text-sm leading-relaxed">
-                Set your preferences, then get a <span className="font-medium text-foreground"> shuffled</span> deck
-                of real animals from the public directory. A
-                <span className="font-medium text-foreground"> match </span>
-                (roughly {Math.round(MATCH_MOMENT_PROBABILITY * 10)} in 10 of your yeses) adds to
-                <span className="font-medium text-foreground"> your matches</span> and can show the full
-                celebration. Other yeses are for fun. In <span className="font-medium">settings</span>, you
-                can clear passed animals, clear saved matches, or both — separately.
+                Pick what fits you below, then tap <span className="font-medium text-foreground">Shuffle deck</span>{' '}
+                to browse animals from the directory. Your session stays on this device; open the gear when you
+                want to change filters or tidy your lists.
               </p>
               <ExploreFormFields
                 idSuffix="pre"
@@ -413,7 +411,7 @@ export function ExploreView({ onBack, onOpenAnimal }: Props) {
                 size="lg"
                 onClick={startDeck}
               >
-                Start swiping
+                Shuffle deck
               </Button>
             </div>
           ) : (
@@ -422,7 +420,7 @@ export function ExploreView({ onBack, onOpenAnimal }: Props) {
                 return (
                   <div className="text-muted-foreground flex items-center justify-center gap-2 py-12 text-sm">
                     <span className="size-5 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                    Loading animals…
+                    Loading deck…
                   </div>
                 )
               }
@@ -558,7 +556,7 @@ function ExploreToolbar({ title, onOpenSettings }: ToolbarProps) {
         variant="secondary"
         onClick={onOpenSettings}
         className="transition active:scale-95 motion-reduce:active:scale-100"
-        aria-label="Explore settings"
+        aria-label="Swipe deck settings"
       >
         <Settings className="size-4" />
       </Button>
@@ -661,7 +659,7 @@ function SettingsDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent showCloseButton className="sm:max-w-md" aria-describedby={undefined}>
         <DialogHeader>
-          <DialogTitle>Explore settings</DialogTitle>
+          <DialogTitle>Swipe deck settings</DialogTitle>
         </DialogHeader>
         <ExploreFormFields
           idSuffix="settings"
