@@ -67,14 +67,10 @@ export function AnimalList({
     <section className="text-start" aria-labelledby="animals-heading">
       <h2
         id="animals-heading"
-        className="text-foreground mb-1 text-lg font-semibold tracking-tight"
+        className="text-foreground mb-3 text-lg font-semibold tracking-tight"
       >
         Animals
       </h2>
-      <p className="text-muted-foreground mb-3 text-sm leading-relaxed">
-        Published profiles for adoption discovery; confirm details with the shelter. Selecting an
-        animal pans the map to that shelter without opening shelter details.
-      </p>
 
       {error ? (
         <div

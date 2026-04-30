@@ -12,15 +12,15 @@ type Props = {
 
 export function DiscoveryHeader({ onShareFeedback, appView, onGoExplore, onGoDirectory }: Props) {
   return (
-    <header className="border-border border-b px-6 py-4">
-      <div className="flex flex-col gap-4 md:flex-row md:items-start md:gap-6">
+    <header className="border-border border-b px-4 py-3 md:px-6 md:py-4">
+      <div className="flex flex-col gap-3 md:flex-row md:items-start md:gap-6">
         <div className="min-w-0 md:w-2/3">
           <h1 className="text-lg font-semibold tracking-tight">Voluntail</h1>
           {appView === 'directory' ? (
             <p className="text-muted-foreground mt-1 max-w-2xl text-sm leading-relaxed">
-              Discover animal shelters in the Netherlands—explore the map or list, then open a
-              shelter for volunteer signup and donation links. Info here is curated; always confirm
-              details on the shelter&apos;s official site.
+              Try <span className="font-medium text-foreground">Explore</span> for a quick swipe
+              through animals. Please use Share Feedback so I can learn what works or what you&apos;d
+              like me to add to this. Love, B
             </p>
           ) : (
             <p className="text-muted-foreground mt-1 max-w-2xl text-sm leading-relaxed">
