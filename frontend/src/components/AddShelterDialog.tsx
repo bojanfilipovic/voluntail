@@ -6,6 +6,7 @@ import {
   shelterFormFooterClassName,
   shelterFormScrollAreaClassName,
 } from '@/components/shelters/ShelterDialogChrome'
+import { DraftPositionInputs } from '@/components/shelters/DraftPositionInputs'
 import { ShelterSpeciesFieldset } from '@/components/shelters/ShelterSpeciesFieldset'
 import type { MapCenter } from '@/components/ShelterMap'
 import { Button } from '@/components/ui/button'
@@ -44,38 +45,6 @@ const DEFAULT_CITY = 'Amsterdam'
 function urlOrDefault(raw: string, fallback: string): string {
   const t = raw.trim()
   return t || fallback
-}
-
-/**
- * Remount when `key` (draft position) changes — parent must pass
- * `key={\`\${lat},\${lon}\`}` so pin moves pick up new defaultValues without
- * setState in an effect. Lat/lon are submitted via FormData.
- */
-function DraftPositionInputs({ draftLocation }: { draftLocation: MapCenter }) {
-  return (
-    <div className="grid grid-cols-2 gap-3">
-      <div className="space-y-1.5">
-        <Label htmlFor="add-lat">Latitude</Label>
-        <Input
-          id="add-lat"
-          name="latitude"
-          inputMode="decimal"
-          required
-          defaultValue={String(draftLocation.latitude)}
-        />
-      </div>
-      <div className="space-y-1.5">
-        <Label htmlFor="add-lng">Longitude</Label>
-        <Input
-          id="add-lng"
-          name="longitude"
-          inputMode="decimal"
-          required
-          defaultValue={String(draftLocation.longitude)}
-        />
-      </div>
-    </div>
-  )
 }
 
 export function AddShelterDialog({
@@ -194,6 +163,7 @@ export function AddShelterDialog({
                 {draftLocation ? (
                   <DraftPositionInputs
                     key={`${draftLocation.latitude},${draftLocation.longitude}`}
+                    idPrefix="add"
                     draftLocation={draftLocation}
                   />
                 ) : null}

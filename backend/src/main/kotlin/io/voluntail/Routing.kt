@@ -1,13 +1,15 @@
 package io.voluntail
 
+import io.animals.animalRoutes
+import io.feedback.feedbackRoutes
+import io.feedback.peerFeedbackMaxRows
 import io.ktor.server.application.Application
 import io.ktor.server.response.respond
 import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
-import io.animals.animalRoutes
-import io.feedback.feedbackRoutes
-import io.feedback.peerFeedbackMaxRows
 import io.shelters.shelterRoutes
+import io.shelters.shelterSuggestionRoutes
+import io.shelters.shelterSuggestionsMaxRows
 
 private val serviceInfo =
     ServiceInfo(
@@ -33,5 +35,6 @@ fun Application.configureRouting() {
         shelterRoutes(repos.shelterRepository)
         animalRoutes(repos.shelterRepository, repos.animalRepository)
         feedbackRoutes(repos.feedbackRepository, peerFeedbackMaxRows())
+        shelterSuggestionRoutes(repos.shelterSuggestionRepository, shelterSuggestionsMaxRows())
     }
 }

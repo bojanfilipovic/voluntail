@@ -10,6 +10,7 @@ import { MapPublicToolbar } from '@/components/layout/MapPublicToolbar'
 import type { ShelterMapHandle } from '@/components/ShelterMap'
 import { ShelterList } from '@/components/ShelterList'
 import { Button } from '@/components/ui/button'
+import type { DraftFlow } from '@/hooks/useShelterDiscoveryState'
 import type { ShelterSpecies } from '@/domain/species'
 import { MapLoadingFallback } from '@/directory/MapLoadingFallback'
 
@@ -30,12 +31,18 @@ type DirectoryTab = 'shelters' | 'animals'
 export type DirectoryLayoutProps = {
   shelterMapRef: RefObject<ShelterMapHandle | null>
   placementMode: boolean
+  suggestPlacementMode: boolean
+  draftFlow: DraftFlow
   draftLocation: DraftMapPosition | null
   addDialogOpen: boolean
+  suggestDialogOpen: boolean
   cmsBusy: boolean
   cancelPlacementDisabled: boolean
+  cancelSuggestDisabled: boolean
   onStartAddPin: () => void
+  onStartSuggestShelter: () => void
   onEnterDetails: () => void
+  onEnterSuggestDetails: () => void
   onCancelPlacement: () => void
   mapShelters: Shelter[]
   selectedShelter: Shelter | null
@@ -76,12 +83,18 @@ export type DirectoryLayoutProps = {
 export function DirectoryLayout({
   shelterMapRef,
   placementMode,
+  suggestPlacementMode,
+  draftFlow,
   draftLocation,
   addDialogOpen,
+  suggestDialogOpen,
   cmsBusy,
   cancelPlacementDisabled,
+  cancelSuggestDisabled,
   onStartAddPin,
+  onStartSuggestShelter,
   onEnterDetails,
+  onEnterSuggestDetails,
   onCancelPlacement,
   mapShelters,
   selectedShelter,
@@ -118,6 +131,9 @@ export function DirectoryLayout({
   shelterCityOptions,
   animalSpeciesCounts,
 }: DirectoryLayoutProps) {
+  const cmsDraftLocationKnown = draftFlow === 'cms' && Boolean(draftLocation)
+  const suggestDraftLocationKnown = draftFlow === 'suggest' && Boolean(draftLocation)
+
   return (
     <DiscoveryErrorBoundary>
       <DiscoveryGrid>
@@ -125,7 +141,15 @@ export function DirectoryLayout({
           className="border-border flex min-h-0 flex-col overflow-hidden rounded-lg border"
           aria-label="Map of shelters"
         >
-          <MapPublicToolbar />
+          <MapPublicToolbar
+            placementMode={suggestPlacementMode}
+            draftLocationKnown={suggestDraftLocationKnown}
+            suggestDialogOpen={suggestDialogOpen}
+            cancelPlacementDisabled={cancelSuggestDisabled}
+            onStartAddPin={onStartSuggestShelter}
+            onEnterDetails={onEnterSuggestDetails}
+            onCancelPlacement={onCancelPlacement}
+          />
           <div className="flex h-full min-h-0 flex-1 flex-col">
             <Suspense fallback={<MapLoadingFallback />}>
               <ShelterMapLazy
@@ -144,7 +168,7 @@ export function DirectoryLayout({
           {cmsConfigured ? (
             <MapPlacementToolbar
               placementMode={placementMode}
-              draftLocationKnown={Boolean(draftLocation)}
+              draftLocationKnown={cmsDraftLocationKnown}
               addDialogOpen={addDialogOpen}
               cmsBusy={cmsBusy}
               cancelPlacementDisabled={cancelPlacementDisabled}
