@@ -10,6 +10,7 @@ import { EditAnimalDialog } from '@/components/EditAnimalDialog'
 import { EditShelterDialog } from '@/components/EditShelterDialog'
 import { ShelterDetailDialog } from '@/components/ShelterDetailDialog'
 import { ShareFeedbackDialog } from '@/components/ShareFeedbackDialog'
+import { SuggestShelterDialog } from '@/components/SuggestShelterDialog'
 import { DiscoveryHeader } from '@/components/layout/DiscoveryHeader'
 import { useAnimalMutations } from '@/hooks/useAnimalMutations'
 import { useShelterDiscoveryState } from '@/hooks/useShelterDiscoveryState'
@@ -154,20 +155,29 @@ function App() {
   const {
     mapRef,
     addDialogNonce,
+    suggestDialogNonce,
     selectedShelter,
     placementMode,
+    suggestPlacementMode,
+    draftFlow,
     draftLocation,
     addDialogOpen,
+    suggestDialogOpen,
     placementOrRelocateActive,
     cancelPlacementDisabled,
+    cancelSuggestDisabled,
     clearSelection,
     handleCancelPlacement,
     handleMapSelect,
     handleListSelect,
     handleStartAddPin,
+    handleStartSuggestShelter,
     handleDraftPosition,
     handleEnterDetails,
+    handleEnterSuggestDetails,
     handleCloseAddDialog,
+    handleCloseSuggestDialog,
+    handleSuggestSubmitted,
     handleCreateShelter,
     handleRemovePin,
   } = useShelterDiscoveryState(data, mutations)
@@ -309,12 +319,18 @@ function App() {
           <DirectoryLayout
             shelterMapRef={mapRef}
             placementMode={placementMode}
+            suggestPlacementMode={suggestPlacementMode}
+            draftFlow={draftFlow}
             draftLocation={draftLocation}
             addDialogOpen={addDialogOpen}
+            suggestDialogOpen={suggestDialogOpen}
             cmsBusy={mutations.cmsBusy}
             cancelPlacementDisabled={cancelPlacementDisabled}
+            cancelSuggestDisabled={cancelSuggestDisabled}
             onStartAddPin={handleStartAddPin}
+            onStartSuggestShelter={handleStartSuggestShelter}
             onEnterDetails={handleEnterDetails}
+            onEnterSuggestDetails={handleEnterSuggestDetails}
             onCancelPlacement={handleCancelPlacement}
             mapShelters={mapShelters}
             selectedShelter={selectedShelter}
@@ -370,10 +386,17 @@ function App() {
       <AddShelterDialog
         key={addDialogNonce}
         open={addDialogOpen}
-        draftLocation={draftLocation}
+        draftLocation={draftFlow === 'cms' ? draftLocation : null}
         onClose={handleCloseAddDialog}
         onSubmit={handleCreateShelter}
         isSubmitting={mutations.createMutation.isPending}
+      />
+      <SuggestShelterDialog
+        key={suggestDialogNonce}
+        open={suggestDialogOpen}
+        draftLocation={draftFlow === 'suggest' ? draftLocation : null}
+        onClose={handleCloseSuggestDialog}
+        onSubmitted={handleSuggestSubmitted}
       />
       <ShelterDetailDialog
         shelter={selectedShelter}

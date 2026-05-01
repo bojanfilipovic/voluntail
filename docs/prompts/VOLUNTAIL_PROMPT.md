@@ -33,7 +33,8 @@ voluntail/
 - POST /api/shelters, DELETE /api/shelters/{id} — CMS only.
 - GET /api/animals — public; query: `shelterId`, `city`, `species` (as implemented). With `X-CMS-Key`, list may include unpublished (CMS view).
 - POST /api/animals, PATCH /api/animals/{id}, DELETE /api/animals/{id} — CMS only.
-- POST /api/suggestions — public if `DB_URL` is set; otherwise 503. JSON: `message`, optional `contact`, optional `shelterId` / `animalId` (UUIDs, triage). Rate limit in pilot via row cap (see backend).
+- POST /api/suggestions — public if `DB_URL` is set; otherwise 503. JSON: `message`, optional `contact`, optional `shelterId` / `animalId` (UUIDs, triage). Rate limit in pilot via row cap (`PEER_FEEDBACK_MAX_ROWS`; see backend).
+- POST /api/shelter-suggestions — public if `DB_URL` is set; otherwise 503. JSON: required `name`, `latitude`, `longitude`; optional `description`, `city`, `speciesNote`, `signupUrl`, `imageUrl`, `donationUrl`, `contact`. Response same shape as suggestions (`id`, `createdAt`). Rate limit via `SHELTER_SUGGESTIONS_MAX_ROWS` (see backend).
 - Persistence: If `DB_URL` is unset/empty, repository behavior follows backend (in-memory samples / degraded paths per module).
 - Frontend optional CMS key: `VITE_CMS_API_KEY` (see `frontend/src/api/shelters.ts`, `animals`) — must not be present in the public visitor build if only you should curate in-app.
 
@@ -59,7 +60,7 @@ voluntail/
 
 ## Where we are (high level) — *UPDATE AS YOU SHIP*
 
-- Map + list split, shelter & animal modals, species filters, outbound shelter links, animals listing + published filter for public, CMS flows with `X-CMS-Key`, Exposed/Postgres when `DB_URL` is set, peer feedback pipeline when DB is up, GitHub CI, backend Dockerfile, seed/migrations in repo. Backend: kotlin-logging (oshai) + Logback (startup + errors), Ktor `CallLogging` (health excluded) + `StatusPages` for 500s — see [`docs/adr/0001-backend-observability-kotlin-logging.md`](../adr/0001-backend-observability-kotlin-logging.md). Frontend: TypeScript `strict`, `npm test` in CI, `src/directory/` for URL + map/list shell + documented shadcn-only ESLint — see [`docs/adr/0002-frontend-spa-hygiene-and-directory-module.md`](../adr/0002-frontend-spa-hygiene-and-directory-module.md).
+- Map + list split, shelter & animal modals, species filters, outbound shelter links, animals listing + published filter for public, CMS flows with `X-CMS-Key`, Exposed/Postgres when `DB_URL` is set, peer feedback + **shelter suggestion** pipelines when DB is up (apply `shelter_suggestions` migration), GitHub CI, backend Dockerfile, seed/migrations in repo. Backend: kotlin-logging (oshai) + Logback (startup + errors), Ktor `CallLogging` (health excluded) + `StatusPages` for 500s — [`docs/adr/0001-backend-observability-kotlin-logging.md`](../adr/0001-backend-observability-kotlin-logging.md). Shelter nominations API + inbox limits — [`docs/adr/0003-shelter-suggestions-and-feedback-limits.md`](../adr/0003-shelter-suggestions-and-feedback-limits.md). Frontend: TypeScript `strict`, `npm test` in CI, `src/directory/` for URL + map/list shell + documented shadcn-only ESLint — [`docs/adr/0002-frontend-spa-hygiene-and-directory-module.md`](../adr/0002-frontend-spa-hygiene-and-directory-module.md).
 
 ## Things I will not do in a drive-by task (unless explicitly asked)
 
