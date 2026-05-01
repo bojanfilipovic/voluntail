@@ -144,7 +144,7 @@ export function DirectoryLayout({
           <MapPublicToolbar
             placementMode={suggestPlacementMode}
             draftLocationKnown={suggestDraftLocationKnown}
-            addDialogOpen={suggestDialogOpen}
+            suggestDialogOpen={suggestDialogOpen}
             cancelPlacementDisabled={cancelSuggestDisabled}
             onStartAddPin={onStartSuggestShelter}
             onEnterDetails={onEnterSuggestDetails}

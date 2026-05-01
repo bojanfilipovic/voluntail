@@ -1,5 +1,5 @@
 import { useMutation } from '@tanstack/react-query'
-import { type FormEvent, useEffect, useState } from 'react'
+import { type FormEvent, useState } from 'react'
 import { postSuggestion } from '@/api/suggestions'
 import {
   shelterFormDialogContentClassName,
@@ -74,12 +74,10 @@ export function SuggestShelterDialog({
     {},
   )
   const [formError, setFormError] = useState<string | null>(null)
-  const [showThanks, setShowThanks] = useState(false)
 
   const mutation = useMutation({
     mutationFn: postSuggestion,
     onSuccess: () => {
-      setShowThanks(true)
       onSubmitted()
       setName('')
       setDescription('')
@@ -94,24 +92,21 @@ export function SuggestShelterDialog({
     },
   })
 
-  useEffect(() => {
-    if (!open) {
-      mutation.reset()
-      setShowThanks(false)
-      setFormError(null)
-    }
-  }, [open])
-
   const toggleSpecies = (tag: SuggestShelterSpeciesTag) => {
     setSpecies((prev) => ({ ...prev, [tag]: !prev[tag] }))
     mutation.reset()
     setFormError(null)
   }
 
+  /** Reset dialog UI + mutation; then notify parent (Cancel, overlay, Escape, thanks Close). */
+  const dismiss = () => {
+    mutation.reset()
+    setFormError(null)
+    onClose()
+  }
+
   const handleOpenChange = (next: boolean) => {
-    if (!next) {
-      onClose()
-    }
+    if (!next) dismiss()
   }
 
   const trimmedName = name.trim()
@@ -167,7 +162,7 @@ export function SuggestShelterDialog({
         <DialogHeader className={shelterFormDialogHeaderClassName}>
           <DialogTitle>Suggest shelter</DialogTitle>
         </DialogHeader>
-        {showThanks ? (
+        {mutation.isSuccess ? (
           <div className="flex min-h-0 flex-1 flex-col gap-4 py-4">
             <div
               role="status"
@@ -183,7 +178,7 @@ export function SuggestShelterDialog({
               </p>
             </div>
             <DialogFooter className={shelterFormFooterClassName}>
-              <Button type="button" onClick={() => onClose()}>
+              <Button type="button" onClick={dismiss}>
                 Close
               </Button>
             </DialogFooter>
@@ -369,7 +364,7 @@ export function SuggestShelterDialog({
               <Button
                 type="button"
                 variant="outline"
-                onClick={onClose}
+                onClick={dismiss}
                 disabled={mutation.isPending}
               >
                 Cancel
