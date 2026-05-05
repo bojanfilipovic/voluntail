@@ -5,7 +5,7 @@ create table if not exists public.shelters (
     description text not null,
     latitude double precision not null,
     longitude double precision not null,
-    species jsonb not null default '[]'::jsonb,
+    species text[] not null default '{}'::text[],
     signup_url text null,
     image_url text null,
     donation_url text null,
