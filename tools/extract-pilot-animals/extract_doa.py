@@ -106,17 +106,24 @@ def _fetch_image(session: requests.Session, detail_url: str, delay: float) -> st
     finally:
         time.sleep(delay)
     soup = BeautifulSoup(r.text, "html.parser")
+    candidates: list[str] = []
     for img in soup.select(".elementor-widget-image img, .elementor-section img"):
         src = img.get("data-src") or img.get("src") or ""
         if not src or "logo" in src.lower() or "placeholder" in src.lower():
+            continue
+        if "elementor/thumbs" in src.lower():
             continue
         if src.startswith("//"):
             src = "https:" + src
         if src.startswith("/"):
             src = urljoin(detail_url, src)
         if _looks_like_animal_image(src):
-            return src
-    return None
+            candidates.append(src)
+    # Prefer kenneldata images (actual per-animal photos from shelter system)
+    for c in candidates:
+        if "kenneldata" in c:
+            return c
+    return candidates[0] if candidates else None
 
 
 # ---------------------------------------------------------------------------

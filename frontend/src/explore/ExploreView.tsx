@@ -22,6 +22,7 @@ import { shuffleIdsInPlace } from '@/explore/shuffleIds'
 import { useExploreSessionState } from '@/explore/useExploreSessionState'
 import type { ExploreSpeciesMode } from '@/explore/types'
 import { cn } from '@/lib/utils'
+import { intentLabel } from '@/explore/labels'
 import { Heart, Settings } from 'lucide-react'
 
 type Props = {
@@ -107,7 +108,7 @@ export function ExploreView({ onBack, onOpenAnimal }: Props) {
   const [matchAnimal, setMatchAnimal] = useState<Animal | null>(null)
   const [lowKeySaveName, setLowKeySaveName] = useState<string | null>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
-  const [localDataConfirm, setLocalDataConfirm] = useState<null | 'clearPassed' | 'clearMatches'>(null)
+  const [localDataConfirm, setLocalDataConfirm] = useState<null | 'reshuffle' | 'startOver'>(null)
   /** Bumps to rebuild a freshly shuffled deck: Start swiping, reset, or species while in the deck. */
   const [shuffleKey, setShuffleKey] = useState(0)
   const [deckOrder, setDeckOrder] = useState<string[]>([])
@@ -115,7 +116,7 @@ export function ExploreView({ onBack, onOpenAnimal }: Props) {
 
   useEffect(() => {
     if (!lowKeySaveName) return
-    const t = window.setTimeout(() => setLowKeySaveName(null), 2800)
+    const t = window.setTimeout(() => setLowKeySaveName(null), 3500)
     return () => window.clearTimeout(t)
   }, [lowKeySaveName])
 
@@ -197,9 +198,8 @@ export function ExploreView({ onBack, onOpenAnimal }: Props) {
     () => (session.rememberNo ? session.passedIds.length > 0 : sessionPassed.size > 0),
     [session.rememberNo, session.passedIds, sessionPassed],
   )
-  /** “Yes” without match moment — these block the deck but are not “passed” (not for me). */
   const hasNoMatchStash = session.yesNotMatchIds.length > 0
-  const hasMatches = session.shortlistIds.length > 0
+  const canReshuffle = hasRejections || hasNoMatchStash
 
   useEffect(() => {
     if (topId && !animalsLoading && byId.size > 0 && !byId.has(topId)) {
@@ -255,43 +255,28 @@ export function ExploreView({ onBack, onOpenAnimal }: Props) {
     setDeckOrder((d) => d.slice(1))
   }
 
-  /** Clear only “not for me” / passed state (not matches, not “yes, no match” stash). */
-  const clearPassedOnly = () => {
-    patch((s) => ({ ...s, passedIds: [] }))
+  /** Reshuffle: clear passed + no-match stash, keep matches, rebuild deck. */
+  const applyReshuffle = () => {
+    patch((s) => ({ ...s, passedIds: [], yesNotMatchIds: [] }))
     setSessionPassed(new Set())
-  }
-
-  const applyClearPassed = () => {
-    clearPassedOnly()
     setMatchAnimal(null)
     setLowKeySaveName(null)
     if (session.deckEntered) setShuffleKey((k) => k + 1)
     setLocalDataConfirm(null)
   }
 
-  const applyClearMatches = () => {
-    patch((s) => ({ ...s, shortlistIds: [] }))
+  /** Start over: clear everything, rebuild deck. */
+  const applyStartOver = () => {
+    patch((s) => ({ ...s, passedIds: [], yesNotMatchIds: [], shortlistIds: [] }))
+    setSessionPassed(new Set())
+    setMatchAnimal(null)
+    setLowKeySaveName(null)
     if (session.deckEntered) setShuffleKey((k) => k + 1)
     setLocalDataConfirm(null)
   }
 
-  /** “Yes, no match this time” stashes; clearing brings those animals back into the shuffle. */
-  const clearYesNotMatchStash = () => {
-    patch((s) => ({ ...s, yesNotMatchIds: [] }))
-    setMatchAnimal(null)
-    setLowKeySaveName(null)
-    if (session.deckEntered) setShuffleKey((k) => k + 1)
-  }
-
-  const requestClearPassed = () => {
-    if (!hasRejections) return
-    setLocalDataConfirm('clearPassed')
-  }
-
-  const requestClearMatches = () => {
-    if (!hasMatches) return
-    setLocalDataConfirm('clearMatches')
-  }
+  const requestReshuffle = () => setLocalDataConfirm('reshuffle')
+  const requestStartOver = () => setLocalDataConfirm('startOver')
 
   const skipTop = () => {
     if (deckOrder.length <= 1) {
@@ -341,20 +326,17 @@ export function ExploreView({ onBack, onOpenAnimal }: Props) {
           onSpeciesModeChange={handleSpeciesModeChange}
           patch={patch}
           onRememberNoChange={handleRememberNoChange}
-          hasRejections={hasRejections}
-          hasNoMatchStash={hasNoMatchStash}
-          hasMatches={hasMatches}
-          onRequestClearPassed={requestClearPassed}
-          onRequestClearMatches={requestClearMatches}
-          onClearYesNotMatchStash={clearYesNotMatchStash}
+          canReshuffle={canReshuffle}
+          onRequestReshuffle={requestReshuffle}
+          onRequestStartOver={requestStartOver}
         />
         <LocalDataConfirmDialog
           kind={localDataConfirm}
           onOpenChange={(o) => {
             if (!o) setLocalDataConfirm(null)
           }}
-          onConfirmClearPassed={applyClearPassed}
-          onConfirmClearMatches={applyClearMatches}
+          onConfirmReshuffle={applyReshuffle}
+          onConfirmStartOver={applyStartOver}
         />
       </div>
     )
@@ -365,7 +347,12 @@ export function ExploreView({ onBack, onOpenAnimal }: Props) {
 
   return (
     <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-      <ExploreToolbar onOpenSettings={() => setSettingsOpen(true)} title={SWIPE_VIEW_TITLE} />
+      <ExploreToolbar
+        onOpenSettings={() => setSettingsOpen(true)}
+        title={SWIPE_VIEW_TITLE}
+        displayName={session.deckEntered ? session.displayName : undefined}
+        intent={session.deckEntered ? session.intent : undefined}
+      />
 
       <div
         className={cn(
@@ -436,35 +423,16 @@ export function ExploreView({ onBack, onOpenAnimal }: Props) {
                   <div className="text-center">
                     <p className="text-foreground text-base font-medium">You&apos;re caught up (for now).</p>
                     <p className="text-muted-foreground mt-1 text-sm">
-                      If you only swiped <span className="font-medium text-foreground">not for me</span>, use
-                      <span className="font-medium text-foreground"> Clear passed</span>. If you said yes
-                      and got &ldquo;no match this time&rdquo; (those animals are set aside from the
-                      deck), use <span className="font-medium text-foreground">Get more cards</span>. Your
-                      saved matches stay until you clear them in settings. You can also change the filter
-                      in settings.
+                      Reshuffle to see all animals again, or start over to reset your matches too.
                     </p>
                     <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-center sm:flex-wrap">
                       <Button
                         type="button"
-                        disabled={!hasRejections}
-                        title={hasRejections ? undefined : 'No "not for me" swipes to clear'}
-                        onClick={requestClearPassed}
+                        disabled={!canReshuffle}
+                        onClick={requestReshuffle}
                         className="transition active:scale-[0.99] enabled:opacity-100 disabled:opacity-40 motion-reduce:active:scale-100"
                       >
-                        Clear passed
-                      </Button>
-                      <Button
-                        type="button"
-                        disabled={!hasNoMatchStash}
-                        title={
-                          hasNoMatchStash
-                            ? undefined
-                            : 'No “no match this time” animals in this session to bring back'
-                        }
-                        onClick={clearYesNotMatchStash}
-                        className="transition active:scale-[0.99] enabled:opacity-100 disabled:opacity-40 motion-reduce:active:scale-100"
-                      >
-                        Get more cards
+                        Reshuffle deck
                       </Button>
                       <Button type="button" variant="secondary" onClick={() => setSettingsOpen(true)}>
                         Open settings
@@ -481,6 +449,7 @@ export function ExploreView({ onBack, onOpenAnimal }: Props) {
                     onLike={onLikeSwipe}
                     onSkip={skipTop}
                     singleCardSkipNudge={singleSkipNudge}
+                    remaining={deckOrder.length}
                     busy={Boolean(matchAnimal)}
                   />
                 </div>
@@ -492,11 +461,12 @@ export function ExploreView({ onBack, onOpenAnimal }: Props) {
 
       {lowKeySaveName ? (
         <div
-          className="border-border bg-card text-foreground pointer-events-none fixed right-4 bottom-20 left-4 z-40 max-w-md animate-in slide-in-from-bottom-3 duration-200 zoom-in-95 motion-reduce:animate-none rounded-lg border p-3 text-sm shadow-md sm:bottom-32 sm:left-auto"
+          className="pointer-events-none fixed inset-x-4 bottom-24 z-40 mx-auto max-w-md animate-in slide-in-from-bottom-4 zoom-in-95 duration-300 motion-reduce:animate-none rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm shadow-lg dark:border-amber-800 dark:bg-amber-950 sm:bottom-36"
           role="status"
         >
-          <p className="text-center">
-            <span className="font-medium">{lowKeySaveName}</span> — no match this time. Keep swiping.
+          <p className="text-center text-amber-900 dark:text-amber-100">
+            <span className="text-base">&#128064;</span>{' '}
+            <span className="font-semibold">{lowKeySaveName}</span> — no match this time. Keep swiping!
           </p>
         </div>
       ) : null}
@@ -521,12 +491,9 @@ export function ExploreView({ onBack, onOpenAnimal }: Props) {
         onSpeciesModeChange={handleSpeciesModeChange}
         patch={patch}
         onRememberNoChange={handleRememberNoChange}
-        hasRejections={hasRejections}
-        hasNoMatchStash={hasNoMatchStash}
-        hasMatches={hasMatches}
-        onRequestClearPassed={requestClearPassed}
-        onRequestClearMatches={requestClearMatches}
-        onClearYesNotMatchStash={clearYesNotMatchStash}
+        canReshuffle={canReshuffle}
+        onRequestReshuffle={requestReshuffle}
+        onRequestStartOver={requestStartOver}
       />
 
       <LocalDataConfirmDialog
@@ -534,8 +501,8 @@ export function ExploreView({ onBack, onOpenAnimal }: Props) {
         onOpenChange={(o) => {
           if (!o) setLocalDataConfirm(null)
         }}
-        onConfirmClearPassed={applyClearPassed}
-        onConfirmClearMatches={applyClearMatches}
+        onConfirmReshuffle={applyReshuffle}
+        onConfirmStartOver={applyStartOver}
       />
     </div>
   )
@@ -543,13 +510,22 @@ export function ExploreView({ onBack, onOpenAnimal }: Props) {
 
 type ToolbarProps = {
   title: string
+  displayName?: string
+  intent?: import('@/explore/types').ExploreIntent
   onOpenSettings: () => void
 }
 
-function ExploreToolbar({ title, onOpenSettings }: ToolbarProps) {
+function ExploreToolbar({ title, displayName, intent, onOpenSettings }: ToolbarProps) {
   return (
     <div className="border-border bg-background/95 flex items-center justify-between gap-2 border-b px-4 py-2">
-      <h2 className="min-w-0 truncate text-sm font-semibold tracking-tight">{title}</h2>
+      <div className="min-w-0 flex-1">
+        <h2 className="min-w-0 truncate text-sm font-semibold tracking-tight">{title}</h2>
+        {displayName ? (
+          <p className="text-muted-foreground min-w-0 truncate text-xs">
+            {displayName}{intent && intent !== 'undecided' ? ` \u00b7 ${intentLabel(intent)}` : ''}
+          </p>
+        ) : null}
+      </div>
       <Button
         type="button"
         size="icon-sm"
@@ -565,56 +541,55 @@ function ExploreToolbar({ title, onOpenSettings }: ToolbarProps) {
 }
 
 type LocalDataConfirmProps = {
-  kind: null | 'clearPassed' | 'clearMatches'
+  kind: null | 'reshuffle' | 'startOver'
   onOpenChange: (open: boolean) => void
-  onConfirmClearPassed: () => void
-  onConfirmClearMatches: () => void
+  onConfirmReshuffle: () => void
+  onConfirmStartOver: () => void
 }
 
 function LocalDataConfirmDialog({
   kind,
   onOpenChange,
-  onConfirmClearPassed,
-  onConfirmClearMatches,
+  onConfirmReshuffle,
+  onConfirmStartOver,
 }: LocalDataConfirmProps) {
   return (
     <Dialog open={kind !== null} onOpenChange={onOpenChange}>
       <DialogContent showCloseButton className="sm:max-w-md" aria-describedby={undefined}>
-        {kind === 'clearPassed' ? (
+        {kind === 'reshuffle' ? (
           <>
             <DialogHeader>
-              <DialogTitle>Clear passed animals?</DialogTitle>
+              <DialogTitle>Reshuffle deck?</DialogTitle>
               <p className="text-muted-foreground text-sm">
-                This only forgets animals you marked <span className="font-medium text-foreground">not for me</span>
-                . It does <span className="font-medium text-foreground">not</span> remove your saved matches
-                or your &ldquo;yes, no match this time&rdquo; list. Display name and filters stay the same.
+                All animals come back into the deck — passed ones and &ldquo;no match&rdquo; ones.
+                Your saved matches stay.
               </p>
             </DialogHeader>
             <DialogFooter>
               <Button type="button" variant="secondary" onClick={() => onOpenChange(false)}>
                 Cancel
               </Button>
-              <Button type="button" variant="destructive" onClick={onConfirmClearPassed}>
-                Clear passed
+              <Button type="button" onClick={onConfirmReshuffle}>
+                Reshuffle
               </Button>
             </DialogFooter>
           </>
         ) : null}
-        {kind === 'clearMatches' ? (
+        {kind === 'startOver' ? (
           <>
             <DialogHeader>
-              <DialogTitle>Clear saved matches?</DialogTitle>
+              <DialogTitle>Start over?</DialogTitle>
               <p className="text-muted-foreground text-sm">
-                This removes every animal from your saved matches list in this browser. It does not change
-                passed animals or your &ldquo;yes, no match this time&rdquo; list.
+                This resets everything — your matches, passed animals, and deck.
+                Your display name and filters stay the same.
               </p>
             </DialogHeader>
             <DialogFooter>
               <Button type="button" variant="secondary" onClick={() => onOpenChange(false)}>
                 Cancel
               </Button>
-              <Button type="button" variant="destructive" onClick={onConfirmClearMatches}>
-                Clear matches
+              <Button type="button" variant="destructive" onClick={onConfirmStartOver}>
+                Start over
               </Button>
             </DialogFooter>
           </>
@@ -632,12 +607,9 @@ type SProps = {
   onSpeciesModeChange: (m: import('@/explore/types').ExploreSpeciesMode) => void
   patch: (fn: (s: import('@/explore/types').ExplorePersisted) => import('@/explore/types').ExplorePersisted) => void
   onRememberNoChange: (v: boolean) => void
-  hasRejections: boolean
-  hasNoMatchStash: boolean
-  hasMatches: boolean
-  onRequestClearPassed: () => void
-  onRequestClearMatches: () => void
-  onClearYesNotMatchStash: () => void
+  canReshuffle: boolean
+  onRequestReshuffle: () => void
+  onRequestStartOver: () => void
 }
 
 function SettingsDialog({
@@ -648,12 +620,9 @@ function SettingsDialog({
   onSpeciesModeChange,
   patch,
   onRememberNoChange,
-  hasRejections,
-  hasNoMatchStash,
-  hasMatches,
-  onRequestClearPassed,
-  onRequestClearMatches,
-  onClearYesNotMatchStash,
+  canReshuffle,
+  onRequestReshuffle,
+  onRequestStartOver,
 }: SProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -673,38 +642,24 @@ function SettingsDialog({
           onRememberNoChange={onRememberNoChange}
         />
         <div className="grid gap-2 border-t pt-4">
-          <p className="text-sm font-medium">Local data in this browser</p>
-          <p className="text-muted-foreground text-xs">Reset each list separately. Nothing is sent to a server.</p>
+          <p className="text-muted-foreground text-xs">Data stays in this browser only. Nothing is sent to a server.</p>
           <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
             <Button
               type="button"
               variant="secondary"
-              disabled={!hasRejections}
-              title={hasRejections ? undefined : 'No “not for me” swipes to clear'}
-              onClick={onRequestClearPassed}
+              disabled={!canReshuffle}
+              onClick={onRequestReshuffle}
               className="w-full transition active:scale-[0.99] enabled:opacity-100 disabled:opacity-40 sm:w-auto"
             >
-              Clear passed (not for me)
+              Reshuffle deck
             </Button>
             <Button
               type="button"
               variant="secondary"
-              disabled={!hasNoMatchStash}
-              title={hasNoMatchStash ? undefined : 'No “no match this time” animals in this session'}
-              onClick={onClearYesNotMatchStash}
-              className="w-full transition active:scale-[0.99] enabled:opacity-100 disabled:opacity-40 sm:w-auto"
+              onClick={onRequestStartOver}
+              className="w-full text-destructive transition active:scale-[0.99] sm:w-auto"
             >
-              Get more cards (clear “no match this time”)
-            </Button>
-            <Button
-              type="button"
-              variant="secondary"
-              disabled={!hasMatches}
-              title={hasMatches ? undefined : 'No saved matches to clear'}
-              onClick={onRequestClearMatches}
-              className="w-full transition active:scale-[0.99] enabled:opacity-100 disabled:opacity-40 sm:w-auto"
-            >
-              Clear saved matches
+              Start over
             </Button>
           </div>
         </div>
