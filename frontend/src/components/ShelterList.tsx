@@ -50,9 +50,11 @@ export function ShelterList({
 
       {error ? null : isPending ? (
         <p className="text-muted-foreground text-sm">Loading shelters…</p>
+      ) : !shelters?.length ? (
+        <p className="text-muted-foreground py-8 text-center text-sm">No shelters found.</p>
       ) : (
         <ul className="list-none space-y-3 p-0">
-          {(shelters ?? []).map((s) => (
+          {shelters.map((s) => (
             <li key={s.id}>
               <button
                 type="button"
