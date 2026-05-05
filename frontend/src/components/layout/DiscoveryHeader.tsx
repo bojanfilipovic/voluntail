@@ -4,6 +4,12 @@ import type { ThemeValue } from '@/lib/theme'
 
 type AppView = 'directory' | 'explore'
 
+type CommunityStats = {
+  shelters?: number
+  animals?: number
+  hearts?: number
+}
+
 type Props = {
   onShareFeedback: () => void
   appView: AppView
@@ -12,6 +18,7 @@ type Props = {
   hasMatches?: boolean
   theme: ThemeValue
   onCycleTheme: () => void
+  stats?: CommunityStats
 }
 
 /** New element each call — safe for two responsive branches both mounted in the DOM. */
@@ -21,6 +28,17 @@ function DirectoryIntro() {
       Please use Share Feedback so I can learn what works and what you&apos;d like me to add to
       this. Love, B 🫶
     </p>
+  )
+}
+
+function CommunityStatsStrip({ stats }: { stats?: CommunityStats }) {
+  if (!stats?.shelters) return null
+  const parts: string[] = []
+  if (stats.shelters) parts.push(`${stats.shelters} shelters`)
+  if (stats.animals) parts.push(`${stats.animals} animals`)
+  if (stats.hearts) parts.push(`${stats.hearts.toLocaleString()} hearts given`)
+  return (
+    <p className="text-muted-foreground/70 text-xs">{parts.join(' · ')}</p>
   )
 }
 
@@ -52,7 +70,7 @@ function ThemeToggleButton({ theme, onCycleTheme }: Pick<Props, 'theme' | 'onCyc
   )
 }
 
-export function DiscoveryHeader({ onShareFeedback, appView, onGoExplore, onGoDirectory, hasMatches, theme, onCycleTheme }: Props) {
+export function DiscoveryHeader({ onShareFeedback, appView, onGoExplore, onGoDirectory, hasMatches, theme, onCycleTheme, stats }: Props) {
   return (
     <header className="border-border border-b px-4 py-3 md:px-6 md:py-4">
       {/* Mobile & narrow: Voluntail + Share, then intro, then Explore / Back */}
@@ -64,7 +82,7 @@ export function DiscoveryHeader({ onShareFeedback, appView, onGoExplore, onGoDir
             <ShareFeedbackButton onShareFeedback={onShareFeedback} />
           </div>
         </div>
-        {appView === 'directory' ? <DirectoryIntro /> : <ExploreIntro hasMatches={hasMatches} />}
+        {appView === 'directory' ? <><DirectoryIntro /><CommunityStatsStrip stats={stats} /></> : <ExploreIntro hasMatches={hasMatches} />}
         <div className="w-full">
           {appView === 'directory' ? (
             <Button
@@ -113,7 +131,7 @@ export function DiscoveryHeader({ onShareFeedback, appView, onGoExplore, onGoDir
             <ShareFeedbackButton onShareFeedback={onShareFeedback} />
           </div>
         </div>
-        {appView === 'directory' ? <DirectoryIntro /> : <ExploreIntro hasMatches={hasMatches} />}
+        {appView === 'directory' ? <><DirectoryIntro /><CommunityStatsStrip stats={stats} /></> : <ExploreIntro hasMatches={hasMatches} />}
       </div>
     </header>
   )

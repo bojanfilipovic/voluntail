@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { lazy, Suspense, useCallback, useMemo, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { fetchAnimals } from '@/api/animals'
 import type { Animal } from '@/api/animals'
 import { fetchShelters, type Shelter } from '@/api/shelters'
@@ -18,7 +18,7 @@ import { useShelterMutations } from '@/hooks/useShelterMutations'
 import { isOtherSpecies, type SpeciesFilterValue } from '@/domain/species'
 import { buildSpeciesFilterRows, countSpecies, filterBySpecies } from '@/domain/speciesFilter'
 import { DirectoryLayout } from '@/directory/DirectoryLayout'
-import { getInitialAppView, replaceAppViewInUrl, type AppView } from '@/directory/urlState'
+import { getInitialAppView, getAnimalIdFromUrl, clearAnimalIdFromUrl, replaceAppViewInUrl, type AppView } from '@/directory/urlState'
 import { EXPLORE_STORAGE_KEY } from '@/explore/types'
 import { useTheme } from '@/hooks/useTheme'
 import { toQueryError } from '@/lib/queryError'
@@ -47,6 +47,9 @@ function App() {
   })
   const [directoryTab, setDirectoryTab] = useState<DirectoryTab>('shelters')
   const [speciesFilter, setSpeciesFilter] = useState<SpeciesFilterValue | null>(null)
+
+  const [initialAnimalId] = useState(getAnimalIdFromUrl)
+  const deepLinkHandled = useRef(false)
 
   const [animalCityFilter, setAnimalCityFilter] = useState<string | null>(null)
   const [animalShelterFilter, setAnimalShelterFilter] = useState<string | null>(null)
@@ -88,7 +91,6 @@ function App() {
   } = useQuery({
     queryKey: animalQueryKeys.list(animalListQuery),
     queryFn: () => fetchAnimals(animalListQuery),
-    enabled: directoryTab === 'animals',
   })
 
   const queryError = useMemo(() => toQueryError(error), [error])
@@ -145,6 +147,12 @@ function App() {
     () => buildSpeciesFilterRows(countSpecies(animals ?? [], (a) => a.species)),
     [animals],
   )
+
+  const communityStats = useMemo(() => ({
+    shelters: data?.length,
+    animals: animals?.length,
+    hearts: animals?.reduce((s, a) => s + a.heartCount, 0),
+  }), [data, animals])
 
   const {
     mapRef,
@@ -236,6 +244,17 @@ function App() {
     [data, clearSelection, mapRef],
   )
 
+  // Deep link: open animal modal when ?animal=ID is in URL
+  useEffect(() => {
+    if (!initialAnimalId || deepLinkHandled.current || !animals) return
+    deepLinkHandled.current = true
+    const target = animals.find((a) => a.id === initialAnimalId)
+    if (target) {
+      handleSelectAnimal(target)
+    }
+    clearAnimalIdFromUrl()
+  }, [initialAnimalId, animals, handleSelectAnimal])
+
   const handleCloseAnimalDetail = useCallback(() => {
     setAnimalDetailOpen(false)
     setSelectedAnimal(null)
@@ -311,6 +330,7 @@ function App() {
         hasMatches={exploreHasMatches}
         theme={theme}
         onCycleTheme={cycleTheme}
+        stats={communityStats}
       />
       <main
         className={
