@@ -9,7 +9,7 @@ import type { AnimalStatus } from '@/schemas/animals'
 import { cn } from '@/lib/utils'
 import { getHeartedIds } from '@/lib/heartStorage'
 import { getShortlistIds } from '@/lib/exploreShortlist'
-import { Dices, Heart, Sparkles } from 'lucide-react'
+import { Heart, Sparkles } from 'lucide-react'
 
 function isNew(createdAt: string): boolean {
   const created = new Date(createdAt)
@@ -103,22 +103,8 @@ export function AnimalList({
         totalCount={totalAnimalCount}
       />
 
-      {(displayAnimals?.length ?? 0) > 0 || favCount > 0 || matchCount > 0 ? (
+      {favCount > 0 || matchCount > 0 ? (
         <div className="mb-3 flex flex-wrap gap-2">
-          {(displayAnimals?.length ?? 0) > 1 ? (
-            <button
-              type="button"
-              onClick={() => {
-                if (!displayAnimals?.length) return
-                const pick = displayAnimals[Math.floor(Math.random() * displayAnimals.length)]
-                onSelectAnimal(pick)
-              }}
-              className="border-border text-muted-foreground hover:border-emerald-200 hover:text-emerald-600 inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors"
-            >
-              <Dices className="size-3" />
-              Surprise me
-            </button>
-          ) : null}
           {favCount > 0 ? (
             <button
               type="button"
