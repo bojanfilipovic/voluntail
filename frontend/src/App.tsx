@@ -19,6 +19,7 @@ import { isOtherSpecies, type SpeciesFilterValue } from '@/domain/species'
 import { buildSpeciesFilterRows, countSpecies, filterBySpecies } from '@/domain/speciesFilter'
 import { DirectoryLayout } from '@/directory/DirectoryLayout'
 import { getInitialAppView, replaceAppViewInUrl, type AppView } from '@/directory/urlState'
+import { EXPLORE_STORAGE_KEY } from '@/explore/types'
 import { toQueryError } from '@/lib/queryError'
 import { animalQueryKeys, shelterQueryKeys } from '@/lib/queryKeys'
 
@@ -34,6 +35,14 @@ function App() {
   const animalMutations = useAnimalMutations()
 
   const [appView, setAppView] = useState<AppView>(getInitialAppView)
+  const [exploreHasMatches, setExploreHasMatches] = useState(() => {
+    try {
+      const raw = localStorage.getItem(EXPLORE_STORAGE_KEY)
+      if (!raw) return false
+      const o = JSON.parse(raw) as { shortlistIds?: unknown }
+      return Array.isArray(o.shortlistIds) && o.shortlistIds.length > 0
+    } catch { return false }
+  })
   const [directoryTab, setDirectoryTab] = useState<DirectoryTab>('shelters')
   const [speciesFilter, setSpeciesFilter] = useState<SpeciesFilterValue | null>(null)
 
@@ -281,6 +290,13 @@ function App() {
   const navigateView = useCallback((next: AppView) => {
     setAppView(next)
     replaceAppViewInUrl(next)
+    try {
+      const raw = localStorage.getItem(EXPLORE_STORAGE_KEY)
+      if (raw) {
+        const o = JSON.parse(raw) as { shortlistIds?: unknown }
+        setExploreHasMatches(Array.isArray(o.shortlistIds) && o.shortlistIds.length > 0)
+      }
+    } catch { /* ignore */ }
   }, [])
 
   return (
@@ -290,6 +306,7 @@ function App() {
         appView={appView}
         onGoExplore={() => navigateView('explore')}
         onGoDirectory={() => navigateView('directory')}
+        hasMatches={exploreHasMatches}
       />
       <main
         className={
