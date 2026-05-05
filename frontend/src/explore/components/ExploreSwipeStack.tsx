@@ -34,6 +34,7 @@ export function ExploreSwipeStack({
 }: Props) {
   const [dragX, setDragX] = useState(0)
   const [exitDir, setExitDir] = useState<ExitDir>(null)
+  const [ringPulse, setRingPulse] = useState(false)
   const baseId = useId()
   const [showHint, setShowHint] = useState(true)
   const exitTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -44,6 +45,7 @@ export function ExploreSwipeStack({
     setPrevId(current.id)
     setExitDir(null)
     setDragX(0)
+    setRingPulse(false)
   }
 
   useEffect(() => {
@@ -76,7 +78,7 @@ export function ExploreSwipeStack({
       if (last) {
         if (Math.abs(mx) < 6) return
         if (mx < -SWIPE_THRESHOLD) triggerExit('left', onPass)
-        else if (mx > SWIPE_THRESHOLD) triggerExit('right', onLike)
+        else if (mx > SWIPE_THRESHOLD) { setRingPulse(true); triggerExit('right', onLike) }
       }
     },
     { filterTaps: true },
@@ -88,6 +90,7 @@ export function ExploreSwipeStack({
   }
   const handleLike = () => {
     if (exitDir) return
+    setRingPulse(true)
     triggerExit('right', onLike)
   }
 
@@ -122,16 +125,28 @@ export function ExploreSwipeStack({
       ) : null}
       <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden pr-0.5">
         <div
+          key={current.id}
           className={cn(
-            'relative mx-auto w-full',
+            'relative mx-auto w-full animate-in fade-in scale-in-95 duration-200 motion-reduce:animate-none',
             !exitDir && 'transition-transform duration-200 ease-out motion-reduce:transition-none',
             (busy || !!exitDir) && 'pointer-events-none',
             busy && 'opacity-50',
             showHint && !exitDir && 'animate-swipe-hint motion-reduce:animate-none',
+            ringPulse && 'animate-ring-pulse motion-reduce:animate-none',
           )}
           style={transformStyle}
           {...(busy || exitDir ? {} : bind())}
         >
+          {/* Floating heart on right-drag */}
+          {dragX > 30 && !exitDir && (
+            <span
+              className="pointer-events-none absolute top-1/3 left-1/2 z-30 -translate-x-1/2 text-2xl motion-reduce:hidden"
+              style={{ opacity: Math.min(1, (dragX - 30) / 90), transform: `translateX(-50%) translateY(${-dragX * 0.15}px)` }}
+              aria-hidden
+            >
+              &#128149;
+            </span>
+          )}
           <div
             className={cn(
               'pointer-events-none absolute top-2 left-2 z-20 rounded border-2 border-emerald-500 px-2 py-1 text-xs font-semibold text-emerald-600 transition-opacity motion-reduce:transition-none',

@@ -22,7 +22,6 @@ describe('buildDeck', () => {
         shortlistIds: [],
         passedIds: [],
         sessionYesNotMatchIds: [],
-        speciesMode: 'all',
       }),
     ).toEqual([])
   })
@@ -34,7 +33,6 @@ describe('buildDeck', () => {
         shortlistIds: ['1'],
         passedIds: ['2'],
         sessionYesNotMatchIds: [],
-        speciesMode: 'all',
       }).map((x) => x.id),
     ).toEqual(['3'])
   })
@@ -46,7 +44,6 @@ describe('buildDeck', () => {
         shortlistIds: [],
         passedIds: [],
         sessionYesNotMatchIds: ['1'],
-        speciesMode: 'all',
       }).map((x) => x.id),
     ).toEqual(['2'])
   })
@@ -61,12 +58,11 @@ describe('buildDeck', () => {
         shortlistIds: [],
         passedIds: [],
         sessionYesNotMatchIds: [],
-        speciesMode: 'all',
       }).map((x) => x.id),
     ).toEqual(['1'])
   })
 
-  it('filters by species when not all', () => {
+  it('includes all species (no species filter)', () => {
     const a = [
       sample({ id: '1', species: 'cat' }),
       sample({ id: '2', species: 'dog' }),
@@ -76,8 +72,7 @@ describe('buildDeck', () => {
         shortlistIds: [],
         passedIds: [],
         sessionYesNotMatchIds: [],
-        speciesMode: 'cat',
       }).map((x) => x.id),
-    ).toEqual(['1'])
+    ).toEqual(['1', '2'])
   })
 })
