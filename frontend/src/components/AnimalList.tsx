@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import type { Animal } from '@/api/animals'
 import type { Shelter } from '@/api/shelters'
 import { SpeciesFilterBar, type SpeciesFilterRow } from '@/components/SpeciesFilterBar'
@@ -8,7 +8,8 @@ import { speciesLabel, type SpeciesFilterValue } from '@/domain/species'
 import type { AnimalStatus } from '@/schemas/animals'
 import { cn } from '@/lib/utils'
 import { getHeartedIds } from '@/lib/heartStorage'
-import { Heart } from 'lucide-react'
+import { getShortlistIds } from '@/lib/exploreShortlist'
+import { Heart, Sparkles } from 'lucide-react'
 
 function isNew(createdAt: string): boolean {
   const created = new Date(createdAt)
@@ -73,10 +74,16 @@ export function AnimalList({
     (shelters ?? []).map((s) => [s.id, s.name] as const),
   )
   const heartedIds = getHeartedIds()
+  const shortlistIds = getShortlistIds()
   const favCount = heartedIds.size
+  const matchCount = shortlistIds.size
+  const [matchesOnly, setMatchesOnly] = useState(false)
+  const handleMatchesToggle = useCallback(() => setMatchesOnly((v) => !v), [])
   const displayAnimals = favoritesOnly
     ? (animals ?? []).filter((a) => heartedIds.has(a.id))
-    : animals
+    : matchesOnly
+      ? (animals ?? []).filter((a) => shortlistIds.has(a.id))
+      : animals
 
   return (
     <section className="text-start" aria-label="Animal list">
@@ -96,21 +103,38 @@ export function AnimalList({
         totalCount={totalAnimalCount}
       />
 
-      {favCount > 0 ? (
-        <div className="mb-3">
-          <button
-            type="button"
-            onClick={onFavoritesToggle}
-            className={cn(
-              'inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors',
-              favoritesOnly
-                ? 'border-rose-300 bg-rose-50 text-rose-700'
-                : 'border-border text-muted-foreground hover:border-rose-200 hover:text-rose-600',
-            )}
-          >
-            <Heart className={cn('size-3', favoritesOnly && 'fill-rose-500')} />
-            My favorites ({favCount})
-          </button>
+      {favCount > 0 || matchCount > 0 ? (
+        <div className="mb-3 flex flex-wrap gap-2">
+          {favCount > 0 ? (
+            <button
+              type="button"
+              onClick={onFavoritesToggle}
+              className={cn(
+                'inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors',
+                favoritesOnly
+                  ? 'border-rose-300 bg-rose-50 text-rose-700 dark:border-rose-700 dark:bg-rose-950/40 dark:text-rose-300'
+                  : 'border-border text-muted-foreground hover:border-rose-200 hover:text-rose-600',
+              )}
+            >
+              <Heart className={cn('size-3', favoritesOnly && 'fill-rose-500')} />
+              My favorites ({favCount})
+            </button>
+          ) : null}
+          {matchCount > 0 ? (
+            <button
+              type="button"
+              onClick={handleMatchesToggle}
+              className={cn(
+                'inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors',
+                matchesOnly
+                  ? 'border-amber-300 bg-amber-50 text-amber-700 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-300'
+                  : 'border-border text-muted-foreground hover:border-amber-200 hover:text-amber-600',
+              )}
+            >
+              <Sparkles className={cn('size-3', matchesOnly && 'fill-amber-500')} />
+              My matches ({matchCount})
+            </button>
+          ) : null}
         </div>
       ) : null}
 
@@ -127,20 +151,22 @@ export function AnimalList({
         <p className="text-muted-foreground text-sm">Loading animals…</p>
       ) : !displayAnimals?.length ? (
         <p className="text-muted-foreground py-8 text-center text-sm">
-          {favoritesOnly ? 'No favorites yet.' : 'No animals found.'}
+          {favoritesOnly ? 'No favorites yet.' : matchesOnly ? 'No matches yet.' : 'No animals found.'}
         </p>
       ) : (
         <ul className="list-none space-y-3 p-0">
           {displayAnimals.map((a) => (
             <li key={a.id}>
-              <button
-                type="button"
+              <div
+                role="button"
+                tabIndex={0}
                 className={cn(
-                  'hover:bg-muted/80 w-full rounded-lg border border-transparent p-2 text-start transition-colors',
+                  'hover:bg-muted/80 w-full cursor-pointer rounded-lg border border-transparent p-2 text-start transition-colors',
                   a.id === selectedId &&
                     'border-primary/50 bg-primary/10 ring-primary/30 ring-1',
                 )}
                 onClick={() => onSelectAnimal(a)}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelectAnimal(a) } }}
               >
                 <span className="grid grid-cols-[4.5rem_1fr] items-start gap-3">
                   {a.imageUrl ? (
@@ -162,8 +188,14 @@ export function AnimalList({
                     <span className="text-foreground flex items-center gap-1.5 font-medium leading-snug">
                       {a.name}
                       {isNew(a.createdAt) ? (
-                        <span className="rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700">
+                        <span className="rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
                           New
+                        </span>
+                      ) : null}
+                      {shortlistIds.has(a.id) ? (
+                        <span className="inline-flex items-center gap-0.5 rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">
+                          <Sparkles className="size-2.5" aria-hidden />
+                          Match
                         </span>
                       ) : null}
                     </span>
@@ -184,7 +216,7 @@ export function AnimalList({
                     </span>
                   </span>
                 </span>
-              </button>
+              </div>
             </li>
           ))}
         </ul>

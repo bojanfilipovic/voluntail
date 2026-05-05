@@ -39,6 +39,7 @@ type Props = {
   placementOrRelocateActive?: boolean
   draftLocation?: MapCenter | null
   onDraftPosition?: (c: MapCenter) => void
+  isDark?: boolean
 }
 
 function validShelters(shelters: Shelter[]): Shelter[] {
@@ -69,6 +70,7 @@ export const ShelterMap = forwardRef<ShelterMapHandle, Props>(
       placementOrRelocateActive = false,
       draftLocation = null,
       onDraftPosition,
+      isDark = false,
     },
     ref,
   ) {
@@ -167,7 +169,7 @@ export const ShelterMap = forwardRef<ShelterMapHandle, Props>(
             mapboxAccessToken={token}
             initialViewState={NL_VIEW}
             style={{ width: '100%', height: '100%' }}
-            mapStyle="mapbox://styles/mapbox/light-v11"
+            mapStyle={isDark ? 'mapbox://styles/mapbox/dark-v11' : 'mapbox://styles/mapbox/light-v11'}
             reuseMaps
             onLoad={() => {
               resizeMap()

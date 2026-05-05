@@ -36,7 +36,7 @@ export function MapPublicToolbar({
         type="button"
         size="sm"
         variant={placementMode ? 'secondary' : 'outline'}
-        className="shadow-md"
+        className="shadow-md dark:border-border dark:bg-background dark:text-foreground"
         onClick={onStartAddPin}
       >
         Suggest Shelter
