@@ -20,6 +20,7 @@ type Props = {
   removeDisabled?: boolean
   editDisabled?: boolean
   onShareFeedback: () => void
+  cmsConfigured?: boolean
 }
 
 export function ShelterDetailDialog({
@@ -30,6 +31,7 @@ export function ShelterDetailDialog({
   removeDisabled = false,
   editDisabled = false,
   onShareFeedback,
+  cmsConfigured = false,
 }: Props) {
   return (
     <Dialog open={Boolean(shelter)} onOpenChange={(open) => !open && onClose()}>
@@ -129,32 +131,34 @@ export function ShelterDetailDialog({
                   Share feedback
                 </Button>
               </div>
-              <div
-                className="border-border/50 flex w-full min-w-0 flex-nowrap items-center justify-between gap-2 border-t pt-2"
-                role="group"
-                aria-label="Curation"
-              >
-                <Button
-                  type="button"
-                  variant="secondary"
-                  size="sm"
-                  className="shrink-0"
-                  disabled={editDisabled}
-                  onClick={onEdit}
+              {cmsConfigured ? (
+                <div
+                  className="border-border/50 flex w-full min-w-0 flex-nowrap items-center justify-between gap-2 border-t pt-2"
+                  role="group"
+                  aria-label="Curation"
                 >
-                  Edit details
-                </Button>
-                <Button
-                  type="button"
-                  variant="destructive"
-                  size="sm"
-                  className="shrink-0"
-                  disabled={removeDisabled}
-                  onClick={onRemove}
-                >
-                  Remove pin
-                </Button>
-              </div>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    className="shrink-0"
+                    disabled={editDisabled}
+                    onClick={onEdit}
+                  >
+                    Edit details
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="sm"
+                    className="shrink-0"
+                    disabled={removeDisabled}
+                    onClick={onRemove}
+                  >
+                    Remove pin
+                  </Button>
+                </div>
+              ) : null}
             </div>
           </>
         ) : null}

@@ -20,6 +20,7 @@ import { buildSpeciesFilterRows, countSpecies, filterBySpecies } from '@/domain/
 import { DirectoryLayout } from '@/directory/DirectoryLayout'
 import { getInitialAppView, replaceAppViewInUrl, type AppView } from '@/directory/urlState'
 import { EXPLORE_STORAGE_KEY } from '@/explore/types'
+import { useTheme } from '@/hooks/useTheme'
 import { toQueryError } from '@/lib/queryError'
 import { animalQueryKeys, shelterQueryKeys } from '@/lib/queryKeys'
 
@@ -31,6 +32,7 @@ const ExploreViewLazy = lazy(async () => {
 type DirectoryTab = 'shelters' | 'animals'
 
 function App() {
+  const { theme, resolved, cycleTheme } = useTheme()
   const mutations = useShelterMutations()
   const animalMutations = useAnimalMutations()
 
@@ -307,6 +309,8 @@ function App() {
         onGoExplore={() => navigateView('explore')}
         onGoDirectory={() => navigateView('directory')}
         hasMatches={exploreHasMatches}
+        theme={theme}
+        onCycleTheme={cycleTheme}
       />
       <main
         className={
@@ -371,6 +375,7 @@ function App() {
               setAnimalShelterFilter(shelterId)
               setDirectoryTab('animals')
             }}
+            isDark={resolved === 'dark'}
           />
         ) : (
           <Suspense
@@ -389,7 +394,7 @@ function App() {
         )}
       </main>
       <AddShelterDialog
-        key={addDialogNonce}
+        key={`add-${addDialogNonce}`}
         open={addDialogOpen}
         draftLocation={draftFlow === 'cms' ? draftLocation : null}
         onClose={handleCloseAddDialog}
@@ -397,7 +402,7 @@ function App() {
         isSubmitting={mutations.createMutation.isPending}
       />
       <SuggestShelterDialog
-        key={suggestDialogNonce}
+        key={`suggest-${suggestDialogNonce}`}
         open={suggestDialogOpen}
         draftLocation={draftFlow === 'suggest' ? draftLocation : null}
         onClose={handleCloseSuggestDialog}
@@ -411,6 +416,7 @@ function App() {
         removeDisabled={mutations.cmsBusy}
         editDisabled={mutations.cmsBusy}
         onShareFeedback={openShelterFeedback}
+        cmsConfigured={cmsConfigured}
       />
       <EditShelterDialog
         shelter={selectedShelter}

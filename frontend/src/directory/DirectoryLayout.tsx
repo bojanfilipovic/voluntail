@@ -80,6 +80,7 @@ export type DirectoryLayoutProps = {
   animalSpeciesFilters: import('@/components/SpeciesFilterBar').SpeciesFilterRow[]
   totalAnimalCount: number | undefined
   onViewAnimals: (shelterId: string) => void
+  isDark?: boolean
 }
 
 export function DirectoryLayout({
@@ -134,6 +135,7 @@ export function DirectoryLayout({
   animalSpeciesFilters,
   totalAnimalCount,
   onViewAnimals,
+  isDark = false,
 }: DirectoryLayoutProps) {
   const cmsDraftLocationKnown = draftFlow === 'cms' && Boolean(draftLocation)
   const suggestDraftLocationKnown = draftFlow === 'suggest' && Boolean(draftLocation)
@@ -158,6 +160,7 @@ export function DirectoryLayout({
               placementOrRelocateActive={placementOrRelocateActive}
               draftLocation={draftLocation}
               onDraftPosition={onDraftPosition}
+              isDark={isDark}
             />
           </Suspense>
           <div className="pointer-events-none absolute top-2 left-2 z-10">

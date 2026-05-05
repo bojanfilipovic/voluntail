@@ -58,14 +58,16 @@ export function ShelterList({
         <ul className="list-none space-y-3 p-0">
           {shelters.map((s) => (
             <li key={s.id}>
-              <button
-                type="button"
+              <div
+                role="button"
+                tabIndex={0}
                 className={cn(
-                  'hover:bg-muted/80 w-full rounded-lg border border-transparent p-2 text-start transition-colors',
+                  'hover:bg-muted/80 w-full cursor-pointer rounded-lg border border-transparent p-2 text-start transition-colors',
                   s.id === selectedId &&
                     'border-primary/50 bg-primary/10 ring-primary/30 ring-1',
                 )}
                 onClick={() => onSelectShelter(s)}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelectShelter(s) } }}
               >
                 <span className="grid grid-cols-[4.5rem_1fr] items-start gap-3">
                   {s.imageUrl ? (
@@ -113,7 +115,7 @@ export function ShelterList({
                     </span>
                   </span>
                 </span>
-              </button>
+              </div>
             </li>
           ))}
         </ul>

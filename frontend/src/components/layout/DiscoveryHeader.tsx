@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/button'
-import { MessageSquare, ArrowLeft, Compass } from 'lucide-react'
+import { MessageSquare, ArrowLeft, Compass, Moon, Sun, Monitor } from 'lucide-react'
+import type { ThemeValue } from '@/lib/theme'
 
 type AppView = 'directory' | 'explore'
 
@@ -9,6 +10,8 @@ type Props = {
   onGoExplore: () => void
   onGoDirectory: () => void
   hasMatches?: boolean
+  theme: ThemeValue
+  onCycleTheme: () => void
 }
 
 /** New element each call — safe for two responsive branches both mounted in the DOM. */
@@ -40,14 +43,26 @@ function ShareFeedbackButton({ onShareFeedback }: Pick<Props, 'onShareFeedback'>
   )
 }
 
-export function DiscoveryHeader({ onShareFeedback, appView, onGoExplore, onGoDirectory, hasMatches }: Props) {
+function ThemeToggleButton({ theme, onCycleTheme }: Pick<Props, 'theme' | 'onCycleTheme'>) {
+  const Icon = theme === 'dark' ? Moon : theme === 'light' ? Sun : Monitor
+  return (
+    <Button type="button" variant="outline" size="icon" onClick={onCycleTheme} aria-label={`Theme: ${theme}`} className="shrink-0">
+      <Icon className="size-4" aria-hidden />
+    </Button>
+  )
+}
+
+export function DiscoveryHeader({ onShareFeedback, appView, onGoExplore, onGoDirectory, hasMatches, theme, onCycleTheme }: Props) {
   return (
     <header className="border-border border-b px-4 py-3 md:px-6 md:py-4">
       {/* Mobile & narrow: Voluntail + Share, then intro, then Explore / Back */}
       <div className="flex flex-col gap-3 md:hidden">
         <div className="flex items-center justify-between gap-3">
           <h1 className="text-lg font-semibold tracking-tight">Voluntail</h1>
-          <ShareFeedbackButton onShareFeedback={onShareFeedback} />
+          <div className="flex items-center gap-1">
+            <ThemeToggleButton theme={theme} onCycleTheme={onCycleTheme} />
+            <ShareFeedbackButton onShareFeedback={onShareFeedback} />
+          </div>
         </div>
         {appView === 'directory' ? <DirectoryIntro /> : <ExploreIntro hasMatches={hasMatches} />}
         <div className="w-full">
@@ -94,6 +109,7 @@ export function DiscoveryHeader({ onShareFeedback, appView, onGoExplore, onGoDir
                 Back to map
               </Button>
             )}
+            <ThemeToggleButton theme={theme} onCycleTheme={onCycleTheme} />
             <ShareFeedbackButton onShareFeedback={onShareFeedback} />
           </div>
         </div>
