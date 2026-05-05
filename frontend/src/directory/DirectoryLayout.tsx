@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button'
 import type { DraftFlow } from '@/hooks/useShelterDiscoveryState'
 import type { SpeciesFilterValue } from '@/domain/species'
 import { MapLoadingFallback } from '@/directory/MapLoadingFallback'
+import { Dices } from 'lucide-react'
 
 /** Same as MapCenter from ShelterMap — duplicated here to avoid a static import of the map module next to a lazy() of it. */
 type DraftMapPosition = { latitude: number; longitude: number }
@@ -220,6 +221,22 @@ export function DirectoryLayout({
             >
               Animals
             </Button>
+            {directoryTab === 'animals' && (animals?.length ?? 0) > 1 ? (
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                className="ml-auto"
+                onClick={() => {
+                  if (!animals?.length) return
+                  const pick = animals[Math.floor(Math.random() * animals.length)]
+                  onSelectAnimal(pick)
+                }}
+              >
+                <Dices className="size-3.5" aria-hidden />
+                Surprise me
+              </Button>
+            ) : null}
           </div>
           <div
             className="flex min-h-0 flex-1 flex-col overflow-y-auto p-4"

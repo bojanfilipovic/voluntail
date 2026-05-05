@@ -13,8 +13,8 @@ import {
 import { parseAnimalAge } from '@/domain/animalAge'
 import { speciesLabel } from '@/domain/species'
 import { cn } from '@/lib/utils'
-import { XIcon } from 'lucide-react'
-import { useState } from 'react'
+import { Share2, XIcon } from 'lucide-react'
+import { useCallback, useState } from 'react'
 
 function statusLabel(s: Animal['status']): string {
   switch (s) {
@@ -59,6 +59,23 @@ export function AnimalDetailDialog({
 }: Props) {
   const showCms = cmsConfigured
   const [shelterDetailsOpen, setShelterDetailsOpen] = useState(false)
+  const [copied, setCopied] = useState(false)
+
+  const handleShare = useCallback(async () => {
+    if (!animal) return
+    const url = new URL(window.location.origin)
+    url.searchParams.set('animal', animal.id)
+    const shareUrl = url.toString()
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: animal.name, text: `Help ${animal.name} find a home!`, url: shareUrl })
+      } catch { /* user cancelled */ }
+    } else {
+      await navigator.clipboard.writeText(shareUrl)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    }
+  }, [animal])
 
   return (
     <Dialog open={Boolean(animal)} onOpenChange={(next) => !next && onClose()}>
@@ -203,6 +220,16 @@ export function AnimalDetailDialog({
                   onClick={onShareFeedback}
                 >
                   Share feedback
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon-sm"
+                  onClick={handleShare}
+                  aria-label={copied ? 'Link copied!' : 'Share animal link'}
+                  title={copied ? 'Link copied!' : 'Share'}
+                >
+                  <Share2 className="size-3.5" aria-hidden />
                 </Button>
                 {showCms ? (
                   <>

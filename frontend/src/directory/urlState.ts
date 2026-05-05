@@ -19,3 +19,14 @@ export function replaceAppViewInUrl(appView: AppView): void {
   else u.searchParams.delete('view')
   window.history.replaceState({}, '', u.toString())
 }
+
+export function getAnimalIdFromUrl(): string | null {
+  if (typeof window === 'undefined') return null
+  return new URLSearchParams(window.location.search).get('animal')
+}
+
+export function clearAnimalIdFromUrl(): void {
+  const u = new URL(window.location.href)
+  u.searchParams.delete('animal')
+  window.history.replaceState({}, '', u.toString())
+}
