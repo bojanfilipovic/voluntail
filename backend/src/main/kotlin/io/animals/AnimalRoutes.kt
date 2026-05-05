@@ -163,5 +163,21 @@ fun Route.animalRoutes(
             }
             call.respond(HttpStatusCode.NoContent)
         }
+        post("/animals/{id}/heart") {
+            val id = call.uuidPathParameter("id") ?: return@post
+            val newCount =
+                animalRepository.incrementHeartCount(id)
+                    ?: run {
+                        call.respondText(
+                            "Animal not found",
+                            status = HttpStatusCode.NotFound,
+                        )
+                        return@post
+                    }
+            call.respond(HeartCountResponse(heartCount = newCount))
+        }
     }
 }
+
+@kotlinx.serialization.Serializable
+data class HeartCountResponse(val heartCount: Int)

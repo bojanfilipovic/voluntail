@@ -15,4 +15,6 @@ data class AnimalResponse(
     val published: Boolean,
     val imageUrl: String?,
     val externalUrl: String?,
+    val createdAt: String,
+    val heartCount: Int,
 )

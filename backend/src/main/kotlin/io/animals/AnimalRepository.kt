@@ -33,4 +33,7 @@ interface AnimalRepository {
     ): AnimalResponse?
 
     suspend fun delete(id: UUID): Boolean
+
+    /** Increment heart_count by 1 for a published animal. Returns new count, or null if not found/unpublished. */
+    suspend fun incrementHeartCount(id: UUID): Int?
 }

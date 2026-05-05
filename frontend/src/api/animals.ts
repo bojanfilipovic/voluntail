@@ -136,3 +136,18 @@ export async function deleteAnimal(id: string): Promise<void> {
     throw new Error(await errorMessageFromResponse(res, 'default'))
   }
 }
+
+export async function heartAnimal(id: string): Promise<{ heartCount: number }> {
+  let res: Response
+  try {
+    res = await fetch(`${ANIMALS_URL}/${encodeURIComponent(id)}/heart`, {
+      method: 'POST',
+    })
+  } catch (e) {
+    throw errorFromFetchFailure(e)
+  }
+  if (!res.ok) {
+    throw new Error(await errorMessageFromResponse(res, 'default'))
+  }
+  return (await parseJsonResponse(res, 'Invalid JSON from heart endpoint')) as { heartCount: number }
+}

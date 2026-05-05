@@ -128,4 +128,45 @@ class AnimalsRoutesTest {
             assertTrue(!body.contains("Rex"))
         }
     }
+
+    @Test
+    fun `GET animals includes heartCount and createdAt`() {
+        voluntailTest {
+            val body = client.get("/api/animals").bodyAsText()
+            assertTrue(body.contains("\"heartCount\""))
+            assertTrue(body.contains("\"createdAt\""))
+        }
+    }
+
+    @Test
+    fun `POST heart increments count for published animal`() {
+        voluntailTest {
+            val sampleId = "b0000001-0001-4001-8001-000000000001"
+            val res = client.post("/api/animals/$sampleId/heart")
+            assertEquals(HttpStatusCode.OK, res.status)
+            val body = res.bodyAsText()
+            assertTrue(body.contains("\"heartCount\":1"))
+
+            val res2 = client.post("/api/animals/$sampleId/heart")
+            assertEquals(HttpStatusCode.OK, res2.status)
+            assertTrue(res2.bodyAsText().contains("\"heartCount\":2"))
+        }
+    }
+
+    @Test
+    fun `POST heart returns 404 for unpublished animal`() {
+        voluntailTest {
+            val unpublishedId = "b0000004-0004-4004-8004-000000000004"
+            val res = client.post("/api/animals/$unpublishedId/heart")
+            assertEquals(HttpStatusCode.NotFound, res.status)
+        }
+    }
+
+    @Test
+    fun `POST heart returns 404 for nonexistent animal`() {
+        voluntailTest {
+            val res = client.post("/api/animals/00000000-0000-0000-0000-000000000000/heart")
+            assertEquals(HttpStatusCode.NotFound, res.status)
+        }
+    }
 }

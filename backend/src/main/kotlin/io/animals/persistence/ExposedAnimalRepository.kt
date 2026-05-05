@@ -19,6 +19,7 @@ import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.plus
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.insert
@@ -136,6 +137,22 @@ class ExposedAnimalRepository(
                 AnimalsTable.deleteWhere { AnimalsTable.id eq id } > 0
             }
         }
+
+    override suspend fun incrementHeartCount(id: UUID): Int? =
+        withContext(Dispatchers.IO) {
+            suspendTransaction(db = database, readOnly = false) {
+                val updated =
+                    AnimalsTable.update({ (AnimalsTable.id eq id) and (AnimalsTable.published eq true) }) {
+                        it[heartCount] = heartCount + 1
+                    }
+                if (updated == 0) return@suspendTransaction null
+                AnimalsTable
+                    .selectAll()
+                    .where { AnimalsTable.id eq id }
+                    .firstOrNull()
+                    ?.get(AnimalsTable.heartCount)
+            }
+        }
 }
 
 private fun ResultRow.toAnimalResponse(): AnimalResponse {
@@ -147,6 +164,7 @@ private fun ResultRow.toAnimalResponse(): AnimalResponse {
     val status =
         AnimalStatus.entries.find { it.name == statusName }
             ?: error("unknown status in animals row: $statusName")
+    val createdAt: java.time.OffsetDateTime = this[AnimalsTable.createdAt]
     return AnimalResponse(
         id = this[AnimalsTable.id].toString(),
         shelterId = this[AnimalsTable.shelterId].toString(),
@@ -158,5 +176,7 @@ private fun ResultRow.toAnimalResponse(): AnimalResponse {
         published = this[AnimalsTable.published],
         imageUrl = this[AnimalsTable.imageUrl],
         externalUrl = this[AnimalsTable.externalUrl],
+        createdAt = createdAt.toInstant().toString(),
+        heartCount = this[AnimalsTable.heartCount],
     )
 }
