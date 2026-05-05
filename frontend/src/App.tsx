@@ -15,7 +15,8 @@ import { DiscoveryHeader } from '@/components/layout/DiscoveryHeader'
 import { useAnimalMutations } from '@/hooks/useAnimalMutations'
 import { useShelterDiscoveryState } from '@/hooks/useShelterDiscoveryState'
 import { useShelterMutations } from '@/hooks/useShelterMutations'
-import { SPECIES_VALUES, PRIMARY_SPECIES, OTHER_SPECIES, isOtherSpecies, type ShelterSpecies, type SpeciesFilterValue } from '@/domain/species'
+import { isOtherSpecies, type SpeciesFilterValue } from '@/domain/species'
+import { buildSpeciesFilterRows, countSpecies, filterBySpecies } from '@/domain/speciesFilter'
 import { DirectoryLayout } from '@/directory/DirectoryLayout'
 import { getInitialAppView, replaceAppViewInUrl, type AppView } from '@/directory/urlState'
 import { toQueryError } from '@/lib/queryError'
@@ -59,9 +60,9 @@ function App() {
     () => ({
       city: animalCityFilter,
       shelterId: animalShelterFilter,
-      species: animalSpeciesFilter === 'others' ? null : animalSpeciesFilter,
+      species: null,
     }),
-    [animalCityFilter, animalShelterFilter, animalSpeciesFilter],
+    [animalCityFilter, animalShelterFilter],
   )
 
   const { data, error, isPending } = useQuery({
@@ -109,57 +110,30 @@ function App() {
     return [...set].sort((a, b) => a.localeCompare(b))
   }, [data])
 
-  const filteredShelters = useMemo(() => {
-    if (!data) return undefined
-    if (!speciesFilter) return data
-    if (speciesFilter === 'others') return data.filter((s) => s.species.some(isOtherSpecies))
-    return data.filter((s) => s.species.includes(speciesFilter))
-  }, [data, speciesFilter])
+  const filteredShelters = useMemo(
+    () => (data ? filterBySpecies(data, speciesFilter, (s) => s.species) : undefined),
+    [data, speciesFilter],
+  )
 
   const mapShelters = useMemo(() => {
     if (directoryTab === 'animals') return data ?? []
     return filteredShelters ?? []
   }, [directoryTab, data, filteredShelters])
 
-  const speciesFilters = useMemo(() => {
-    const counts = Object.fromEntries(
-      SPECIES_VALUES.map((sp) => [sp, 0]),
-    ) as Record<ShelterSpecies, number>
-    for (const s of data ?? []) {
-      for (const sp of s.species) {
-        counts[sp] += 1
-      }
-    }
-    const rows = PRIMARY_SPECIES.map((species) => ({
-      kind: 'single' as const,
-      species,
-      count: counts[species],
-    }))
-    const othersCount = OTHER_SPECIES.reduce((sum, sp) => sum + counts[sp], 0)
-    return [...rows, { kind: 'group' as const, key: 'others' as const, label: 'Others', count: othersCount }]
-  }, [data])
+  const speciesFilters = useMemo(
+    () => buildSpeciesFilterRows(countSpecies(data ?? [], (s) => s.species)),
+    [data],
+  )
 
-  const filteredAnimals = useMemo(() => {
-    if (!animals) return undefined
-    if (animalSpeciesFilter !== 'others') return animals
-    return animals.filter((a) => isOtherSpecies(a.species))
-  }, [animals, animalSpeciesFilter])
+  const filteredAnimals = useMemo(
+    () => (animals ? filterBySpecies(animals, animalSpeciesFilter, (a) => a.species) : undefined),
+    [animals, animalSpeciesFilter],
+  )
 
-  const animalSpeciesFilters = useMemo(() => {
-    const counts = Object.fromEntries(
-      SPECIES_VALUES.map((sp) => [sp, 0]),
-    ) as Record<ShelterSpecies, number>
-    for (const a of animals ?? []) {
-      counts[a.species] += 1
-    }
-    const rows = PRIMARY_SPECIES.map((species) => ({
-      kind: 'single' as const,
-      species,
-      count: counts[species],
-    }))
-    const othersCount = OTHER_SPECIES.reduce((sum, sp) => sum + counts[sp], 0)
-    return [...rows, { kind: 'group' as const, key: 'others' as const, label: 'Others', count: othersCount }]
-  }, [animals])
+  const animalSpeciesFilters = useMemo(
+    () => buildSpeciesFilterRows(countSpecies(animals ?? [], (a) => a.species)),
+    [animals],
+  )
 
   const {
     mapRef,

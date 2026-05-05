@@ -5,19 +5,19 @@ type Props = {
 }
 
 /**
- * Viewport shell is fixed (see index.css). Grid must not grow with list intrinsic height:
- * - lg: one row minmax(0,1fr) → map + list share viewport height; list scrolls inside.
- * - stacked: capped map row + remainder to list so the map cannot push the page.
+ * Responsive discovery layout:
+ * - Mobile (<lg): vertical scroll-snap with two positions.
+ *   Default: map ~30svh, list remainder. Swipe up: map collapses to 80px, list fills viewport.
+ * - Desktop (lg+): side-by-side 50/50 grid (unchanged).
  */
 export function DiscoveryGrid({ children }: Props) {
   return (
     <div
       className="
-        grid min-h-0 flex-1 gap-3 lg:gap-4
-        grid-cols-1
-        grid-rows-[minmax(220px,min(40svh,420px))_minmax(0,1fr)]
-        lg:grid-cols-2
-        lg:grid-rows-[minmax(0,1fr)]
+        min-h-0 flex-1
+        flex flex-col overflow-y-auto snap-y snap-mandatory overscroll-y-contain
+        lg:grid lg:grid-cols-2 lg:grid-rows-[minmax(0,1fr)] lg:gap-4
+        lg:snap-none lg:overflow-visible
       "
     >
       {children}

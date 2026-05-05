@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import type { Animal } from '@/api/animals'
 import { fetchAnimalsPublic } from '@/api/animals'
 import { Button } from '@/components/ui/button'
@@ -20,7 +20,6 @@ import { MatchMomentOverlay } from '@/explore/components/MatchMomentOverlay'
 import { rollMatchMoment } from '@/explore/matchMomentConfig'
 import { shuffleIdsInPlace } from '@/explore/shuffleIds'
 import { useExploreSessionState } from '@/explore/useExploreSessionState'
-import type { ExploreSpeciesMode } from '@/explore/types'
 import { cn } from '@/lib/utils'
 import { intentLabel } from '@/explore/labels'
 import { Heart, Settings } from 'lucide-react'
@@ -80,30 +79,9 @@ function ExploreShortlistRow({
 }
 
 export function ExploreView({ onBack, onOpenAnimal }: Props) {
-  const { session, patch, sessionPassed, setSessionPassed, setRememberNo, setDisplayName } =
+  const { session, patch, sessionPassed, setSessionPassed, setDisplayName } =
     useExploreSessionState()
 
-  const handleRememberNoChange = useCallback(
-    (v: boolean) => {
-      if (v) {
-        if (session && !session.rememberNo) {
-          patch((s) => ({
-            ...s,
-            rememberNo: true,
-            passedIds: [...new Set([...s.passedIds, ...sessionPassed])],
-          }))
-        }
-        return
-      }
-      setRememberNo(false)
-    },
-    [session, sessionPassed, patch, setRememberNo],
-  )
-
-  const handleSpeciesModeChange = (speciesMode: ExploreSpeciesMode) => {
-    patch((s) => ({ ...s, speciesMode }))
-    if (session.deckEntered) setShuffleKey((k) => k + 1)
-  }
 
   const [matchAnimal, setMatchAnimal] = useState<Animal | null>(null)
   const [lowKeySaveName, setLowKeySaveName] = useState<string | null>(null)
@@ -127,13 +105,8 @@ export function ExploreView({ onBack, onOpenAnimal }: Props) {
   }, [singleSkipNudge])
 
   const listQuery = useMemo(
-    () => ({
-      city: null as string | null,
-      shelterId: null as string | null,
-      species:
-        !session || session.speciesMode === 'all' ? null : (session.speciesMode as string | null),
-    }),
-    [session],
+    () => ({ city: null as string | null, shelterId: null as string | null, species: null }),
+    [],
   )
 
   const {
@@ -165,7 +138,6 @@ export function ExploreView({ onBack, onOpenAnimal }: Props) {
       shortlistIds: s.shortlistIds,
       passedIds: passed,
       sessionYesNotMatchIds: s.yesNotMatchIds,
-      speciesMode: s.speciesMode,
     })
     const next = shuffleIdsInPlace(base.map((a) => a.id))
     queueMicrotask(() => {
@@ -323,9 +295,7 @@ export function ExploreView({ onBack, onOpenAnimal }: Props) {
           onOpenChange={setSettingsOpen}
           session={session}
           setDisplayName={setDisplayName}
-          onSpeciesModeChange={handleSpeciesModeChange}
           patch={patch}
-          onRememberNoChange={handleRememberNoChange}
           canReshuffle={canReshuffle}
           onRequestReshuffle={requestReshuffle}
           onRequestStartOver={requestStartOver}
@@ -376,25 +346,16 @@ export function ExploreView({ onBack, onOpenAnimal }: Props) {
 
           {!session.deckEntered ? (
             <div className="space-y-4">
-              <p className="text-muted-foreground text-sm leading-relaxed">
-                Pick what fits you below, then tap <span className="font-medium text-foreground">Shuffle deck</span>{' '}
-                to browse animals from the directory. Your session stays on this device; open the gear when you
-                want to change filters or tidy your lists.
-              </p>
               <ExploreFormFields
                 idSuffix="pre"
                 displayName={session.displayName}
                 onDisplayNameChange={setDisplayName}
                 intent={session.intent}
                 onIntentChange={(intent) => patch((s) => ({ ...s, intent }))}
-                speciesMode={session.speciesMode}
-                onSpeciesModeChange={handleSpeciesModeChange}
-                rememberNo={session.rememberNo}
-                onRememberNoChange={handleRememberNoChange}
               />
               <Button
                 type="button"
-                className="w-full transition active:scale-[0.99] motion-reduce:active:scale-100"
+                className="w-full animate-pulse [animation-iteration-count:3] motion-reduce:animate-none transition active:scale-[0.99] motion-reduce:active:scale-100"
                 size="lg"
                 onClick={startDeck}
               >
@@ -488,9 +449,7 @@ export function ExploreView({ onBack, onOpenAnimal }: Props) {
         onOpenChange={setSettingsOpen}
         session={session}
         setDisplayName={setDisplayName}
-        onSpeciesModeChange={handleSpeciesModeChange}
         patch={patch}
-        onRememberNoChange={handleRememberNoChange}
         canReshuffle={canReshuffle}
         onRequestReshuffle={requestReshuffle}
         onRequestStartOver={requestStartOver}
@@ -604,9 +563,7 @@ type SProps = {
   onOpenChange: (o: boolean) => void
   session: import('@/explore/types').ExplorePersisted
   setDisplayName: (s: string) => void
-  onSpeciesModeChange: (m: import('@/explore/types').ExploreSpeciesMode) => void
   patch: (fn: (s: import('@/explore/types').ExplorePersisted) => import('@/explore/types').ExplorePersisted) => void
-  onRememberNoChange: (v: boolean) => void
   canReshuffle: boolean
   onRequestReshuffle: () => void
   onRequestStartOver: () => void
@@ -617,9 +574,7 @@ function SettingsDialog({
   onOpenChange,
   session,
   setDisplayName,
-  onSpeciesModeChange,
   patch,
-  onRememberNoChange,
   canReshuffle,
   onRequestReshuffle,
   onRequestStartOver,
@@ -636,10 +591,6 @@ function SettingsDialog({
           onDisplayNameChange={setDisplayName}
           intent={session.intent}
           onIntentChange={(intent) => patch((s) => ({ ...s, intent }))}
-          speciesMode={session.speciesMode}
-          onSpeciesModeChange={onSpeciesModeChange}
-          rememberNo={session.rememberNo}
-          onRememberNoChange={onRememberNoChange}
         />
         <div className="grid gap-2 border-t pt-4">
           <p className="text-muted-foreground text-xs">Data stays in this browser only. Nothing is sent to a server.</p>

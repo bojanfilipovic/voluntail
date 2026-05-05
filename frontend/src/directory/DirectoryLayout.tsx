@@ -140,7 +140,7 @@ export function DirectoryLayout({
     <DiscoveryErrorBoundary>
       <DiscoveryGrid>
         <section
-          className="border-border flex min-h-0 flex-col overflow-hidden rounded-lg border"
+          className="border-border flex min-h-0 shrink-0 snap-start flex-col overflow-hidden rounded-lg border h-[30svh] lg:h-auto"
           aria-label="Map of shelters"
         >
           <MapPublicToolbar
@@ -181,9 +181,13 @@ export function DirectoryLayout({
           ) : null}
         </section>
         <section
-          className="border-border flex min-h-0 flex-col overflow-hidden rounded-lg border"
+          className="border-border flex min-h-[calc(100%-80px)] shrink-0 snap-start flex-col overflow-hidden rounded-lg border lg:min-h-0"
           aria-label="Directory"
         >
+          {/* Drag handle — mobile affordance for scroll-snap */}
+          <div className="flex justify-center py-1.5 lg:hidden" aria-hidden>
+            <div className="h-1 w-10 rounded-full bg-border" />
+          </div>
           <div
             className="border-border bg-muted/30 flex flex-shrink-0 flex-wrap items-center gap-2 border-b px-3 py-2"
             role="tablist"
