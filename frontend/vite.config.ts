@@ -12,14 +12,7 @@ export default defineConfig({
     },
   },
   build: {
-    rollupOptions: {
-      external: ['mapbox-gl'],
-      output: {
-        globals: {
-          'mapbox-gl': 'mapboxgl',
-        },
-      },
-    },
+    chunkSizeWarningLimit: 1800,
   },
   server: {
     proxy: {
