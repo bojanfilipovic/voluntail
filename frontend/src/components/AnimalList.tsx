@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { Animal } from '@/api/animals'
 import type { Shelter } from '@/api/shelters'
 import { SpeciesFilterBar, type SpeciesFilterRow } from '@/components/SpeciesFilterBar'
+import { parseAnimalAge } from '@/domain/animalAge'
 import { speciesLabel, type SpeciesFilterValue } from '@/domain/species'
 import type { AnimalStatus } from '@/schemas/animals'
 import { cn } from '@/lib/utils'
@@ -122,7 +123,7 @@ export function AnimalList({
                   <span className="flex min-w-0 flex-col gap-0.5">
                     <span className="text-foreground font-medium leading-snug">{a.name}</span>
                     <span className="text-muted-foreground text-xs">
-                      {speciesLabel(a.species)} · {statusLabel(a.status)} · {a.city}
+                      {speciesLabel(a.species)} · {statusLabel(a.status)} · {a.city}{parseAnimalAge(a.description) ? ` · ${parseAnimalAge(a.description)}` : ''}
                     </span>
                     <span className="text-muted-foreground text-xs">
                       {shelterNameById.get(a.shelterId) ?? 'Shelter'}

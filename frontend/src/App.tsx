@@ -350,6 +350,10 @@ function App() {
             shelterCityOptions={shelterCityOptions}
             animalSpeciesFilters={animalSpeciesFilters}
             totalAnimalCount={filteredAnimals?.length}
+            onViewAnimals={(shelterId) => {
+              setAnimalShelterFilter(shelterId)
+              setDirectoryTab('animals')
+            }}
           />
         ) : (
           <Suspense
@@ -412,6 +416,12 @@ function App() {
         publishBusy={animalMutations.updateMutation.isPending}
         deleteBusy={animalMutations.deleteMutation.isPending}
         onShareFeedback={openAnimalFeedback}
+        onShelterClick={() => {
+          if (selectedAnimalShelter) {
+            handleCloseAnimalDetail()
+            handleListSelectClearingHighlight(selectedAnimalShelter)
+          }
+        }}
       />
       <EditAnimalDialog
         animal={selectedAnimal}

@@ -13,6 +13,7 @@ type Props = {
   speciesFilter: SpeciesFilterValue | null
   onSpeciesFilter: (species: SpeciesFilterValue | null) => void
   speciesFilters: SpeciesFilterRow[]
+  onViewAnimals: (shelterId: string) => void
 }
 
 function speciesLine(s: Shelter): string {
@@ -29,6 +30,7 @@ export function ShelterList({
   speciesFilter,
   onSpeciesFilter,
   speciesFilters,
+  onViewAnimals,
 }: Props) {
   return (
     <section className="text-start" aria-label="Shelter list">
@@ -89,19 +91,26 @@ export function ShelterList({
                     <span className="text-foreground/90 line-clamp-3 text-sm leading-snug">
                       {s.description}
                     </span>
-                    {s.signupUrl ? (
-                      <span className="mt-1">
+                    <span className="mt-1.5 flex flex-wrap items-center gap-2">
+                      {s.signupUrl ? (
                         <a
-                          href={s.signupUrl}
+                          href={new URL(s.signupUrl).origin}
                           onClick={(e) => e.stopPropagation()}
                           rel="noreferrer noopener"
                           target="_blank"
-                          className="text-primary text-xs underline-offset-4 hover:underline"
+                          className="inline-flex items-center rounded-md bg-emerald-600 px-2 py-0.5 text-xs font-medium text-white hover:bg-emerald-700"
                         >
-                          Signup link
+                          More info
                         </a>
-                      </span>
-                    ) : null}
+                      ) : null}
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); onViewAnimals(s.id) }}
+                        className="text-primary inline-flex items-center text-xs font-medium underline-offset-4 hover:underline"
+                      >
+                        Animals
+                      </button>
+                    </span>
                   </span>
                 </span>
               </button>

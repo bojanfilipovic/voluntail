@@ -28,7 +28,7 @@ export function MapPublicToolbar({
 
   return (
     <div
-      className="border-border bg-muted/40 flex flex-shrink-0 flex-wrap items-center gap-2 border-b px-3 py-2"
+      className="pointer-events-auto inline-flex flex-wrap items-center gap-2"
       role="toolbar"
       aria-label="Public map actions"
     >
@@ -36,12 +36,13 @@ export function MapPublicToolbar({
         type="button"
         size="sm"
         variant={placementMode ? 'secondary' : 'outline'}
+        className="shadow-md"
         onClick={onStartAddPin}
       >
         Suggest Shelter
       </Button>
       {suggestFlowActive ? (
-        <>
+        <span className="inline-flex flex-wrap items-center gap-2 rounded-lg bg-background/90 px-2 py-1 shadow-md backdrop-blur-sm">
           <Button
             type="button"
             size="sm"
@@ -60,15 +61,15 @@ export function MapPublicToolbar({
             Cancel
           </Button>
           {placementMode ? (
-            <span className="text-muted-foreground min-w-[12rem] flex-1 text-xs">
-              Click the map to place a pin.
+            <span className="text-muted-foreground text-xs">
+              Tap map to place pin.
             </span>
           ) : draftLocationKnown && !suggestDialogOpen ? (
-            <span className="text-muted-foreground min-w-[12rem] flex-1 text-xs">
-              Draft pin set — Enter details or click the map to move it.
+            <span className="text-muted-foreground text-xs">
+              Pin set — Enter details or tap to move.
             </span>
           ) : null}
-        </>
+        </span>
       ) : null}
     </div>
   )

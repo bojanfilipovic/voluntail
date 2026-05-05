@@ -79,6 +79,7 @@ export type DirectoryLayoutProps = {
   shelterCityOptions: string[]
   animalSpeciesFilters: import('@/components/SpeciesFilterBar').SpeciesFilterRow[]
   totalAnimalCount: number | undefined
+  onViewAnimals: (shelterId: string) => void
 }
 
 export function DirectoryLayout({
@@ -132,6 +133,7 @@ export function DirectoryLayout({
   shelterCityOptions,
   animalSpeciesFilters,
   totalAnimalCount,
+  onViewAnimals,
 }: DirectoryLayoutProps) {
   const cmsDraftLocationKnown = draftFlow === 'cms' && Boolean(draftLocation)
   const suggestDraftLocationKnown = draftFlow === 'suggest' && Boolean(draftLocation)
@@ -140,44 +142,46 @@ export function DirectoryLayout({
     <DiscoveryErrorBoundary>
       <DiscoveryGrid>
         <section
-          className="border-border flex min-h-0 shrink-0 snap-start flex-col overflow-hidden rounded-lg border h-[30svh] lg:h-auto"
+          className="border-border relative shrink-0 snap-start overflow-hidden rounded-lg border h-[30svh] lg:h-auto"
           aria-label="Map of shelters"
         >
-          <MapPublicToolbar
-            placementMode={suggestPlacementMode}
-            draftLocationKnown={suggestDraftLocationKnown}
-            suggestDialogOpen={suggestDialogOpen}
-            cancelPlacementDisabled={cancelSuggestDisabled}
-            onStartAddPin={onStartSuggestShelter}
-            onEnterDetails={onEnterSuggestDetails}
-            onCancelPlacement={onCancelPlacement}
-          />
-          <div className="flex h-full min-h-0 flex-1 flex-col">
-            <Suspense fallback={<MapLoadingFallback />}>
-              <ShelterMapLazy
-                ref={shelterMapRef}
-                shelters={mapShelters}
-                selectedId={selectedShelter?.id ?? null}
-                animalContextShelterId={mapShelterHighlightId}
-                onSelectShelter={onMapSelectShelter}
-                onClearSelection={onClearMapSelection}
-                placementOrRelocateActive={placementOrRelocateActive}
-                draftLocation={draftLocation}
-                onDraftPosition={onDraftPosition}
-              />
-            </Suspense>
-          </div>
-          {cmsConfigured ? (
-            <MapPlacementToolbar
-              placementMode={placementMode}
-              draftLocationKnown={cmsDraftLocationKnown}
-              addDialogOpen={addDialogOpen}
-              cmsBusy={cmsBusy}
-              cancelPlacementDisabled={cancelPlacementDisabled}
-              onStartAddPin={onStartAddPin}
-              onEnterDetails={onEnterDetails}
+          <Suspense fallback={<MapLoadingFallback />}>
+            <ShelterMapLazy
+              ref={shelterMapRef}
+              shelters={mapShelters}
+              selectedId={selectedShelter?.id ?? null}
+              animalContextShelterId={mapShelterHighlightId}
+              onSelectShelter={onMapSelectShelter}
+              onClearSelection={onClearMapSelection}
+              placementOrRelocateActive={placementOrRelocateActive}
+              draftLocation={draftLocation}
+              onDraftPosition={onDraftPosition}
+            />
+          </Suspense>
+          <div className="pointer-events-none absolute top-2 left-2 z-10">
+            <MapPublicToolbar
+              placementMode={suggestPlacementMode}
+              draftLocationKnown={suggestDraftLocationKnown}
+              suggestDialogOpen={suggestDialogOpen}
+              cancelPlacementDisabled={cancelSuggestDisabled}
+              onStartAddPin={onStartSuggestShelter}
+              onEnterDetails={onEnterSuggestDetails}
               onCancelPlacement={onCancelPlacement}
             />
+          </div>
+          {cmsConfigured ? (
+            <div className="pointer-events-none absolute bottom-2 left-2 z-10">
+              <MapPlacementToolbar
+                placementMode={placementMode}
+                draftLocationKnown={cmsDraftLocationKnown}
+                addDialogOpen={addDialogOpen}
+                cmsBusy={cmsBusy}
+                cancelPlacementDisabled={cancelPlacementDisabled}
+                onStartAddPin={onStartAddPin}
+                onEnterDetails={onEnterDetails}
+                onCancelPlacement={onCancelPlacement}
+              />
+            </div>
           ) : null}
         </section>
         <section
@@ -228,6 +232,7 @@ export function DirectoryLayout({
                 speciesFilter={speciesFilter}
                 onSpeciesFilter={onShelterSpeciesFilter}
                 speciesFilters={speciesFilters}
+                onViewAnimals={onViewAnimals}
               />
             ) : (
               <AnimalList
