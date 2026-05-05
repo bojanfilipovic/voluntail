@@ -17,9 +17,9 @@ import Map, {
 import type { Shelter } from '@/api/shelters'
 
 const NL_VIEW = {
-  longitude: 5.2913,
-  latitude: 52.1326,
-  zoom: 6.5,
+  longitude: 4.9041,
+  latitude: 52.3676,
+  zoom: 9,
 } as const
 
 export type MapCenter = { latitude: number; longitude: number }

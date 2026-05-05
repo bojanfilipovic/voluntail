@@ -4,7 +4,7 @@
  * About this fraction of yeses match; the rest are "no match this time"
  * and stay out of the saved list (for gamification).
  */
-export const MATCH_MOMENT_PROBABILITY = 0.3
+export const MATCH_MOMENT_PROBABILITY = 0.4
 
 /** Roll for a full match (event handler / side-effect use only). */
 export function rollMatchMoment(): boolean {

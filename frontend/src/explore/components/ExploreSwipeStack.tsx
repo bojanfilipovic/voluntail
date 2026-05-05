@@ -1,6 +1,6 @@
 import { useDrag } from '@use-gesture/react'
 import type { CSSProperties } from 'react'
-import { useId, useState } from 'react'
+import { useCallback, useEffect, useId, useRef, useState } from 'react'
 import type { Animal } from '@/api/animals'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -9,6 +9,9 @@ import { cn } from '@/lib/utils'
 import { SkipForward, ThumbsDown, ThumbsUp } from 'lucide-react'
 
 const SWIPE_THRESHOLD = 100
+const EXIT_DURATION = 280
+
+type ExitDir = 'left' | 'right' | null
 
 type Props = {
   current: Animal
@@ -16,6 +19,7 @@ type Props = {
   onLike: () => void
   onSkip: () => void
   singleCardSkipNudge: boolean
+  remaining?: number
   busy?: boolean
 }
 
@@ -25,14 +29,45 @@ export function ExploreSwipeStack({
   onLike,
   onSkip,
   singleCardSkipNudge,
+  remaining,
   busy = false,
 }: Props) {
   const [dragX, setDragX] = useState(0)
+  const [exitDir, setExitDir] = useState<ExitDir>(null)
   const baseId = useId()
+  const [showHint, setShowHint] = useState(true)
+  const exitTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [prevId, setPrevId] = useState(current.id)
+
+  // Reset exit state when card changes (React-approved derived state pattern)
+  if (prevId !== current.id) {
+    setPrevId(current.id)
+    setExitDir(null)
+    setDragX(0)
+  }
+
+  useEffect(() => {
+    const t = window.setTimeout(() => setShowHint(false), 700)
+    return () => window.clearTimeout(t)
+  }, [])
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (exitTimeout.current) clearTimeout(exitTimeout.current)
+    }
+  }, [])
+
+  const triggerExit = useCallback((dir: 'left' | 'right', action: () => void) => {
+    setExitDir(dir)
+    exitTimeout.current = setTimeout(() => {
+      action()
+    }, EXIT_DURATION)
+  }, [])
 
   const bind = useDrag(
     ({ down, last, movement: [mx] }) => {
-      if (busy) return
+      if (busy || exitDir) return
       if (down) {
         setDragX(mx)
         return
@@ -40,20 +75,39 @@ export function ExploreSwipeStack({
       setDragX(0)
       if (last) {
         if (Math.abs(mx) < 6) return
-        if (mx < -SWIPE_THRESHOLD) onPass()
-        else if (mx > SWIPE_THRESHOLD) onLike()
+        if (mx < -SWIPE_THRESHOLD) triggerExit('left', onPass)
+        else if (mx > SWIPE_THRESHOLD) triggerExit('right', onLike)
       }
     },
     { filterTaps: true },
   )
 
+  const handlePass = () => {
+    if (exitDir) return
+    triggerExit('left', onPass)
+  }
+  const handleLike = () => {
+    if (exitDir) return
+    triggerExit('right', onLike)
+  }
+
   const likeOpacity = dragX > 0 ? Math.min(1, dragX / 120) : 0
   const passOpacity = dragX < 0 ? Math.min(1, -dragX / 120) : 0
 
-  const transformStyle: CSSProperties = {
-    transform: `translateX(${dragX}px) rotate(${dragX * 0.04}deg)`,
-    touchAction: 'none',
-  }
+  const exitTranslate = exitDir === 'left' ? '-120%' : exitDir === 'right' ? '120%' : '0'
+  const exitRotate = exitDir === 'left' ? '-15deg' : exitDir === 'right' ? '15deg' : '0deg'
+
+  const transformStyle: CSSProperties = exitDir
+    ? {
+        transform: `translateX(${exitTranslate}) rotate(${exitRotate})`,
+        opacity: 0,
+        transition: `transform ${EXIT_DURATION}ms ease-out, opacity ${EXIT_DURATION}ms ease-out`,
+        touchAction: 'none',
+      }
+    : {
+        transform: `translateX(${dragX}px) rotate(${dragX * 0.04}deg)`,
+        touchAction: 'none',
+      }
 
   return (
     <div className="flex h-full min-h-0 w-full max-w-md flex-1 flex-col">
@@ -61,25 +115,38 @@ export function ExploreSwipeStack({
         <p className="text-muted-foreground text-center text-xs" role="status">
           Only this animal left. Still unsure? You can pass or try for a match.
         </p>
+      ) : remaining != null && remaining > 0 ? (
+        <p className="text-muted-foreground text-center text-xs tabular-nums">
+          {remaining} {remaining === 1 ? 'animal' : 'animals'} left
+        </p>
       ) : null}
       <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden pr-0.5">
         <div
           className={cn(
-            'relative mx-auto w-full transition-transform duration-200 ease-out motion-reduce:transition-none',
-            busy && 'pointer-events-none opacity-50',
+            'relative mx-auto w-full',
+            !exitDir && 'transition-transform duration-200 ease-out motion-reduce:transition-none',
+            (busy || !!exitDir) && 'pointer-events-none',
+            busy && 'opacity-50',
+            showHint && !exitDir && 'animate-swipe-hint motion-reduce:animate-none',
           )}
           style={transformStyle}
-          {...(busy ? {} : bind())}
+          {...(busy || exitDir ? {} : bind())}
         >
           <div
-            className="pointer-events-none absolute top-2 left-2 z-20 rounded border-2 border-emerald-500 px-2 py-1 text-xs font-semibold text-emerald-600 transition-opacity motion-reduce:transition-none"
-            style={{ opacity: likeOpacity }}
+            className={cn(
+              'pointer-events-none absolute top-2 left-2 z-20 rounded border-2 border-emerald-500 px-2 py-1 text-xs font-semibold text-emerald-600 transition-opacity motion-reduce:transition-none',
+              exitDir === 'right' && 'opacity-100',
+            )}
+            style={{ opacity: exitDir === 'right' ? 1 : likeOpacity }}
           >
             YES
           </div>
           <div
-            className="pointer-events-none absolute top-2 right-2 z-20 rounded border-2 border-rose-500 px-2 py-1 text-xs font-semibold text-rose-600 transition-opacity motion-reduce:transition-none"
-            style={{ opacity: passOpacity }}
+            className={cn(
+              'pointer-events-none absolute top-2 right-2 z-20 rounded border-2 border-rose-500 px-2 py-1 text-xs font-semibold text-rose-600 transition-opacity motion-reduce:transition-none',
+              exitDir === 'left' && 'opacity-100',
+            )}
+            style={{ opacity: exitDir === 'left' ? 1 : passOpacity }}
           >
             PASS
           </div>
@@ -87,6 +154,8 @@ export function ExploreSwipeStack({
             className={cn(
               "w-full overflow-hidden shadow-lg transition-shadow duration-200",
               "motion-reduce:transition-none",
+              exitDir === 'right' && 'ring-2 ring-emerald-400',
+              exitDir === 'left' && 'ring-2 ring-rose-400',
             )}
           >
             <div className="bg-muted/60 relative flex h-[min(32vh,15rem)] w-full items-center justify-center p-2 sm:h-64">
@@ -101,9 +170,16 @@ export function ExploreSwipeStack({
                 <span className="text-muted-foreground p-6 text-sm">No photo</span>
               )}
             </div>
-            <CardContent className="pt-3">
+            <CardContent className="pt-3 pb-3">
               <p className="text-base font-semibold">{current.name}</p>
-              <p className="text-muted-foreground text-sm">{speciesLabel(current.species)}</p>
+              <p className="text-muted-foreground text-sm">
+                {speciesLabel(current.species)}{current.city ? ` \u00b7 ${current.city}` : ''}
+              </p>
+              {current.description ? (
+                <p className="text-muted-foreground mt-1 line-clamp-2 text-xs leading-snug">
+                  {current.description}
+                </p>
+              ) : null}
             </CardContent>
           </Card>
         </div>
@@ -122,9 +198,9 @@ export function ExploreSwipeStack({
             type="button"
             variant="outline"
             size="default"
-            className="min-w-0 flex-1 border-rose-500/30 text-rose-800 transition active:scale-[0.97] motion-reduce:transition-none sm:min-w-[4.5rem] sm:flex-initial"
-            onClick={onPass}
-            disabled={busy}
+            className="min-w-0 flex-1 h-11 sm:h-9 border-rose-500/30 text-rose-800 transition active:scale-[0.97] motion-reduce:transition-none sm:min-w-[4.5rem] sm:flex-initial"
+            onClick={handlePass}
+            disabled={busy || !!exitDir}
             aria-label="Not for me"
           >
             <ThumbsDown aria-hidden className="size-4" />
@@ -134,9 +210,9 @@ export function ExploreSwipeStack({
             type="button"
             variant="secondary"
             size="default"
-            className="min-w-0 flex-1 text-foreground transition active:scale-[0.97] motion-reduce:transition-none sm:min-w-[4.5rem] sm:flex-initial"
+            className="min-w-0 flex-1 h-11 sm:h-9 text-foreground transition active:scale-[0.97] motion-reduce:transition-none sm:min-w-[4.5rem] sm:flex-initial"
             onClick={onSkip}
-            disabled={busy}
+            disabled={busy || !!exitDir}
             aria-label="Decide later; this animal is shown again after the others in this round"
           >
             <SkipForward aria-hidden className="size-4" />
@@ -145,9 +221,9 @@ export function ExploreSwipeStack({
           <Button
             type="button"
             size="default"
-            className="min-w-0 flex-1 bg-emerald-600 text-white transition active:scale-[0.97] motion-reduce:transition-none hover:bg-emerald-700 sm:min-w-[4.5rem] sm:flex-initial"
-            onClick={onLike}
-            disabled={busy}
+            className="min-w-0 flex-1 h-11 sm:h-9 bg-emerald-600 text-white transition active:scale-[0.97] motion-reduce:transition-none hover:bg-emerald-700 sm:min-w-[4.5rem] sm:flex-initial"
+            onClick={handleLike}
+            disabled={busy || !!exitDir}
             aria-label="Yes, try for a match"
           >
             <ThumbsUp aria-hidden className="size-4" />
