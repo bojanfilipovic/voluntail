@@ -77,7 +77,8 @@ export type DirectoryLayoutProps = {
   animalSpeciesFilter: ShelterSpecies | null
   onAnimalSpeciesFilter: (s: ShelterSpecies | null) => void
   shelterCityOptions: string[]
-  animalSpeciesCounts: Record<ShelterSpecies, number>
+  animalSpeciesFilters: { species: ShelterSpecies; count: number }[]
+  totalAnimalCount: number | undefined
 }
 
 export function DirectoryLayout({
@@ -129,7 +130,8 @@ export function DirectoryLayout({
   animalSpeciesFilter,
   onAnimalSpeciesFilter,
   shelterCityOptions,
-  animalSpeciesCounts,
+  animalSpeciesFilters,
+  totalAnimalCount,
 }: DirectoryLayoutProps) {
   const cmsDraftLocationKnown = draftFlow === 'cms' && Boolean(draftLocation)
   const suggestDraftLocationKnown = draftFlow === 'suggest' && Boolean(draftLocation)
@@ -238,7 +240,8 @@ export function DirectoryLayout({
                 speciesFilter={animalSpeciesFilter}
                 onSpeciesFilter={onAnimalSpeciesFilter}
                 cityOptions={shelterCityOptions}
-                speciesCounts={animalSpeciesCounts}
+                speciesFilters={animalSpeciesFilters}
+                totalAnimalCount={totalAnimalCount}
               />
             )}
           </div>

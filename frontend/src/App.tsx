@@ -142,15 +142,17 @@ function App() {
     [speciesCounts],
   )
 
-  const animalSpeciesCounts = useMemo(() => {
-    const counts = Object.fromEntries(
-      SPECIES_VALUES.map((sp) => [sp, 0]),
-    ) as Record<ShelterSpecies, number>
-    for (const a of animals ?? []) {
-      counts[a.species] += 1
-    }
-    return counts
-  }, [animals])
+  const animalSpeciesFilters = useMemo(
+    () =>
+      SPECIES_VALUES.map((species) => {
+        let count = 0
+        for (const a of animals ?? []) {
+          if (a.species === species) count += 1
+        }
+        return { species, count }
+      }),
+    [animals],
+  )
 
   const {
     mapRef,
@@ -365,7 +367,8 @@ function App() {
             animalSpeciesFilter={animalSpeciesFilter}
             onAnimalSpeciesFilter={setAnimalSpeciesFilter}
             shelterCityOptions={shelterCityOptions}
-            animalSpeciesCounts={animalSpeciesCounts}
+            animalSpeciesFilters={animalSpeciesFilters}
+            totalAnimalCount={animals?.length}
           />
         ) : (
           <Suspense

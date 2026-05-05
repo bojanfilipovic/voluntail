@@ -1,6 +1,6 @@
-import { Button } from '@/components/ui/button'
 import type { Animal } from '@/api/animals'
 import type { Shelter } from '@/api/shelters'
+import { SpeciesFilterBar, type SpeciesFilterRow } from '@/components/SpeciesFilterBar'
 import { speciesLabel, type ShelterSpecies } from '@/domain/species'
 import type { AnimalStatus } from '@/schemas/animals'
 import { cn } from '@/lib/utils'
@@ -33,7 +33,8 @@ type Props = {
   onSpeciesFilter: (species: ShelterSpecies | null) => void
   /** Distinct cities from shelter directory (stable sort); filter is applied server-side. */
   cityOptions: string[]
-  speciesCounts: Record<ShelterSpecies, number>
+  speciesFilters: SpeciesFilterRow[]
+  totalAnimalCount: number | undefined
 }
 
 export function AnimalList({
@@ -50,18 +51,12 @@ export function AnimalList({
   speciesFilter,
   onSpeciesFilter,
   cityOptions,
-  speciesCounts,
+  speciesFilters,
+  totalAnimalCount,
 }: Props) {
   const shelterNameById = new Map(
     (shelters ?? []).map((s) => [s.id, s.name] as const),
   )
-
-  const speciesFilters = (
-    Object.keys(speciesCounts) as ShelterSpecies[]
-  ).map((species) => ({
-    species,
-    count: speciesCounts[species],
-  }))
 
   return (
     <section className="text-start" aria-label="Animal list">
@@ -116,28 +111,12 @@ export function AnimalList({
         </select>
       </div>
 
-      {speciesFilters.some(({ count }) => count > 0) ? (
-        <div className="mb-4 flex flex-wrap gap-2" role="group" aria-label="Filter by species">
-          {speciesFilters.map(({ species: sp, count }) => (
-            <Button
-              key={sp}
-              type="button"
-              size="sm"
-              variant={speciesFilter === sp ? 'default' : 'outline'}
-              className={cn(
-                count === 0 &&
-                  speciesFilter !== sp &&
-                  'text-muted-foreground opacity-55 hover:opacity-80',
-              )}
-              aria-pressed={speciesFilter === sp}
-              onClick={() => onSpeciesFilter(speciesFilter === sp ? null : sp)}
-            >
-              <span>{speciesLabel(sp)}</span>
-              <span className="text-muted-foreground ml-1 tabular-nums">: {count}</span>
-            </Button>
-          ))}
-        </div>
-      ) : null}
+      <SpeciesFilterBar
+        filters={speciesFilters}
+        selected={speciesFilter}
+        onSelect={onSpeciesFilter}
+        totalCount={totalAnimalCount}
+      />
 
       {error ? null : isPending ? (
         <p className="text-muted-foreground text-sm">Loading animals…</p>
