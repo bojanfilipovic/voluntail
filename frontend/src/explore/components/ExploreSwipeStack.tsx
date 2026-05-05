@@ -4,6 +4,7 @@ import { useCallback, useEffect, useId, useRef, useState } from 'react'
 import type { Animal } from '@/api/animals'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import { parseAnimalAge } from '@/domain/animalAge'
 import { speciesLabel } from '@/domain/species'
 import { cn } from '@/lib/utils'
 import { SkipForward, ThumbsDown, ThumbsUp } from 'lucide-react'
@@ -118,9 +119,9 @@ export function ExploreSwipeStack({
         <p className="text-muted-foreground text-center text-xs" role="status">
           Only this animal left. Still unsure? You can pass or try for a match.
         </p>
-      ) : remaining != null && remaining > 0 ? (
-        <p className="text-muted-foreground text-center text-xs tabular-nums">
-          {remaining} {remaining === 1 ? 'animal' : 'animals'} left
+      ) : remaining != null && remaining > 0 && remaining < 5 ? (
+        <p className="text-muted-foreground text-center text-xs">
+          Just a few left to discover
         </p>
       ) : null}
       <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden pr-0.5">
@@ -188,7 +189,7 @@ export function ExploreSwipeStack({
             <CardContent className="pt-3 pb-3">
               <p className="text-base font-semibold">{current.name}</p>
               <p className="text-muted-foreground text-sm">
-                {speciesLabel(current.species)}{current.city ? ` \u00b7 ${current.city}` : ''}
+                {speciesLabel(current.species)}{current.city ? ` \u00b7 ${current.city}` : ''}{parseAnimalAge(current.description) ? ` \u00b7 ${parseAnimalAge(current.description)}` : ''}
               </p>
               {current.description ? (
                 <p className="text-muted-foreground mt-1 line-clamp-2 text-xs leading-snug">

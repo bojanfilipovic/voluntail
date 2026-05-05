@@ -9,6 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import { parseAnimalAge } from '@/domain/animalAge'
 import { speciesLabel } from '@/domain/species'
 import { cn } from '@/lib/utils'
 import { XIcon } from 'lucide-react'
@@ -39,6 +40,7 @@ type Props = {
   publishBusy: boolean
   deleteBusy: boolean
   onShareFeedback: () => void
+  onShelterClick: () => void
 }
 
 export function AnimalDetailDialog({
@@ -52,6 +54,7 @@ export function AnimalDetailDialog({
   publishBusy,
   deleteBusy,
   onShareFeedback,
+  onShelterClick,
 }: Props) {
   const showCms = cmsConfigured
   const [shelterDetailsOpen, setShelterDetailsOpen] = useState(false)
@@ -87,10 +90,8 @@ export function AnimalDetailDialog({
                   <DialogTitle>{animal.name}</DialogTitle>
                   <p className="text-muted-foreground text-sm">
                     {speciesLabel(animal.species)} · {statusLabel(animal.status)} · {animal.city}
+                    {parseAnimalAge(animal.description) ? ` · ${parseAnimalAge(animal.description)}` : ''}
                   </p>
-                  {shelter ? (
-                    <p className="text-foreground text-sm font-medium">{shelter.name}</p>
-                  ) : null}
                 </div>
                 <DialogClose
                   render={
@@ -114,18 +115,14 @@ export function AnimalDetailDialog({
                     href={animal.externalUrl}
                     rel="noreferrer noopener"
                     target="_blank"
-                    className="text-primary underline-offset-4 hover:underline"
+                    className={cn(buttonVariants({ variant: 'default', size: 'sm' }), 'bg-emerald-600 text-white hover:bg-emerald-700')}
                   >
-                    External profile / more info
+                    More info
                   </a>
                 </p>
               ) : null}
               {shelter ? (
                 <div className="space-y-2">
-                  <p className="text-muted-foreground text-xs leading-snug">
-                    This animal is listed by the shelter below. Use their official links for
-                    volunteering or donations.
-                  </p>
                   <Button
                     type="button"
                     variant="outline"
@@ -142,6 +139,13 @@ export function AnimalDetailDialog({
                       className="border-border bg-muted/30 space-y-3 rounded-lg border p-3"
                       id="animal-dialog-shelter-details"
                     >
+                      <button
+                        type="button"
+                        className="text-primary text-sm font-medium underline-offset-4 hover:underline"
+                        onClick={onShelterClick}
+                      >
+                        {shelter.name}
+                      </button>
                       <p className="text-muted-foreground text-sm">
                         {shelter.city}
                         {shelter.species.length
@@ -157,7 +161,7 @@ export function AnimalDetailDialog({
                             target="_blank"
                             className={cn(buttonVariants({ variant: 'default', size: 'sm' }))}
                           >
-                            Volunteer / signup
+                            Volunteer
                           </a>
                         ) : null}
                         {shelter.donationUrl ? (
@@ -171,10 +175,6 @@ export function AnimalDetailDialog({
                           </a>
                         ) : null}
                       </div>
-                      <p className="text-muted-foreground text-xs leading-snug">
-                        Always double-check volunteer and donation details on the shelter&apos;s
-                        official channels before you commit.
-                      </p>
                     </div>
                   ) : null}
                 </div>

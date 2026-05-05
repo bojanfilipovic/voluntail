@@ -82,15 +82,7 @@ export function ShelterDetailDialog({
               </div>
             </DialogHeader>
             <div className="space-y-3 px-4 py-3 text-sm leading-relaxed">
-              <p className="text-muted-foreground">
-                Shelters rely on volunteers, adopters, and fosters—use the shelter&apos;s own
-                pages for final steps.
-              </p>
               <p>{shelter.description}</p>
-              <p className="text-muted-foreground text-xs leading-snug">
-                Tip: always double-check volunteer and donation info on the shelter&apos;s
-                official website before you commit.
-              </p>
             </div>
             <div
               className="border-border/50 flex flex-col gap-2 rounded-b-xl border-t bg-muted/40 px-4 py-3 pb-4"
@@ -111,7 +103,7 @@ export function ShelterDetailDialog({
                       buttonVariants({ variant: 'default', size: 'sm' }),
                     )}
                   >
-                    Volunteer / signup
+                    Volunteer
                   </a>
                 ) : null}
                 {shelter.donationUrl ? (
