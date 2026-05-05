@@ -4,7 +4,6 @@ import {
   OTHER_SPECIES,
   PRIMARY_SPECIES,
   SPECIES_VALUES,
-  type ShelterSpecies,
 } from '@/domain/species'
 
 describe('species grouping constants', () => {
