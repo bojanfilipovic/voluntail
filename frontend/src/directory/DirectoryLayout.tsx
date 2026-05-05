@@ -1,4 +1,4 @@
-import { Suspense, lazy, type RefObject } from 'react'
+import { Suspense, lazy, useState, useCallback, type RefObject } from 'react'
 import type { Animal } from '@/api/animals'
 import type { Shelter } from '@/api/shelters'
 import { AnimalList } from '@/components/AnimalList'
@@ -137,6 +137,8 @@ export function DirectoryLayout({
 }: DirectoryLayoutProps) {
   const cmsDraftLocationKnown = draftFlow === 'cms' && Boolean(draftLocation)
   const suggestDraftLocationKnown = draftFlow === 'suggest' && Boolean(draftLocation)
+  const [favoritesOnly, setFavoritesOnly] = useState(false)
+  const handleFavoritesToggle = useCallback(() => setFavoritesOnly((v) => !v), [])
 
   return (
     <DiscoveryErrorBoundary>
@@ -251,6 +253,8 @@ export function DirectoryLayout({
                 cityOptions={shelterCityOptions}
                 speciesFilters={animalSpeciesFilters}
                 totalAnimalCount={totalAnimalCount}
+                favoritesOnly={favoritesOnly}
+                onFavoritesToggle={handleFavoritesToggle}
               />
             )}
           </div>

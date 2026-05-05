@@ -2,10 +2,19 @@ import { useState } from 'react'
 import type { Animal } from '@/api/animals'
 import type { Shelter } from '@/api/shelters'
 import { SpeciesFilterBar, type SpeciesFilterRow } from '@/components/SpeciesFilterBar'
+import { HeartButton } from '@/components/HeartButton'
 import { parseAnimalAge } from '@/domain/animalAge'
 import { speciesLabel, type SpeciesFilterValue } from '@/domain/species'
 import type { AnimalStatus } from '@/schemas/animals'
 import { cn } from '@/lib/utils'
+import { getHeartedIds } from '@/lib/heartStorage'
+import { Heart } from 'lucide-react'
+
+function isNew(createdAt: string): boolean {
+  const created = new Date(createdAt)
+  const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000
+  return created.getTime() > sevenDaysAgo
+}
 
 function statusLabel(s: AnimalStatus): string {
   switch (s) {
@@ -37,6 +46,8 @@ type Props = {
   cityOptions: string[]
   speciesFilters: SpeciesFilterRow[]
   totalAnimalCount: number | undefined
+  favoritesOnly: boolean
+  onFavoritesToggle: () => void
 }
 
 export function AnimalList({
@@ -55,10 +66,17 @@ export function AnimalList({
   cityOptions,
   speciesFilters,
   totalAnimalCount,
+  favoritesOnly,
+  onFavoritesToggle,
 }: Props) {
   const shelterNameById = new Map(
     (shelters ?? []).map((s) => [s.id, s.name] as const),
   )
+  const heartedIds = getHeartedIds()
+  const favCount = heartedIds.size
+  const displayAnimals = favoritesOnly
+    ? (animals ?? []).filter((a) => heartedIds.has(a.id))
+    : animals
 
   return (
     <section className="text-start" aria-label="Animal list">
@@ -78,6 +96,24 @@ export function AnimalList({
         totalCount={totalAnimalCount}
       />
 
+      {favCount > 0 ? (
+        <div className="mb-3">
+          <button
+            type="button"
+            onClick={onFavoritesToggle}
+            className={cn(
+              'inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors',
+              favoritesOnly
+                ? 'border-rose-300 bg-rose-50 text-rose-700'
+                : 'border-border text-muted-foreground hover:border-rose-200 hover:text-rose-600',
+            )}
+          >
+            <Heart className={cn('size-3', favoritesOnly && 'fill-rose-500')} />
+            My favorites ({favCount})
+          </button>
+        </div>
+      ) : null}
+
       <SecondaryFilters
         cityFilter={cityFilter}
         onCityFilter={onCityFilter}
@@ -89,11 +125,13 @@ export function AnimalList({
 
       {error ? null : isPending ? (
         <p className="text-muted-foreground text-sm">Loading animals…</p>
-      ) : !animals?.length ? (
-        <p className="text-muted-foreground py-8 text-center text-sm">No animals found.</p>
+      ) : !displayAnimals?.length ? (
+        <p className="text-muted-foreground py-8 text-center text-sm">
+          {favoritesOnly ? 'No favorites yet.' : 'No animals found.'}
+        </p>
       ) : (
         <ul className="list-none space-y-3 p-0">
-          {animals.map((a) => (
+          {displayAnimals.map((a) => (
             <li key={a.id}>
               <button
                 type="button"
@@ -121,7 +159,14 @@ export function AnimalList({
                     />
                   )}
                   <span className="flex min-w-0 flex-col gap-0.5">
-                    <span className="text-foreground font-medium leading-snug">{a.name}</span>
+                    <span className="text-foreground flex items-center gap-1.5 font-medium leading-snug">
+                      {a.name}
+                      {isNew(a.createdAt) ? (
+                        <span className="rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700">
+                          New
+                        </span>
+                      ) : null}
+                    </span>
                     <span className="text-muted-foreground text-xs">
                       {speciesLabel(a.species)} · {statusLabel(a.status)} · {a.city}{parseAnimalAge(a.description) ? ` · ${parseAnimalAge(a.description)}` : ''}
                     </span>
@@ -131,9 +176,12 @@ export function AnimalList({
                     <span className="text-foreground/90 line-clamp-2 text-sm leading-snug">
                       {a.description}
                     </span>
-                    {!a.published ? (
-                      <span className="text-destructive text-xs font-medium">Unpublished</span>
-                    ) : null}
+                    <span className="flex items-center gap-2">
+                      {!a.published ? (
+                        <span className="text-destructive text-xs font-medium">Unpublished</span>
+                      ) : null}
+                      <HeartButton animalId={a.id} initialCount={a.heartCount} />
+                    </span>
                   </span>
                 </span>
               </button>

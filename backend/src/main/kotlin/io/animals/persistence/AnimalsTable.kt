@@ -2,6 +2,7 @@ package io.animals.persistence
 
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.java.javaUUID
+import org.jetbrains.exposed.v1.javatime.timestampWithTimeZone
 
 object AnimalsTable : Table("animals") {
     val id = javaUUID("id")
@@ -14,6 +15,8 @@ object AnimalsTable : Table("animals") {
     val published = bool("published")
     val imageUrl = text("image_url").nullable()
     val externalUrl = text("external_url").nullable()
+    val createdAt = timestampWithTimeZone("created_at")
+    val heartCount = integer("heart_count")
 
     override val primaryKey = PrimaryKey(id)
 }

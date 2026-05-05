@@ -1,12 +1,15 @@
 package io.animals
 
 import io.shelters.ShelterSpecies
+import java.time.Instant
 
 /**
  * Small in-memory set when `DB_URL` is unset (local fallback / filter smoke tests).
  * The Supabase seed migration has the full animal directory; keep this list short.
  */
 object AnimalSamples {
+    private val now = Instant.now().toString()
+
     val all: List<AnimalResponse> =
         listOf(
             AnimalResponse(
@@ -21,6 +24,8 @@ object AnimalSamples {
                 published = true,
                 imageUrl = "https://picsum.photos/seed/voluntail-ph-dog-milo/400/400",
                 externalUrl = null,
+                createdAt = now,
+                heartCount = 0,
             ),
             AnimalResponse(
                 id = "b0000002-0002-4002-8002-000000000002",
@@ -34,6 +39,8 @@ object AnimalSamples {
                 published = true,
                 imageUrl = "https://picsum.photos/seed/voluntail-ph-cat-luna/400/400",
                 externalUrl = null,
+                createdAt = now,
+                heartCount = 0,
             ),
             AnimalResponse(
                 id = "b0000003-0003-4003-8003-000000000003",
@@ -46,6 +53,8 @@ object AnimalSamples {
                 published = true,
                 imageUrl = "https://picsum.photos/seed/voluntail-ph-rabbit-tonic/400/400",
                 externalUrl = null,
+                createdAt = now,
+                heartCount = 0,
             ),
             AnimalResponse(
                 id = "b0000004-0004-4004-8004-000000000004",
@@ -59,6 +68,8 @@ object AnimalSamples {
                 published = false,
                 imageUrl = null,
                 externalUrl = null,
+                createdAt = now,
+                heartCount = 0,
             ),
             AnimalResponse(
                 id = "b0000005-0005-4005-8005-000000000005",
@@ -71,6 +82,8 @@ object AnimalSamples {
                 published = true,
                 imageUrl = "https://picsum.photos/seed/voluntail-ph-reptile-rex/400/400",
                 externalUrl = null,
+                createdAt = now,
+                heartCount = 0,
             ),
             AnimalResponse(
                 id = "b0000006-0006-4006-8006-000000000006",
@@ -84,6 +97,8 @@ object AnimalSamples {
                 imageUrl =
                     "https://picsum.photos/seed/voluntail-ph-arachnid-1677-25-maart-2026-vogelspin-sling-castricum/400/400",
                 externalUrl = null,
+                createdAt = now,
+                heartCount = 0,
             ),
             AnimalResponse(
                 id = "b0000007-0007-4007-8007-000000000007",
@@ -97,6 +112,8 @@ object AnimalSamples {
                 imageUrl =
                     "https://picsum.photos/seed/voluntail-ph-amphibian-1666-5-maart-2026-salamander-haarlem/400/400",
                 externalUrl = null,
+                createdAt = now,
+                heartCount = 0,
             ),
             AnimalResponse(
                 id = "b0000008-0008-4008-8008-000000000008",
@@ -109,6 +126,8 @@ object AnimalSamples {
                 published = true,
                 imageUrl = "https://picsum.photos/seed/voluntail-utrecht/800/450",
                 externalUrl = null,
+                createdAt = now,
+                heartCount = 0,
             ),
             AnimalResponse(
                 id = "b0000009-0009-4009-8009-000000000009",
@@ -121,6 +140,8 @@ object AnimalSamples {
                 published = true,
                 imageUrl = "https://picsum.photos/seed/voluntail-groningen/800/450",
                 externalUrl = null,
+                createdAt = now,
+                heartCount = 0,
             ),
             AnimalResponse(
                 id = "b000000a-000a-400a-800a-00000000000a",
@@ -133,6 +154,8 @@ object AnimalSamples {
                 published = true,
                 imageUrl = "https://picsum.photos/seed/voluntail-eindhoven-roze/800/450",
                 externalUrl = null,
+                createdAt = now,
+                heartCount = 0,
             ),
         )
 }

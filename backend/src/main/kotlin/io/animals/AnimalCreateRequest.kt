@@ -1,6 +1,7 @@
 package io.animals
 
 import io.shelters.ShelterSpecies
+import java.time.Instant
 import java.util.UUID
 
 data class AnimalCreateRequest(
@@ -27,4 +28,6 @@ fun AnimalCreateRequest.toAnimalResponse(id: UUID): AnimalResponse =
         published = published,
         imageUrl = imageUrl?.trim()?.takeIf { it.isNotEmpty() },
         externalUrl = externalUrl?.trim()?.takeIf { it.isNotEmpty() },
+        createdAt = Instant.now().toString(),
+        heartCount = 0,
     )

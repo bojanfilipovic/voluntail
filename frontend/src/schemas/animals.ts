@@ -20,6 +20,8 @@ export const animalSchema = z.object({
   published: z.boolean(),
   imageUrl: z.string().nullish(),
   externalUrl: z.string().nullish(),
+  createdAt: z.string(),
+  heartCount: z.number(),
 })
 
 export const animalsListSchema = z.array(animalSchema)

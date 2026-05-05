@@ -1,6 +1,7 @@
 import type { Animal } from '@/api/animals'
 import type { Shelter } from '@/api/shelters'
 import { Button, buttonVariants } from '@/components/ui/button'
+import { HeartButton } from '@/components/HeartButton'
 import {
   Dialog,
   DialogClose,
@@ -87,7 +88,10 @@ export function AnimalDetailDialog({
             <DialogHeader className="border-b px-4 pt-4 pb-2">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0 flex-1 space-y-1">
-                  <DialogTitle>{animal.name}</DialogTitle>
+                  <div className="flex items-center gap-2">
+                    <DialogTitle>{animal.name}</DialogTitle>
+                    <HeartButton animalId={animal.id} initialCount={animal.heartCount} />
+                  </div>
                   <p className="text-muted-foreground text-sm">
                     {speciesLabel(animal.species)} · {statusLabel(animal.status)} · {animal.city}
                     {parseAnimalAge(animal.description) ? ` · ${parseAnimalAge(animal.description)}` : ''}

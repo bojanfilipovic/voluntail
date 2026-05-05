@@ -6,7 +6,7 @@ import java.util.UUID
 class InMemoryAnimalRepository(
     private val shelterRepository: ShelterRepository,
 ) : AnimalRepository {
-    private var rows = AnimalSamples.all.toMutableList()
+    private val rows = AnimalSamples.all.toMutableList()
 
     override suspend fun list(
         filters: AnimalListFilters,
@@ -59,4 +59,12 @@ class InMemoryAnimalRepository(
 
     override suspend fun delete(id: UUID): Boolean =
         rows.removeIf { it.id == id.toString() }
+
+    override suspend fun incrementHeartCount(id: UUID): Int? {
+        val idx = rows.indexOfFirst { it.id == id.toString() && it.published }
+        if (idx < 0) return null
+        val updated = rows[idx].copy(heartCount = rows[idx].heartCount + 1)
+        rows[idx] = updated
+        return updated.heartCount
+    }
 }
