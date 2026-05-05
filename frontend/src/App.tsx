@@ -12,6 +12,7 @@ import { ShelterDetailDialog } from '@/components/ShelterDetailDialog'
 import { ShareFeedbackDialog } from '@/components/ShareFeedbackDialog'
 import { SuggestShelterDialog } from '@/components/SuggestShelterDialog'
 import { DiscoveryHeader } from '@/components/layout/DiscoveryHeader'
+import { WelcomeOverlay } from '@/components/WelcomeOverlay'
 import { useAnimalMutations } from '@/hooks/useAnimalMutations'
 import { useShelterDiscoveryState } from '@/hooks/useShelterDiscoveryState'
 import { useShelterMutations } from '@/hooks/useShelterMutations'
@@ -321,6 +322,22 @@ function App() {
     } catch { /* ignore */ }
   }, [])
 
+  // 404 catch-all: if the path is not root, show a not-found message
+  if (window.location.pathname !== '/') {
+    return (
+      <div className="bg-background text-foreground flex h-full min-h-0 flex-col items-center justify-center gap-4 px-4">
+        <h1 className="text-2xl font-semibold">Page not found</h1>
+        <p className="text-muted-foreground text-sm">This page doesn&apos;t exist.</p>
+        <a
+          href="/"
+          className="inline-flex items-center gap-2 rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700"
+        >
+          Back to Voluntail
+        </a>
+      </div>
+    )
+  }
+
   return (
     <div className="bg-background text-foreground flex h-full min-h-0 flex-col overflow-hidden">
       <DiscoveryHeader
@@ -333,6 +350,7 @@ function App() {
         onCycleTheme={cycleTheme}
         stats={communityStats}
       />
+      <WelcomeOverlay onGoExplore={() => navigateView('explore')} />
       <main
         className={
           appView === 'directory'
