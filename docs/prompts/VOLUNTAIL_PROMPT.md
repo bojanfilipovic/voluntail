@@ -5,7 +5,6 @@ Pilot: DOA (dog/cat/rabbit), ROZ (reptiles). Solo passion project: optimize for 
 - V1: Trustworthy map + directory (shelters and animals) + detail modals + outbound links (volunteer, donation, animal `externalUrl` as applicable).
 - V1 Explore: A separate entry: anonymous preferences (intent, species vs all) then a swipe card deck over the same public animal API. "Match" in v1 means filter fit and/or a session-only shortlist (memory/sessionStorage) — not accounts, not server-side matching, not recommendations.
 - Client deep links (for humans, not "SEO"): Optional `?shelter=` / `?animal=` + Copy link — for sharing and triage, independent of search traffic.
-- Process: Record architecture and environment decisions in `docs/adr/`. When a planning cycle closes (shipped or deferred) and it changed architecture, env, security, or public API behavior, update an ADR and this file; optional pointer to the implementing `git` commit. Use `git log` to recover rationale when backfilling ADRs.
 
 Icebox (do not build unless the task says so): Tinder-style matching (accounts, persistence, sync, algorithm, notifications); AI personas; in-app payments/gamification; search-engine and crawler strategy, sitemap/robots (beyond a trivial `robots.txt` if ever needed), per-entity Open Graph / SSR/SSG for share previews; bulk email as a product; scraping; shelter in-app RBAC (auth + who may edit which row) — *until* an explicit “auth + CMS” project; do not weaken read-only public directory or CMS mutation protection in the meantime.
 
@@ -23,7 +22,6 @@ Icebox (do not build unless the task says so): Tinder-style matching (accounts, 
 voluntail/
 ├── backend/          # Ktor (build.gradle.kts); env: backend/.env.example
 ├── frontend/         # Vite; dev proxy /api → backend (vite.config.ts)
-├── docs/adr/         # ADRs: decisions, status, link to code/commits
 └── docs/prompts/     # This file + historical baseline
 ```
 
@@ -42,7 +40,7 @@ voluntail/
 
 - Two logical databases: a dev (or local) instance for trying migrations, and production for real pilot data. Same SQL files applied in order. Keep prod keys out of dev and never embed DB credentials in the frontend.
 - "Public" vs "curator" for the same SPA: achieved by environment variables at build/deploy time — e.g. omit `VITE_CMS_API_KEY` in the Vercel Production app used by end users; a separate preview/project or local `.env` with the key for curation. Set CORS_ORIGINS on the API for every browser origin you use in practice.
-- Long-term (not this build): One public URL, in-app CMS for authorized shelter users, Supabase Auth (or other IdP) + JWT to API + row-level edit rules, replacing the shared browser secret. Document that migration as an ADR when you start it.
+- Long-term (not this build): One public URL, in-app CMS for authorized shelter users, Supabase Auth (or other IdP) + JWT to API + row-level edit rules, replacing the shared browser secret.
 
 ## Engineering principles
 
@@ -50,13 +48,13 @@ voluntail/
 - Schema change = new SQL under `backend/supabase/migrations/` + Kotlin + frontend types; keep in-memory samples loosely consistent for local dev.
 - Never weaken CMS protection on mutations; keep public reads for the directory in V1 unless a task explicitly changes that.
 - Source of truth for real content = migrations and DB; Kotlin/TS samples = dev or offline only when applicable.
-- Mobile: Check responsive DevTools + at least one iOS and one Android on real devices before "pilot ready" for the map+modals+list flows; note baseline in an ADR or README.
+- Mobile: Check responsive DevTools + at least one iOS and one Android on real devices before "pilot ready" for the map+modals+list flows.
 
 ## Domains (mental model)
 
 - Directory (public read): shelters, animals, map presentation.
 - CMS (shared secret today): create/edit/delete and visibility fields as implemented.
-- Auth & shelter-scoped editor (future): replaces shared-secret in the browser for multi-user, auditable curation; design when needed (ADR).
+- Auth & shelter-scoped editor (future): replaces shared-secret in the browser for multi-user, auditable curation; design when needed.
 
 ## Where we are (high level) — *UPDATE AS YOU SHIP*
 

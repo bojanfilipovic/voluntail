@@ -11,7 +11,7 @@ import type { ShelterMapHandle } from '@/components/ShelterMap'
 import { ShelterList } from '@/components/ShelterList'
 import { Button } from '@/components/ui/button'
 import type { DraftFlow } from '@/hooks/useShelterDiscoveryState'
-import type { ShelterSpecies } from '@/domain/species'
+import type { SpeciesFilterValue } from '@/domain/species'
 import { MapLoadingFallback } from '@/directory/MapLoadingFallback'
 
 /** Same as MapCenter from ShelterMap — duplicated here to avoid a static import of the map module next to a lazy() of it. */
@@ -62,9 +62,9 @@ export type DirectoryLayoutProps = {
   sheltersLoading: boolean
   shelterTotal: number | undefined
   onSelectShelterFromList: (s: Shelter) => void
-  speciesFilter: ShelterSpecies | null
-  onShelterSpeciesFilter: (f: ShelterSpecies | null) => void
-  speciesFilters: { species: ShelterSpecies; count: number }[]
+  speciesFilter: SpeciesFilterValue | null
+  onShelterSpeciesFilter: (f: SpeciesFilterValue | null) => void
+  speciesFilters: import('@/components/SpeciesFilterBar').SpeciesFilterRow[]
   animals: Animal[] | undefined
   allShelters: Shelter[] | undefined
   animalsLoading: boolean
@@ -74,10 +74,11 @@ export type DirectoryLayoutProps = {
   onAnimalCityFilter: (c: string | null) => void
   animalShelterFilter: string | null
   onAnimalShelterFilter: (s: string | null) => void
-  animalSpeciesFilter: ShelterSpecies | null
-  onAnimalSpeciesFilter: (s: ShelterSpecies | null) => void
+  animalSpeciesFilter: SpeciesFilterValue | null
+  onAnimalSpeciesFilter: (s: SpeciesFilterValue | null) => void
   shelterCityOptions: string[]
-  animalSpeciesCounts: Record<ShelterSpecies, number>
+  animalSpeciesFilters: import('@/components/SpeciesFilterBar').SpeciesFilterRow[]
+  totalAnimalCount: number | undefined
 }
 
 export function DirectoryLayout({
@@ -129,7 +130,8 @@ export function DirectoryLayout({
   animalSpeciesFilter,
   onAnimalSpeciesFilter,
   shelterCityOptions,
-  animalSpeciesCounts,
+  animalSpeciesFilters,
+  totalAnimalCount,
 }: DirectoryLayoutProps) {
   const cmsDraftLocationKnown = draftFlow === 'cms' && Boolean(draftLocation)
   const suggestDraftLocationKnown = draftFlow === 'suggest' && Boolean(draftLocation)
@@ -238,7 +240,8 @@ export function DirectoryLayout({
                 speciesFilter={animalSpeciesFilter}
                 onSpeciesFilter={onAnimalSpeciesFilter}
                 cityOptions={shelterCityOptions}
-                speciesCounts={animalSpeciesCounts}
+                speciesFilters={animalSpeciesFilters}
+                totalAnimalCount={totalAnimalCount}
               />
             )}
           </div>

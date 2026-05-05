@@ -3,6 +3,7 @@ package io.shelters.persistence
 import io.shelters.ShelterCreateRequest
 import io.shelters.ShelterRepository
 import io.shelters.ShelterResponse
+import io.shelters.ShelterSpecies
 import io.shelters.ShelterUpdateRequest
 import io.shelters.applyTo
 import io.shelters.toShelterResponse
@@ -56,7 +57,7 @@ class ExposedShelterRepository(
                     row[description] = request.description.trim()
                     row[latitude] = request.latitude
                     row[longitude] = request.longitude
-                    row[species] = request.species
+                    row[species] = request.species.map { it.name }
                     row[signupUrl] = request.signupUrl.trimmedNonBlank()
                     row[imageUrl] = request.imageUrl.trimmedNonBlank()
                     row[donationUrl] = request.donationUrl.trimmedNonBlank()
@@ -85,7 +86,7 @@ class ExposedShelterRepository(
                     it[SheltersTable.description] = merged.description
                     it[SheltersTable.latitude] = merged.latitude
                     it[SheltersTable.longitude] = merged.longitude
-                    it[SheltersTable.species] = merged.species
+                    it[SheltersTable.species] = merged.species.map { sp -> sp.name }
                     it[SheltersTable.signupUrl] = merged.signupUrl
                     it[SheltersTable.imageUrl] = merged.imageUrl
                     it[SheltersTable.donationUrl] = merged.donationUrl
@@ -103,16 +104,21 @@ class ExposedShelterRepository(
         }
 }
 
-private fun ResultRow.toShelterResponse(): ShelterResponse =
-    ShelterResponse(
+private fun ResultRow.toShelterResponse(): ShelterResponse {
+    val speciesStrings: List<String> = this[SheltersTable.species]
+    val speciesList = speciesStrings.mapNotNull { name ->
+        ShelterSpecies.entries.find { it.name == name }
+    }
+    return ShelterResponse(
         id = this[SheltersTable.id].toString(),
         name = this[SheltersTable.name],
         description = this[SheltersTable.description],
         latitude = this[SheltersTable.latitude],
         longitude = this[SheltersTable.longitude],
-        species = this[SheltersTable.species],
+        species = speciesList,
         signupUrl = this[SheltersTable.signupUrl],
         imageUrl = this[SheltersTable.imageUrl],
         donationUrl = this[SheltersTable.donationUrl],
         city = this[SheltersTable.city],
     )
+}

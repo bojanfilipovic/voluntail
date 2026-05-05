@@ -1,7 +1,8 @@
-import { Button } from '@/components/ui/button'
+import { useState } from 'react'
 import type { Animal } from '@/api/animals'
 import type { Shelter } from '@/api/shelters'
-import { speciesLabel, type ShelterSpecies } from '@/domain/species'
+import { SpeciesFilterBar, type SpeciesFilterRow } from '@/components/SpeciesFilterBar'
+import { speciesLabel, type SpeciesFilterValue } from '@/domain/species'
 import type { AnimalStatus } from '@/schemas/animals'
 import { cn } from '@/lib/utils'
 
@@ -29,11 +30,12 @@ type Props = {
   onCityFilter: (city: string | null) => void
   shelterFilter: string | null
   onShelterFilter: (shelterId: string | null) => void
-  speciesFilter: ShelterSpecies | null
-  onSpeciesFilter: (species: ShelterSpecies | null) => void
+  speciesFilter: SpeciesFilterValue | null
+  onSpeciesFilter: (species: SpeciesFilterValue | null) => void
   /** Distinct cities from shelter directory (stable sort); filter is applied server-side. */
   cityOptions: string[]
-  speciesCounts: Record<ShelterSpecies, number>
+  speciesFilters: SpeciesFilterRow[]
+  totalAnimalCount: number | undefined
 }
 
 export function AnimalList({
@@ -50,18 +52,12 @@ export function AnimalList({
   speciesFilter,
   onSpeciesFilter,
   cityOptions,
-  speciesCounts,
+  speciesFilters,
+  totalAnimalCount,
 }: Props) {
   const shelterNameById = new Map(
     (shelters ?? []).map((s) => [s.id, s.name] as const),
   )
-
-  const speciesFilters = (
-    Object.keys(speciesCounts) as ShelterSpecies[]
-  ).map((species) => ({
-    species,
-    count: speciesCounts[species],
-  }))
 
   return (
     <section className="text-start" aria-label="Animal list">
@@ -74,70 +70,21 @@ export function AnimalList({
         </div>
       ) : null}
 
-      <div className="mb-4 space-y-1.5">
-        <label className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-          City
-        </label>
-        <select
-          className="border-input bg-background ring-offset-background focus-visible:ring-ring flex h-9 w-full max-w-md rounded-md border px-3 py-1 text-sm shadow-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
-          value={cityFilter ?? ''}
-          onChange={(e) =>
-            onCityFilter(e.target.value ? e.target.value : null)
-          }
-          aria-label="Filter by city"
-        >
-          <option value="">All cities</option>
-          {cityOptions.map((city) => (
-            <option key={city} value={city}>
-              {city}
-            </option>
-          ))}
-        </select>
-      </div>
+      <SpeciesFilterBar
+        filters={speciesFilters}
+        selected={speciesFilter}
+        onSelect={onSpeciesFilter}
+        totalCount={totalAnimalCount}
+      />
 
-      <div className="mb-4 space-y-1.5">
-        <label className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-          Shelter
-        </label>
-        <select
-          className="border-input bg-background ring-offset-background focus-visible:ring-ring flex h-9 w-full max-w-md rounded-md border px-3 py-1 text-sm shadow-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
-          value={shelterFilter ?? ''}
-          onChange={(e) =>
-            onShelterFilter(e.target.value ? e.target.value : null)
-          }
-          aria-label="Filter by shelter"
-        >
-          <option value="">All shelters</option>
-          {(shelters ?? []).map((s) => (
-            <option key={s.id} value={s.id}>
-              {s.name}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {speciesFilters.some(({ count }) => count > 0) ? (
-        <div className="mb-4 flex flex-wrap gap-2" role="group" aria-label="Filter by species">
-          {speciesFilters.map(({ species: sp, count }) => (
-            <Button
-              key={sp}
-              type="button"
-              size="sm"
-              variant={speciesFilter === sp ? 'default' : 'outline'}
-              className={cn(
-                count === 0 &&
-                  speciesFilter !== sp &&
-                  'text-muted-foreground opacity-55 hover:opacity-80',
-              )}
-              aria-pressed={speciesFilter === sp}
-              onClick={() => onSpeciesFilter(speciesFilter === sp ? null : sp)}
-            >
-              <span>{speciesLabel(sp)}</span>
-              <span className="text-muted-foreground ml-1 tabular-nums">: {count}</span>
-            </Button>
-          ))}
-        </div>
-      ) : null}
+      <SecondaryFilters
+        cityFilter={cityFilter}
+        onCityFilter={onCityFilter}
+        shelterFilter={shelterFilter}
+        onShelterFilter={onShelterFilter}
+        cityOptions={cityOptions}
+        shelters={shelters}
+      />
 
       {error ? null : isPending ? (
         <p className="text-muted-foreground text-sm">Loading animals…</p>
@@ -192,5 +139,84 @@ export function AnimalList({
         </ul>
       )}
     </section>
+  )
+}
+
+/* ─── Collapsible secondary filters ─── */
+
+function SecondaryFilters({
+  cityFilter,
+  onCityFilter,
+  shelterFilter,
+  onShelterFilter,
+  cityOptions,
+  shelters,
+}: {
+  cityFilter: string | null
+  onCityFilter: (city: string | null) => void
+  shelterFilter: string | null
+  onShelterFilter: (shelterId: string | null) => void
+  cityOptions: string[]
+  shelters: Shelter[] | undefined
+}) {
+  const [open, setOpen] = useState(false)
+  const activeCount = (cityFilter ? 1 : 0) + (shelterFilter ? 1 : 0)
+
+  return (
+    <div className="mb-4">
+      <button
+        type="button"
+        className="text-muted-foreground hover:text-foreground flex items-center gap-1.5 text-xs font-medium transition-colors"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+      >
+        <svg
+          className={cn('size-3.5 transition-transform', open && 'rotate-90')}
+          viewBox="0 0 16 16"
+          fill="currentColor"
+          aria-hidden
+        >
+          <path d="M6.22 4.22a.75.75 0 0 1 1.06 0l3.5 3.5a.75.75 0 0 1 0 1.06l-3.5 3.5a.75.75 0 0 1-1.06-1.06L9.44 8 6.22 4.78a.75.75 0 0 1 0-1.06Z" />
+        </svg>
+        More filters
+        {activeCount > 0 ? (
+          <span className="bg-primary text-primary-foreground inline-flex size-4 items-center justify-center rounded-full text-[10px] font-semibold">
+            {activeCount}
+          </span>
+        ) : null}
+      </button>
+
+      {open ? (
+        <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
+          <select
+            className="border-input bg-background ring-offset-background focus-visible:ring-ring flex h-9 w-full rounded-md border px-3 py-1 text-sm shadow-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+            value={cityFilter ?? ''}
+            onChange={(e) => onCityFilter(e.target.value || null)}
+            aria-label="Filter by city"
+          >
+            <option value="">All cities</option>
+            {cityOptions.map((city) => (
+              <option key={city} value={city}>
+                {city}
+              </option>
+            ))}
+          </select>
+
+          <select
+            className="border-input bg-background ring-offset-background focus-visible:ring-ring flex h-9 w-full rounded-md border px-3 py-1 text-sm shadow-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+            value={shelterFilter ?? ''}
+            onChange={(e) => onShelterFilter(e.target.value || null)}
+            aria-label="Filter by shelter"
+          >
+            <option value="">All shelters</option>
+            {(shelters ?? []).map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      ) : null}
+    </div>
   )
 }

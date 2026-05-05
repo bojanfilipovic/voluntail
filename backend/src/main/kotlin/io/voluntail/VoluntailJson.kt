@@ -2,7 +2,7 @@ package io.voluntail
 
 import kotlinx.serialization.json.Json
 
-/** Shared [Json] for HTTP content negotiation and Exposed `jsonb` columns (same module). */
+/** Shared [Json] instance for HTTP content negotiation. */
 internal val voluntailJson =
     Json {
         ignoreUnknownKeys = true
