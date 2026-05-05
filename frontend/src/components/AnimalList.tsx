@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import type { Animal } from '@/api/animals'
 import type { Shelter } from '@/api/shelters'
 import { SpeciesFilterBar, type SpeciesFilterRow } from '@/components/SpeciesFilterBar'
@@ -76,9 +76,14 @@ export function AnimalList({
   const heartedIds = getHeartedIds()
   const shortlistIds = getShortlistIds()
   const favCount = heartedIds.size
+  const matchCount = shortlistIds.size
+  const [matchesOnly, setMatchesOnly] = useState(false)
+  const handleMatchesToggle = useCallback(() => setMatchesOnly((v) => !v), [])
   const displayAnimals = favoritesOnly
     ? (animals ?? []).filter((a) => heartedIds.has(a.id))
-    : animals
+    : matchesOnly
+      ? (animals ?? []).filter((a) => shortlistIds.has(a.id))
+      : animals
 
   return (
     <section className="text-start" aria-label="Animal list">
@@ -98,21 +103,38 @@ export function AnimalList({
         totalCount={totalAnimalCount}
       />
 
-      {favCount > 0 ? (
-        <div className="mb-3">
-          <button
-            type="button"
-            onClick={onFavoritesToggle}
-            className={cn(
-              'inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors',
-              favoritesOnly
-                ? 'border-rose-300 bg-rose-50 text-rose-700'
-                : 'border-border text-muted-foreground hover:border-rose-200 hover:text-rose-600',
-            )}
-          >
-            <Heart className={cn('size-3', favoritesOnly && 'fill-rose-500')} />
-            My favorites ({favCount})
-          </button>
+      {favCount > 0 || matchCount > 0 ? (
+        <div className="mb-3 flex flex-wrap gap-2">
+          {favCount > 0 ? (
+            <button
+              type="button"
+              onClick={onFavoritesToggle}
+              className={cn(
+                'inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors',
+                favoritesOnly
+                  ? 'border-rose-300 bg-rose-50 text-rose-700 dark:border-rose-700 dark:bg-rose-950/40 dark:text-rose-300'
+                  : 'border-border text-muted-foreground hover:border-rose-200 hover:text-rose-600',
+              )}
+            >
+              <Heart className={cn('size-3', favoritesOnly && 'fill-rose-500')} />
+              My favorites ({favCount})
+            </button>
+          ) : null}
+          {matchCount > 0 ? (
+            <button
+              type="button"
+              onClick={handleMatchesToggle}
+              className={cn(
+                'inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors',
+                matchesOnly
+                  ? 'border-amber-300 bg-amber-50 text-amber-700 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-300'
+                  : 'border-border text-muted-foreground hover:border-amber-200 hover:text-amber-600',
+              )}
+            >
+              <Sparkles className={cn('size-3', matchesOnly && 'fill-amber-500')} />
+              My matches ({matchCount})
+            </button>
+          ) : null}
         </div>
       ) : null}
 
@@ -129,7 +151,7 @@ export function AnimalList({
         <p className="text-muted-foreground text-sm">Loading animals…</p>
       ) : !displayAnimals?.length ? (
         <p className="text-muted-foreground py-8 text-center text-sm">
-          {favoritesOnly ? 'No favorites yet.' : 'No animals found.'}
+          {favoritesOnly ? 'No favorites yet.' : matchesOnly ? 'No matches yet.' : 'No animals found.'}
         </p>
       ) : (
         <ul className="list-none space-y-3 p-0">
