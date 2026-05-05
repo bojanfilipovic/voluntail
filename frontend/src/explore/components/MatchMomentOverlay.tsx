@@ -22,12 +22,12 @@ function lineForMatch(animalId: string): (typeof MESSAGES)[number] {
 
 type Props = {
   animal: Animal
-  displayName: string
   onOpen: (animal: Animal) => void
   onKeepSwiping: () => void
+  rare?: boolean
 }
 
-export function MatchMomentOverlay({ animal, displayName, onOpen, onKeepSwiping }: Props) {
+export function MatchMomentOverlay({ animal, onOpen, onKeepSwiping, rare = false }: Props) {
   const titleId = useId()
   const line = lineForMatch(animal.id)
 
@@ -40,7 +40,8 @@ export function MatchMomentOverlay({ animal, displayName, onOpen, onKeepSwiping 
     >
       <div
         className={cn(
-          'ring-emerald-300/60 bg-card max-w-md overflow-hidden rounded-2xl text-center shadow-2xl ring-2',
+          'bg-card max-w-md overflow-hidden rounded-2xl text-center shadow-2xl ring-2',
+          rare ? 'ring-yellow-400/80 animate-rare-glow' : 'ring-emerald-300/60',
           'animate-in zoom-in-90 slide-in-from-bottom-4 duration-300 motion-reduce:animate-none',
         )}
       >
@@ -64,14 +65,16 @@ export function MatchMomentOverlay({ animal, displayName, onOpen, onKeepSwiping 
         </div>
         <div className="p-6">
           <p id={titleId} className="animate-in fade-in zoom-in-50 text-xl font-bold tracking-tight duration-500 motion-reduce:animate-none">
-            <span className="bg-gradient-to-r from-emerald-500 to-teal-500 bg-clip-text text-transparent">
-              It&apos;s a match!
+            <span className={cn(
+              'bg-clip-text text-transparent',
+              rare
+                ? 'bg-gradient-to-r from-yellow-500 via-amber-500 to-orange-500'
+                : 'bg-gradient-to-r from-emerald-500 to-teal-500',
+            )}>
+              {rare ? 'Rare match!' : "It\u2019s a match!"}
             </span>
           </p>
           <p className="text-muted-foreground mt-2 text-sm leading-relaxed">{line}</p>
-          <p className="mt-4 text-base font-medium">
-            {animal.name} is in your matches, {displayName}.
-          </p>
           <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-center">
             <Button
               type="button"

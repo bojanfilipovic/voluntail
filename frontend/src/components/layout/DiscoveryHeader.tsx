@@ -8,6 +8,7 @@ type Props = {
   appView: AppView
   onGoExplore: () => void
   onGoDirectory: () => void
+  hasMatches?: boolean
 }
 
 /** New element each call — safe for two responsive branches both mounted in the DOM. */
@@ -20,7 +21,8 @@ function DirectoryIntro() {
   )
 }
 
-function ExploreIntro() {
+function ExploreIntro({ hasMatches }: { hasMatches?: boolean }) {
+  if (hasMatches) return null
   return (
     <p className="text-muted-foreground max-w-2xl text-sm leading-relaxed">
       Swipe through animals that are listed as available and see if you land a match!{' '}
@@ -38,7 +40,7 @@ function ShareFeedbackButton({ onShareFeedback }: Pick<Props, 'onShareFeedback'>
   )
 }
 
-export function DiscoveryHeader({ onShareFeedback, appView, onGoExplore, onGoDirectory }: Props) {
+export function DiscoveryHeader({ onShareFeedback, appView, onGoExplore, onGoDirectory, hasMatches }: Props) {
   return (
     <header className="border-border border-b px-4 py-3 md:px-6 md:py-4">
       {/* Mobile & narrow: Voluntail + Share, then intro, then Explore / Back */}
@@ -47,13 +49,12 @@ export function DiscoveryHeader({ onShareFeedback, appView, onGoExplore, onGoDir
           <h1 className="text-lg font-semibold tracking-tight">Voluntail</h1>
           <ShareFeedbackButton onShareFeedback={onShareFeedback} />
         </div>
-        {appView === 'directory' ? <DirectoryIntro /> : <ExploreIntro />}
+        {appView === 'directory' ? <DirectoryIntro /> : <ExploreIntro hasMatches={hasMatches} />}
         <div className="w-full">
           {appView === 'directory' ? (
             <Button
               type="button"
-              variant="secondary"
-              className="w-full md:w-auto"
+              className="w-full bg-emerald-600 text-white hover:bg-emerald-700 md:w-auto"
               onClick={onGoExplore}
             >
               <Compass className="size-4" aria-hidden />
@@ -79,7 +80,11 @@ export function DiscoveryHeader({ onShareFeedback, appView, onGoExplore, onGoDir
           <h1 className="text-lg font-semibold tracking-tight">Voluntail</h1>
           <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
             {appView === 'directory' ? (
-              <Button type="button" variant="secondary" className="md:w-auto" onClick={onGoExplore}>
+              <Button
+                type="button"
+                className="bg-emerald-600 text-white hover:bg-emerald-700 md:w-auto"
+                onClick={onGoExplore}
+              >
                 <Compass className="size-4" aria-hidden />
                 Explore
               </Button>
@@ -92,7 +97,7 @@ export function DiscoveryHeader({ onShareFeedback, appView, onGoExplore, onGoDir
             <ShareFeedbackButton onShareFeedback={onShareFeedback} />
           </div>
         </div>
-        {appView === 'directory' ? <DirectoryIntro /> : <ExploreIntro />}
+        {appView === 'directory' ? <DirectoryIntro /> : <ExploreIntro hasMatches={hasMatches} />}
       </div>
     </header>
   )

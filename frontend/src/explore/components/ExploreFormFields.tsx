@@ -1,7 +1,10 @@
+import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { EXPLORE_INTENTS, type ExploreIntent } from '@/explore/types'
+import { pickFunnyDisplayName } from '@/explore/funnyDisplayNames'
 import { intentLabel } from '@/explore/labels'
+import { Dices } from 'lucide-react'
 
 type Props = {
   /** Controlled — display name in storage (never empty; funny fallback). */
@@ -11,6 +14,8 @@ type Props = {
   onIntentChange: (v: ExploreIntent) => void
   /** Suffix to keep ids unique in DOM when form appears twice (pre-deck + settings). */
   idSuffix: string
+  /** If true, show only the name field (no intent selector). */
+  nameOnly?: boolean
 }
 
 export function ExploreFormFields({
@@ -19,6 +24,7 @@ export function ExploreFormFields({
   intent,
   onIntentChange,
   idSuffix,
+  nameOnly = false,
 }: Props) {
   const s = (k: string) => `${k}-${idSuffix}`
 
@@ -26,28 +32,44 @@ export function ExploreFormFields({
     <div className="grid gap-4">
       <div className="grid gap-2">
         <Label htmlFor={s('name')}>What should we call you?</Label>
-        <Input
-          id={s('name')}
-          value={displayName}
-          onChange={(e) => onDisplayNameChange(e.target.value)}
-          autoComplete="nickname"
-        />
+        <div className="flex gap-2">
+          <Input
+            id={s('name')}
+            value={displayName}
+            onChange={(e) => onDisplayNameChange(e.target.value)}
+            autoComplete="nickname"
+            className="min-w-0 flex-1"
+          />
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            className="shrink-0 transition active:scale-95"
+            onClick={() => onDisplayNameChange(pickFunnyDisplayName())}
+            aria-label="Random name"
+            title="Random name"
+          >
+            <Dices className="size-4" />
+          </Button>
+        </div>
       </div>
-      <div className="grid gap-2">
-        <Label htmlFor={s('intent')}>I&apos;m here to…</Label>
-        <select
-          id={s('intent')}
-          className="border-input bg-background ring-offset-background h-9 w-full rounded-md border px-3 text-sm"
-          value={intent}
-          onChange={(e) => onIntentChange(e.target.value as ExploreIntent)}
-        >
-          {EXPLORE_INTENTS.map((i) => (
-            <option key={i} value={i}>
-              {intentLabel(i)}
-            </option>
-          ))}
-        </select>
-      </div>
+      {!nameOnly && (
+        <div className="grid gap-2">
+          <Label htmlFor={s('intent')}>I&apos;m here to…</Label>
+          <select
+            id={s('intent')}
+            className="border-input bg-background ring-offset-background h-9 w-full rounded-md border px-3 text-sm"
+            value={intent}
+            onChange={(e) => onIntentChange(e.target.value as ExploreIntent)}
+          >
+            {EXPLORE_INTENTS.map((i) => (
+              <option key={i} value={i}>
+                {intentLabel(i)}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
     </div>
   )
 }

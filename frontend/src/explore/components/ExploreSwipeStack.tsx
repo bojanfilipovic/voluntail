@@ -7,7 +7,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { parseAnimalAge } from '@/domain/animalAge'
 import { speciesLabel } from '@/domain/species'
 import { cn } from '@/lib/utils'
-import { SkipForward, ThumbsDown, ThumbsUp } from 'lucide-react'
+import { Heart, SkipForward, X } from 'lucide-react'
 
 const SWIPE_THRESHOLD = 100
 const EXIT_DURATION = 280
@@ -22,6 +22,10 @@ type Props = {
   singleCardSkipNudge: boolean
   remaining?: number
   busy?: boolean
+  /** Show rare golden glow on this card (rare match outcome). */
+  rareCard?: boolean
+  /** Current streak count for consecutive matches. */
+  streak?: number
 }
 
 export function ExploreSwipeStack({
@@ -32,6 +36,8 @@ export function ExploreSwipeStack({
   singleCardSkipNudge,
   remaining,
   busy = false,
+  rareCard = false,
+  streak = 0,
 }: Props) {
   const [dragX, setDragX] = useState(0)
   const [exitDir, setExitDir] = useState<ExitDir>(null)
@@ -115,6 +121,11 @@ export function ExploreSwipeStack({
 
   return (
     <div className="flex h-full min-h-0 w-full max-w-md flex-1 flex-col">
+      {streak >= 2 && (
+        <p className="text-center text-xs font-semibold text-amber-600 dark:text-amber-400" role="status">
+          {streak} matches in a row!
+        </p>
+      )}
       {singleCardSkipNudge ? (
         <p className="text-muted-foreground text-center text-xs" role="status">
           Only this animal left. Still unsure? You can pass or try for a match.
@@ -128,7 +139,7 @@ export function ExploreSwipeStack({
         <div
           key={current.id}
           className={cn(
-            'relative mx-auto w-full animate-in fade-in scale-in-95 duration-200 motion-reduce:animate-none',
+            'relative mx-auto w-full animate-card-flip-in motion-reduce:animate-none',
             !exitDir && 'transition-transform duration-200 ease-out motion-reduce:transition-none',
             (busy || !!exitDir) && 'pointer-events-none',
             busy && 'opacity-50',
@@ -172,6 +183,7 @@ export function ExploreSwipeStack({
               "motion-reduce:transition-none",
               exitDir === 'right' && 'ring-2 ring-emerald-400',
               exitDir === 'left' && 'ring-2 ring-rose-400',
+              rareCard && !exitDir && 'ring-2 ring-yellow-400 animate-rare-glow motion-reduce:animate-none',
             )}
           >
             <div className="bg-muted/60 relative flex h-[min(32vh,15rem)] w-full items-center justify-center p-2 sm:h-64">
@@ -214,40 +226,37 @@ export function ExploreSwipeStack({
             type="button"
             variant="outline"
             size="default"
-            className="min-w-0 flex-1 h-11 sm:h-9 border-rose-500/30 text-rose-800 transition active:scale-[0.97] motion-reduce:transition-none sm:min-w-[4.5rem] sm:flex-initial"
+            className="min-w-0 flex-1 h-12 sm:h-10 rounded-full border-rose-200 bg-rose-50 text-rose-600 shadow-sm transition active:scale-[0.93] hover:bg-rose-100 motion-reduce:transition-none sm:min-w-[4.5rem] sm:flex-initial dark:border-rose-800 dark:bg-rose-950 dark:text-rose-400"
             onClick={handlePass}
             disabled={busy || !!exitDir}
             aria-label="Not for me"
           >
-            <ThumbsDown aria-hidden className="size-4" />
-            No
+            <X aria-hidden className="size-5" strokeWidth={2.5} />
           </Button>
           <Button
             type="button"
             variant="secondary"
             size="default"
-            className="min-w-0 flex-1 h-11 sm:h-9 text-foreground transition active:scale-[0.97] motion-reduce:transition-none sm:min-w-[4.5rem] sm:flex-initial"
+            className="min-w-0 flex-1 h-10 sm:h-9 rounded-full text-foreground transition active:scale-[0.95] motion-reduce:transition-none sm:min-w-[3.5rem] sm:flex-initial"
             onClick={onSkip}
             disabled={busy || !!exitDir}
             aria-label="Decide later; this animal is shown again after the others in this round"
           >
             <SkipForward aria-hidden className="size-4" />
-            Skip
           </Button>
           <Button
             type="button"
             size="default"
-            className="min-w-0 flex-1 h-11 sm:h-9 bg-emerald-600 text-white transition active:scale-[0.97] motion-reduce:transition-none hover:bg-emerald-700 sm:min-w-[4.5rem] sm:flex-initial"
+            className="min-w-0 flex-1 h-12 sm:h-10 rounded-full border-emerald-200 bg-emerald-50 text-emerald-600 shadow-sm transition active:scale-[0.93] hover:bg-emerald-100 motion-reduce:transition-none sm:min-w-[4.5rem] sm:flex-initial dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-400"
             onClick={handleLike}
             disabled={busy || !!exitDir}
             aria-label="Yes, try for a match"
           >
-            <ThumbsUp aria-hidden className="size-4" />
-            Yes
+            <Heart aria-hidden className="size-5" fill="currentColor" />
           </Button>
         </div>
         <p className="text-muted-foreground text-center text-[0.7rem] leading-tight sm:text-xs">
-          Skip is not a no &mdash; you see this one again after the rest in this round.
+          Skip = see again later. Not a no.
         </p>
       </div>
     </div>

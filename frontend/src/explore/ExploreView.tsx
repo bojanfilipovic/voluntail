@@ -17,7 +17,7 @@ import { buildDeck } from '@/explore/buildDeck'
 import { ExploreFormFields } from '@/explore/components/ExploreFormFields'
 import { ExploreSwipeStack } from '@/explore/components/ExploreSwipeStack'
 import { MatchMomentOverlay } from '@/explore/components/MatchMomentOverlay'
-import { rollMatchMoment } from '@/explore/matchMomentConfig'
+import { rollMatchMoment, rollRareMatch } from '@/explore/matchMomentConfig'
 import { shuffleIdsInPlace } from '@/explore/shuffleIds'
 import { useExploreSessionState } from '@/explore/useExploreSessionState'
 import { cn } from '@/lib/utils'
@@ -84,6 +84,7 @@ export function ExploreView({ onBack, onOpenAnimal }: Props) {
 
 
   const [matchAnimal, setMatchAnimal] = useState<Animal | null>(null)
+  const [isRareMatch, setIsRareMatch] = useState(false)
   const [lowKeySaveName, setLowKeySaveName] = useState<string | null>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [localDataConfirm, setLocalDataConfirm] = useState<null | 'reshuffle' | 'startOver'>(null)
@@ -91,10 +92,11 @@ export function ExploreView({ onBack, onOpenAnimal }: Props) {
   const [shuffleKey, setShuffleKey] = useState(0)
   const [deckOrder, setDeckOrder] = useState<string[]>([])
   const [singleSkipNudge, setSingleSkipNudge] = useState(false)
+  const [streak, setStreak] = useState(0)
 
   useEffect(() => {
     if (!lowKeySaveName) return
-    const t = window.setTimeout(() => setLowKeySaveName(null), 3500)
+    const t = window.setTimeout(() => setLowKeySaveName(null), 2500)
     return () => window.clearTimeout(t)
   }, [lowKeySaveName])
 
@@ -214,6 +216,8 @@ export function ExploreView({ onBack, onOpenAnimal }: Props) {
         ...s,
         shortlistIds: s.shortlistIds.includes(a.id) ? s.shortlistIds : [...s.shortlistIds, a.id],
       }))
+      setStreak((s) => s + 1)
+      setIsRareMatch(rollRareMatch())
       setMatchAnimal(a)
     } else {
       patch((s) => ({
@@ -222,6 +226,7 @@ export function ExploreView({ onBack, onOpenAnimal }: Props) {
           ? s.yesNotMatchIds
           : [...s.yesNotMatchIds, a.id],
       }))
+      setStreak(0)
       setLowKeySaveName(a.name)
     }
     setDeckOrder((d) => d.slice(1))
@@ -261,6 +266,7 @@ export function ExploreView({ onBack, onOpenAnimal }: Props) {
   const onPassSwipe = () => {
     if (!current) return
     passCurrent(current.id)
+    setStreak(0)
     setDeckOrder((d) => d.slice(1))
   }
 
@@ -352,6 +358,7 @@ export function ExploreView({ onBack, onOpenAnimal }: Props) {
                 onDisplayNameChange={setDisplayName}
                 intent={session.intent}
                 onIntentChange={(intent) => patch((s) => ({ ...s, intent }))}
+                nameOnly
               />
               <Button
                 type="button"
@@ -412,6 +419,7 @@ export function ExploreView({ onBack, onOpenAnimal }: Props) {
                     singleCardSkipNudge={singleSkipNudge}
                     remaining={deckOrder.length}
                     busy={Boolean(matchAnimal)}
+                    streak={streak}
                   />
                 </div>
               )
@@ -422,8 +430,9 @@ export function ExploreView({ onBack, onOpenAnimal }: Props) {
 
       {lowKeySaveName ? (
         <div
-          className="pointer-events-none fixed inset-x-4 bottom-24 z-40 mx-auto max-w-md animate-in slide-in-from-bottom-4 zoom-in-95 duration-300 motion-reduce:animate-none rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm shadow-lg dark:border-amber-800 dark:bg-amber-950 sm:bottom-36"
+          className="fixed inset-x-4 bottom-24 z-40 mx-auto max-w-md cursor-pointer animate-in slide-in-from-bottom-4 zoom-in-95 duration-300 motion-reduce:animate-none rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm shadow-lg dark:border-amber-800 dark:bg-amber-950 sm:bottom-36"
           role="status"
+          onClick={() => setLowKeySaveName(null)}
         >
           <p className="text-center text-amber-900 dark:text-amber-100">
             <span className="text-base">&#128064;</span>{' '}
@@ -435,12 +444,13 @@ export function ExploreView({ onBack, onOpenAnimal }: Props) {
       {matchAnimal ? (
         <MatchMomentOverlay
           animal={matchAnimal}
-          displayName={session.displayName}
+          rare={isRareMatch}
           onOpen={(a) => {
             onOpenAnimal(a)
             setMatchAnimal(null)
+            setIsRareMatch(false)
           }}
-          onKeepSwiping={() => setMatchAnimal(null)}
+          onKeepSwiping={() => { setMatchAnimal(null); setIsRareMatch(false) }}
         />
       ) : null}
 
