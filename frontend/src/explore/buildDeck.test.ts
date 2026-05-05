@@ -13,6 +13,8 @@ const sample = (over: Partial<Animal> & { id: string }): Animal => ({
   published: over.published ?? true,
   imageUrl: over.imageUrl ?? null,
   externalUrl: over.externalUrl ?? null,
+  createdAt: over.createdAt ?? '2026-05-01T00:00:00Z',
+  heartCount: over.heartCount ?? 0,
 })
 
 describe('buildDeck', () => {
