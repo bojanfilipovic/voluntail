@@ -7,7 +7,7 @@ export const FUNNY_DISPLAY_NAME_SAMPLES = [
   'Chaos, But Make It Cuddly',
   'Emotionally Available for Snoots',
   'Professional Zoomies Spectator',
-  'One More Won't Hurt (It Will)',
+  "One More Won't Hurt (It Will)",
   'Head of Snack Negotiations',
   'Fluffy Enabler Anonymous',
   'Walking Red Flag (For My Landlord)',

@@ -11,6 +11,16 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  build: {
+    rollupOptions: {
+      external: ['mapbox-gl'],
+      output: {
+        globals: {
+          'mapbox-gl': 'mapboxgl',
+        },
+      },
+    },
+  },
   server: {
     proxy: {
       '/api': { target: 'http://localhost:8080', changeOrigin: true },
