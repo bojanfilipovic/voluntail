@@ -1,6 +1,6 @@
 import type { Shelter } from '@/api/shelters'
 import { SpeciesFilterBar, type SpeciesFilterRow } from '@/components/SpeciesFilterBar'
-import { speciesLabel, type ShelterSpecies } from '@/domain/species'
+import { speciesLabel, type SpeciesFilterValue } from '@/domain/species'
 import { cn } from '@/lib/utils'
 
 type Props = {
@@ -10,8 +10,8 @@ type Props = {
   totalShelterCount: number | undefined
   selectedId: string | null
   onSelectShelter: (s: Shelter) => void
-  speciesFilter: ShelterSpecies | null
-  onSpeciesFilter: (species: ShelterSpecies | null) => void
+  speciesFilter: SpeciesFilterValue | null
+  onSpeciesFilter: (species: SpeciesFilterValue | null) => void
   speciesFilters: SpeciesFilterRow[]
 }
 

@@ -1,13 +1,15 @@
 import { Button } from '@/components/ui/button'
-import { speciesLabel, type ShelterSpecies } from '@/domain/species'
+import { speciesLabel, type ShelterSpecies, type SpeciesFilterValue } from '@/domain/species'
 import { cn } from '@/lib/utils'
 
-export type SpeciesFilterRow = { species: ShelterSpecies; count: number }
+export type SpeciesFilterRow =
+  | { kind: 'single'; species: ShelterSpecies; count: number }
+  | { kind: 'group'; key: 'others'; label: string; count: number }
 
 type Props = {
   filters: SpeciesFilterRow[]
-  selected: ShelterSpecies | null
-  onSelect: (species: ShelterSpecies | null) => void
+  selected: SpeciesFilterValue | null
+  onSelect: (value: SpeciesFilterValue | null) => void
   totalCount?: number
 }
 
@@ -28,24 +30,30 @@ export function SpeciesFilterBar({ filters, selected, onSelect, totalCount }: Pr
           <span className="text-muted-foreground ml-1 tabular-nums">: {totalCount}</span>
         ) : null}
       </Button>
-      {filters.map(({ species: sp, count }) => (
-        <Button
-          key={sp}
-          type="button"
-          size="sm"
-          variant={selected === sp ? 'default' : 'outline'}
-          className={cn(
-            count === 0 &&
-              selected !== sp &&
-              'text-muted-foreground opacity-55 hover:opacity-80',
-          )}
-          aria-pressed={selected === sp}
-          onClick={() => onSelect(selected === sp ? null : sp)}
-        >
-          <span>{speciesLabel(sp)}</span>
-          <span className="text-muted-foreground ml-1 tabular-nums">: {count}</span>
-        </Button>
-      ))}
+      {filters.map((row) => {
+        const key = row.kind === 'single' ? row.species : row.key
+        const label = row.kind === 'single' ? speciesLabel(row.species) : row.label
+        const value: SpeciesFilterValue = row.kind === 'single' ? row.species : 'others'
+        const isSelected = selected === value
+        return (
+          <Button
+            key={key}
+            type="button"
+            size="sm"
+            variant={isSelected ? 'default' : 'outline'}
+            className={cn(
+              row.count === 0 &&
+                !isSelected &&
+                'text-muted-foreground opacity-55 hover:opacity-80',
+            )}
+            aria-pressed={isSelected}
+            onClick={() => onSelect(isSelected ? null : value)}
+          >
+            <span>{label}</span>
+            <span className="text-muted-foreground ml-1 tabular-nums">: {row.count}</span>
+          </Button>
+        )
+      })}
     </div>
   )
 }

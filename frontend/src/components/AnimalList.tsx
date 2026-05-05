@@ -1,7 +1,7 @@
 import type { Animal } from '@/api/animals'
 import type { Shelter } from '@/api/shelters'
 import { SpeciesFilterBar, type SpeciesFilterRow } from '@/components/SpeciesFilterBar'
-import { speciesLabel, type ShelterSpecies } from '@/domain/species'
+import { speciesLabel, type ShelterSpecies, type SpeciesFilterValue } from '@/domain/species'
 import type { AnimalStatus } from '@/schemas/animals'
 import { cn } from '@/lib/utils'
 
@@ -29,8 +29,8 @@ type Props = {
   onCityFilter: (city: string | null) => void
   shelterFilter: string | null
   onShelterFilter: (shelterId: string | null) => void
-  speciesFilter: ShelterSpecies | null
-  onSpeciesFilter: (species: ShelterSpecies | null) => void
+  speciesFilter: SpeciesFilterValue | null
+  onSpeciesFilter: (species: SpeciesFilterValue | null) => void
   /** Distinct cities from shelter directory (stable sort); filter is applied server-side. */
   cityOptions: string[]
   speciesFilters: SpeciesFilterRow[]

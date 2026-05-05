@@ -26,6 +26,19 @@ export function speciesLabel(sp: ShelterSpecies): string {
   return labels[sp]
 }
 
+/** Primary species shown as individual filter buttons. */
+export const PRIMARY_SPECIES: ShelterSpecies[] = ['dog', 'cat', 'rabbit', 'reptile']
+
+/** Species grouped under "Others" in filter UI. */
+export const OTHER_SPECIES: ShelterSpecies[] = ['rodent', 'amphibian', 'wildlife', 'arachnid']
+
+/** Filter value: individual species OR the "others" group. */
+export type SpeciesFilterValue = ShelterSpecies | 'others'
+
+export function isOtherSpecies(sp: ShelterSpecies): boolean {
+  return (OTHER_SPECIES as readonly string[]).includes(sp)
+}
+
 /** Stable order for API payloads (canonical vocabulary order). */
 export function sortShelterSpecies(list: ShelterSpecies[]): ShelterSpecies[] {
   const order = new Map(SPECIES_VALUES.map((s, i) => [s, i]))
