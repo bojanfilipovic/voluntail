@@ -249,10 +249,11 @@ function App() {
     if (!initialAnimalId || deepLinkHandled.current || !animals) return
     deepLinkHandled.current = true
     const target = animals.find((a) => a.id === initialAnimalId)
-    if (target) {
-      handleSelectAnimal(target)
-    }
     clearAnimalIdFromUrl()
+    if (!target) return
+    // Schedule after current render to avoid cascading setState in effect
+    const id = requestAnimationFrame(() => handleSelectAnimal(target))
+    return () => cancelAnimationFrame(id)
   }, [initialAnimalId, animals, handleSelectAnimal])
 
   const handleCloseAnimalDetail = useCallback(() => {
