@@ -1,3 +1,4 @@
+import { Analytics } from '@vercel/analytics/react'
 import { useQuery } from '@tanstack/react-query'
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { fetchAnimals } from '@/api/animals'
@@ -511,6 +512,7 @@ function App() {
         }}
         context={feedbackContext}
       />
+      <Analytics />
     </div>
   )
 }
