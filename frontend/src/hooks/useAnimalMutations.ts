@@ -14,6 +14,7 @@ import {
   type AnimalPatchPayload,
 } from '@/api/animals'
 import { toQueryError } from '@/lib/queryError'
+import { animalQueryKeys } from '@/lib/queryKeys'
 export interface AnimalMutationsApi {
   cmsError: string | null
   setCmsError: Dispatch<SetStateAction<string | null>>
@@ -28,7 +29,7 @@ export interface AnimalMutationsApi {
 }
 
 async function invalidateAnimalLists(queryClient: QueryClient): Promise<void> {
-  await queryClient.invalidateQueries({ queryKey: ['animals'] })
+  await queryClient.invalidateQueries({ queryKey: animalQueryKeys.root })
 }
 
 export function useAnimalMutations(): AnimalMutationsApi {

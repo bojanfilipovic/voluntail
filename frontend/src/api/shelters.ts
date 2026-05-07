@@ -10,6 +10,7 @@ import {
   type Shelter,
   type ShelterPatchPayload,
 } from '@/schemas/shelters'
+import { buildCmsHeaders } from '@/lib/cmsHeaders'
 
 export type { Shelter }
 export type { ShelterPatchPayload }
@@ -28,14 +29,6 @@ export type ShelterCreatePayload = {
 
 const SHELTERS_URL = '/api/shelters'
 const INVALID_JSON_SHELTERS = 'Invalid JSON from /api/shelters'
-
-const CMS_HEADER = 'X-CMS-Key'
-
-function cmsHeaders(): HeadersInit {
-  const key = import.meta.env.VITE_CMS_API_KEY?.trim()
-  if (!key) return {}
-  return { [CMS_HEADER]: key }
-}
 
 export async function fetchShelters(): Promise<Shelter[]> {
   let res: Response
@@ -58,7 +51,7 @@ export async function createShelter(body: ShelterCreatePayload): Promise<Shelter
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        ...cmsHeaders(),
+        ...buildCmsHeaders(),
       },
       body: JSON.stringify(body),
     })
@@ -77,7 +70,7 @@ export async function deleteShelter(id: string): Promise<void> {
   try {
     res = await fetch(`${SHELTERS_URL}/${encodeURIComponent(id)}`, {
       method: 'DELETE',
-      headers: { ...cmsHeaders() },
+      headers: { ...buildCmsHeaders() },
     })
   } catch (e) {
     throw errorFromFetchFailure(e)
@@ -98,7 +91,7 @@ export async function updateShelter(
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
-        ...cmsHeaders(),
+        ...buildCmsHeaders(),
       },
       body: JSON.stringify(body),
     })

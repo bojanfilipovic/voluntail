@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button'
 import type { DraftFlow } from '@/hooks/useShelterDiscoveryState'
 import type { SpeciesFilterValue } from '@/domain/species'
 import { MapLoadingFallback } from '@/directory/MapLoadingFallback'
+import type { DirectoryTab } from '@/directory/types'
 import { Dices } from 'lucide-react'
 
 /** Same as MapCenter from ShelterMap — duplicated here to avoid a static import of the map module next to a lazy() of it. */
@@ -22,8 +23,6 @@ const ShelterMapLazy = lazy(async () => {
   const mod = await import('@/components/ShelterMap')
   return { default: mod.ShelterMap }
 })
-
-type DirectoryTab = 'shelters' | 'animals'
 
 /**
  * Map + list area for the directory (no modals). State and queries live in the parent

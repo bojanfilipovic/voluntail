@@ -1,6 +1,6 @@
 import { Analytics } from '@vercel/analytics/react'
 import { useQuery } from '@tanstack/react-query'
-import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { lazy, Suspense, useCallback, useMemo, useState } from 'react'
 import { fetchAnimals } from '@/api/animals'
 import type { Animal } from '@/api/animals'
 import { fetchShelters, type Shelter } from '@/api/shelters'
@@ -14,16 +14,16 @@ import { ShareFeedbackDialog } from '@/components/ShareFeedbackDialog'
 import { SuggestShelterDialog } from '@/components/SuggestShelterDialog'
 import { DiscoveryHeader } from '@/components/layout/DiscoveryHeader'
 import { WelcomeOverlay } from '@/components/WelcomeOverlay'
+import { useAnimalDeepLink } from '@/hooks/useAnimalDeepLink'
 import { useAnimalMutations } from '@/hooks/useAnimalMutations'
+import { useAppViewNavigation } from '@/hooks/useAppViewNavigation'
+import { useDiscoveryDerived } from '@/hooks/useDiscoveryDerived'
 import { useShelterDiscoveryState } from '@/hooks/useShelterDiscoveryState'
 import { useShelterMutations } from '@/hooks/useShelterMutations'
 import { isOtherSpecies, type SpeciesFilterValue } from '@/domain/species'
-import { buildSpeciesFilterRows, countSpecies, filterBySpecies } from '@/domain/speciesFilter'
 import { DirectoryLayout } from '@/directory/DirectoryLayout'
-import { getInitialAppView, getAnimalIdFromUrl, clearAnimalIdFromUrl, replaceAppViewInUrl, type AppView } from '@/directory/urlState'
-import { EXPLORE_STORAGE_KEY } from '@/explore/types'
+import type { DirectoryTab } from '@/directory/types'
 import { useTheme } from '@/hooks/useTheme'
-import { toQueryError } from '@/lib/queryError'
 import { animalQueryKeys, shelterQueryKeys } from '@/lib/queryKeys'
 
 const ExploreViewLazy = lazy(async () => {
@@ -31,27 +31,14 @@ const ExploreViewLazy = lazy(async () => {
   return { default: mod.ExploreView }
 })
 
-type DirectoryTab = 'shelters' | 'animals'
-
 function App() {
   const { theme, resolved, cycleTheme } = useTheme()
   const mutations = useShelterMutations()
   const animalMutations = useAnimalMutations()
+  const { appView, exploreHasMatches, navigateView } = useAppViewNavigation()
 
-  const [appView, setAppView] = useState<AppView>(getInitialAppView)
-  const [exploreHasMatches, setExploreHasMatches] = useState(() => {
-    try {
-      const raw = localStorage.getItem(EXPLORE_STORAGE_KEY)
-      if (!raw) return false
-      const o = JSON.parse(raw) as { shortlistIds?: unknown }
-      return Array.isArray(o.shortlistIds) && o.shortlistIds.length > 0
-    } catch { return false }
-  })
   const [directoryTab, setDirectoryTab] = useState<DirectoryTab>('shelters')
   const [speciesFilter, setSpeciesFilter] = useState<SpeciesFilterValue | null>(null)
-
-  const [initialAnimalId] = useState(getAnimalIdFromUrl)
-  const deepLinkHandled = useRef(false)
 
   const [animalCityFilter, setAnimalCityFilter] = useState<string | null>(null)
   const [animalShelterFilter, setAnimalShelterFilter] = useState<string | null>(null)
@@ -95,66 +82,26 @@ function App() {
     queryFn: () => fetchAnimals(animalListQuery),
   })
 
-  const queryError = useMemo(() => toQueryError(error), [error])
-  const animalsQueryError = useMemo(() => toQueryError(animalsError), [animalsError])
-
-  const directoryAlert = useMemo((): Error | null => {
-    const q = directoryTab === 'shelters' ? queryError : animalsQueryError
-    const cmsText =
-      directoryTab === 'shelters' ? mutations.cmsError : animalMutations.cmsError
-    if (q?.message && cmsText && q.message === cmsText) {
-      return q
-    }
-    if (q) return q
-    if (cmsText) return new Error(cmsText)
-    return null
-  }, [
+  const {
+    directoryAlert,
+    shelterCityOptions,
+    filteredShelters,
+    mapShelters,
+    speciesFilters,
+    filteredAnimals,
+    animalSpeciesFilters,
+    communityStats,
+  } = useDiscoveryDerived({
     directoryTab,
-    queryError,
-    animalsQueryError,
-    mutations.cmsError,
-    animalMutations.cmsError,
-  ])
-
-  const shelterCityOptions = useMemo(() => {
-    const set = new Set<string>()
-    for (const s of data ?? []) {
-      const c = s.city.trim()
-      if (c) set.add(c)
-    }
-    return [...set].sort((a, b) => a.localeCompare(b))
-  }, [data])
-
-  const filteredShelters = useMemo(
-    () => (data ? filterBySpecies(data, speciesFilter, (s) => s.species) : undefined),
-    [data, speciesFilter],
-  )
-
-  const mapShelters = useMemo(() => {
-    if (directoryTab === 'animals') return data ?? []
-    return filteredShelters ?? []
-  }, [directoryTab, data, filteredShelters])
-
-  const speciesFilters = useMemo(
-    () => buildSpeciesFilterRows(countSpecies(data ?? [], (s) => s.species)),
-    [data],
-  )
-
-  const filteredAnimals = useMemo(
-    () => (animals ? filterBySpecies(animals, animalSpeciesFilter, (a) => a.species) : undefined),
-    [animals, animalSpeciesFilter],
-  )
-
-  const animalSpeciesFilters = useMemo(
-    () => buildSpeciesFilterRows(countSpecies(animals ?? [], (a) => a.species)),
-    [animals],
-  )
-
-  const communityStats = useMemo(() => ({
-    shelters: data?.length,
-    animals: animals?.length,
-    hearts: animals?.reduce((s, a) => s + a.heartCount, 0),
-  }), [data, animals])
+    speciesFilter,
+    animalSpeciesFilter,
+    shelterRows: data,
+    animalRows: animals,
+    shelterQueryError: error,
+    animalsQueryError: animalsError,
+    shelterCmsError: mutations.cmsError,
+    animalCmsError: animalMutations.cmsError,
+  })
 
   const {
     mapRef,
@@ -246,17 +193,7 @@ function App() {
     [data, clearSelection, mapRef],
   )
 
-  // Deep link: open animal modal when ?animal=ID is in URL
-  useEffect(() => {
-    if (!initialAnimalId || deepLinkHandled.current || !animals) return
-    deepLinkHandled.current = true
-    const target = animals.find((a) => a.id === initialAnimalId)
-    clearAnimalIdFromUrl()
-    if (!target) return
-    // Schedule after current render to avoid cascading setState in effect
-    const id = requestAnimationFrame(() => handleSelectAnimal(target))
-    return () => cancelAnimationFrame(id)
-  }, [initialAnimalId, animals, handleSelectAnimal])
+  useAnimalDeepLink(animals, handleSelectAnimal)
 
   const handleCloseAnimalDetail = useCallback(() => {
     setAnimalDetailOpen(false)
@@ -310,18 +247,6 @@ function App() {
     })
     setFeedbackOpen(true)
   }, [selectedAnimal])
-
-  const navigateView = useCallback((next: AppView) => {
-    setAppView(next)
-    replaceAppViewInUrl(next)
-    try {
-      const raw = localStorage.getItem(EXPLORE_STORAGE_KEY)
-      if (raw) {
-        const o = JSON.parse(raw) as { shortlistIds?: unknown }
-        setExploreHasMatches(Array.isArray(o.shortlistIds) && o.shortlistIds.length > 0)
-      }
-    } catch { /* ignore */ }
-  }, [])
 
   // 404 catch-all: if the path is not root, show a not-found message
   if (window.location.pathname !== '/') {

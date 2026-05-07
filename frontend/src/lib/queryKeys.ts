@@ -11,7 +11,10 @@ export type AnimalListQuery = {
 }
 
 export const animalQueryKeys = {
-  list: (filters: AnimalListQuery) => ['animals', filters] as const,
+  /** Prefix for all animal list queries — use for invalidations after CMS mutations. */
+  root: ['animals'] as const,
+  list: (filters: AnimalListQuery) => [...animalQueryKeys.root, filters] as const,
   /** No CMS: public directory only. Used by Explore so drafts are never mixed into swipes. */
-  explore: (filters: AnimalListQuery) => ['animals', 'public', filters] as const,
+  explore: (filters: AnimalListQuery) =>
+    [...animalQueryKeys.root, 'public', filters] as const,
 }

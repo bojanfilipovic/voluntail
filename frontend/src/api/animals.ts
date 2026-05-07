@@ -1,4 +1,5 @@
 import {
+  animalHeartResponseSchema,
   animalSchema,
   animalsListSchema,
   type Animal,
@@ -6,6 +7,7 @@ import {
 } from '@/schemas/animals'
 import type { ShelterSpecies } from '@/domain/species'
 import type { AnimalListQuery } from '@/lib/queryKeys'
+import { buildCmsHeaders } from '@/lib/cmsHeaders'
 import { errorFromFetchFailure, errorMessageFromResponse } from '@/lib/apiErrors'
 import { parseJsonResponse } from '@/lib/http'
 import type { AnimalStatus } from '@/schemas/animals'
@@ -28,14 +30,7 @@ export type AnimalCreatePayload = {
 
 const ANIMALS_URL = '/api/animals'
 const INVALID_JSON_ANIMALS = 'Invalid JSON from /api/animals'
-
-const CMS_HEADER = 'X-CMS-Key'
-
-function cmsHeaders(): HeadersInit {
-  const key = import.meta.env.VITE_CMS_API_KEY?.trim()
-  if (!key) return {}
-  return { [CMS_HEADER]: key }
-}
+const INVALID_JSON_HEART = 'Invalid JSON from heart endpoint'
 
 function buildListUrl(filters: AnimalListQuery): string {
   const p = new URLSearchParams()
@@ -66,7 +61,7 @@ export async function fetchAnimals(filters: AnimalListQuery): Promise<Animal[]> 
   let res: Response
   try {
     res = await fetch(buildListUrl(filters), {
-      headers: { ...cmsHeaders() },
+      headers: { ...buildCmsHeaders() },
     })
   } catch (e) {
     throw errorFromFetchFailure(e)
@@ -85,7 +80,7 @@ export async function createAnimal(body: AnimalCreatePayload): Promise<Animal> {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        ...cmsHeaders(),
+        ...buildCmsHeaders(),
       },
       body: JSON.stringify(body),
     })
@@ -109,7 +104,7 @@ export async function updateAnimal(
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
-        ...cmsHeaders(),
+        ...buildCmsHeaders(),
       },
       body: JSON.stringify(body),
     })
@@ -128,7 +123,7 @@ export async function deleteAnimal(id: string): Promise<void> {
   try {
     res = await fetch(`${ANIMALS_URL}/${encodeURIComponent(id)}`, {
       method: 'DELETE',
-      headers: { ...cmsHeaders() },
+      headers: { ...buildCmsHeaders() },
     })
   } catch (e) {
     throw errorFromFetchFailure(e)
@@ -151,5 +146,6 @@ export async function heartAnimal(id: string): Promise<{ heartCount: number }> {
   if (!res.ok) {
     throw new Error(await errorMessageFromResponse(res, 'default'))
   }
-  return (await parseJsonResponse(res, 'Invalid JSON from heart endpoint')) as { heartCount: number }
+  const raw = await parseJsonResponse(res, INVALID_JSON_HEART)
+  return animalHeartResponseSchema.parse(raw)
 }

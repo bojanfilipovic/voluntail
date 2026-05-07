@@ -46,3 +46,9 @@ export const animalPatchPayloadSchema = z.object({
 })
 
 export type AnimalPatchPayload = z.infer<typeof animalPatchPayloadSchema>
+
+export const animalHeartResponseSchema = z.object({
+  heartCount: z.number(),
+})
+
+export type AnimalHeartResponse = z.infer<typeof animalHeartResponseSchema>
