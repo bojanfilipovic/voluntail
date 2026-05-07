@@ -22,6 +22,11 @@ object AnimalSamples {
                 species = ShelterSpecies.dog,
                 status = AnimalStatus.available,
                 published = true,
+                imageUrls =
+                    listOf(
+                        "https://picsum.photos/seed/voluntail-ph-dog-milo/400/400",
+                        "https://picsum.photos/seed/voluntail-ph-dog-milo-b/400/400",
+                    ),
                 imageUrl = "https://picsum.photos/seed/voluntail-ph-dog-milo/400/400",
                 externalUrl = null,
                 createdAt = now,
@@ -37,6 +42,11 @@ object AnimalSamples {
                 species = ShelterSpecies.cat,
                 status = AnimalStatus.available,
                 published = true,
+                imageUrls =
+                    listOf(
+                        "https://picsum.photos/seed/voluntail-ph-cat-luna/400/400",
+                        "https://picsum.photos/seed/voluntail-ph-cat-luna-b/400/400",
+                    ),
                 imageUrl = "https://picsum.photos/seed/voluntail-ph-cat-luna/400/400",
                 externalUrl = null,
                 createdAt = now,
@@ -51,6 +61,11 @@ object AnimalSamples {
                 species = ShelterSpecies.rabbit,
                 status = AnimalStatus.available,
                 published = true,
+                imageUrls =
+                    listOf(
+                        "https://picsum.photos/seed/voluntail-ph-rabbit-tonic/400/400",
+                        "https://picsum.photos/seed/voluntail-ph-rabbit-tonic-b/400/400",
+                    ),
                 imageUrl = "https://picsum.photos/seed/voluntail-ph-rabbit-tonic/400/400",
                 externalUrl = null,
                 createdAt = now,
@@ -66,6 +81,7 @@ object AnimalSamples {
                 species = ShelterSpecies.dog,
                 status = AnimalStatus.reserved,
                 published = false,
+                imageUrls = emptyList(),
                 imageUrl = null,
                 externalUrl = null,
                 createdAt = now,
@@ -80,6 +96,11 @@ object AnimalSamples {
                 species = ShelterSpecies.reptile,
                 status = AnimalStatus.available,
                 published = true,
+                imageUrls =
+                    listOf(
+                        "https://picsum.photos/seed/voluntail-ph-reptile-rex/400/400",
+                        "https://picsum.photos/seed/voluntail-ph-reptile-rex-b/400/400",
+                    ),
                 imageUrl = "https://picsum.photos/seed/voluntail-ph-reptile-rex/400/400",
                 externalUrl = null,
                 createdAt = now,
@@ -94,6 +115,11 @@ object AnimalSamples {
                 species = ShelterSpecies.arachnid,
                 status = AnimalStatus.available,
                 published = true,
+                imageUrls =
+                    listOf(
+                        "https://picsum.photos/seed/voluntail-ph-arachnid-1677-25-maart-2026-vogelspin-sling-castricum/400/400",
+                        "https://picsum.photos/seed/voluntail-ph-arachnid-b/400/400",
+                    ),
                 imageUrl =
                     "https://picsum.photos/seed/voluntail-ph-arachnid-1677-25-maart-2026-vogelspin-sling-castricum/400/400",
                 externalUrl = null,
@@ -109,6 +135,11 @@ object AnimalSamples {
                 species = ShelterSpecies.amphibian,
                 status = AnimalStatus.available,
                 published = true,
+                imageUrls =
+                    listOf(
+                        "https://picsum.photos/seed/voluntail-ph-amphibian-1666-5-maart-2026-salamander-haarlem/400/400",
+                        "https://picsum.photos/seed/voluntail-ph-amphibian-b/400/400",
+                    ),
                 imageUrl =
                     "https://picsum.photos/seed/voluntail-ph-amphibian-1666-5-maart-2026-salamander-haarlem/400/400",
                 externalUrl = null,
@@ -124,6 +155,11 @@ object AnimalSamples {
                 species = ShelterSpecies.dog,
                 status = AnimalStatus.available,
                 published = true,
+                imageUrls =
+                    listOf(
+                        "https://picsum.photos/seed/voluntail-utrecht/800/450",
+                        "https://picsum.photos/seed/voluntail-utrecht-b/800/450",
+                    ),
                 imageUrl = "https://picsum.photos/seed/voluntail-utrecht/800/450",
                 externalUrl = null,
                 createdAt = now,
@@ -138,6 +174,11 @@ object AnimalSamples {
                 species = ShelterSpecies.cat,
                 status = AnimalStatus.available,
                 published = true,
+                imageUrls =
+                    listOf(
+                        "https://picsum.photos/seed/voluntail-groningen/800/450",
+                        "https://picsum.photos/seed/voluntail-groningen-b/800/450",
+                    ),
                 imageUrl = "https://picsum.photos/seed/voluntail-groningen/800/450",
                 externalUrl = null,
                 createdAt = now,
@@ -152,6 +193,11 @@ object AnimalSamples {
                 species = ShelterSpecies.reptile,
                 status = AnimalStatus.available,
                 published = true,
+                imageUrls =
+                    listOf(
+                        "https://picsum.photos/seed/voluntail-eindhoven-roze/800/450",
+                        "https://picsum.photos/seed/voluntail-eindhoven-roze-b/800/450",
+                    ),
                 imageUrl = "https://picsum.photos/seed/voluntail-eindhoven-roze/800/450",
                 externalUrl = null,
                 createdAt = now,

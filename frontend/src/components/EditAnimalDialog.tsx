@@ -18,7 +18,9 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { effectiveAnimalImageUrls } from '@/domain/animalGallery'
 import { SPECIES_VALUES, speciesLabel, type ShelterSpecies } from '@/domain/species'
+import { Plus, Trash2 } from 'lucide-react'
 import type { AnimalPatchPayload } from '@/schemas/animals'
 import type { AnimalStatus } from '@/schemas/animals'
 import { toQueryError } from '@/lib/queryError'
@@ -33,6 +35,11 @@ type Props = {
 }
 
 const STATUSES: AnimalStatus[] = ['available', 'reserved', 'adopted']
+
+function imageRowsFromAnimal(animal: Animal): string[] {
+  const u = effectiveAnimalImageUrls(animal)
+  return u.length ? [...u] : ['']
+}
 
 type FormProps = {
   animal: Animal
@@ -55,7 +62,7 @@ function EditAnimalForm({
   const [species, setSpecies] = useState<ShelterSpecies>(animal.species)
   const [status, setStatus] = useState<AnimalStatus>(animal.status)
   const [published, setPublished] = useState(animal.published)
-  const [imageUrl, setImageUrl] = useState(animal.imageUrl ?? '')
+  const [imageRows, setImageRows] = useState(() => imageRowsFromAnimal(animal))
   const [externalUrl, setExternalUrl] = useState(animal.externalUrl ?? '')
   const [formError, setFormError] = useState<string | null>(null)
 
@@ -66,6 +73,7 @@ function EditAnimalForm({
       setFormError('Choose a shelter.')
       return
     }
+    const imageUrls = [...new Set(imageRows.map((s) => s.trim()).filter(Boolean))]
     const payload: AnimalPatchPayload = {
       shelterId: shelterId.trim(),
       name: name.trim(),
@@ -73,7 +81,7 @@ function EditAnimalForm({
       species,
       status,
       published,
-      imageUrl: imageUrl.trim(),
+      imageUrls,
       externalUrl: externalUrl.trim(),
     }
     try {
@@ -175,14 +183,47 @@ function EditAnimalForm({
               />
               Published
             </label>
-            <div className="space-y-1.5">
-              <Label htmlFor="edit-animal-image">Image URL</Label>
-              <Input
-                id="edit-animal-image"
-                inputMode="url"
-                value={imageUrl}
-                onChange={(e) => setImageUrl(e.target.value)}
-              />
+            <div className="space-y-2">
+              <Label>Image URLs</Label>
+              <p className="text-muted-foreground text-xs">One per field; first is the thumbnail in lists.</p>
+              <div className="space-y-2">
+                {imageRows.map((row, i) => (
+                  <div key={i} className="flex gap-2">
+                    <Input
+                      id={i === 0 ? 'edit-animal-image-0' : undefined}
+                      inputMode="url"
+                      placeholder="https://…"
+                      value={row}
+                      onChange={(e) =>
+                        setImageRows((rows) => rows.map((r, j) => (j === i ? e.target.value : r)))
+                      }
+                      className="min-w-0 flex-1"
+                    />
+                    {imageRows.length > 1 ? (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        className="shrink-0"
+                        aria-label={`Remove image URL ${i + 1}`}
+                        onClick={() => setImageRows((rows) => rows.filter((_, j) => j !== i))}
+                      >
+                        <Trash2 className="size-4" aria-hidden />
+                      </Button>
+                    ) : null}
+                  </div>
+                ))}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="w-full sm:w-auto"
+                  onClick={() => setImageRows((rows) => [...rows, ''])}
+                >
+                  <Plus className="mr-1 size-4" aria-hidden />
+                  Add another image
+                </Button>
+              </div>
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="edit-animal-ext">External URL</Label>

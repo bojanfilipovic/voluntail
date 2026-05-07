@@ -12,6 +12,7 @@ data class AnimalUpdateBody(
     val species: String? = null,
     val status: String? = null,
     val published: Boolean? = null,
+    val imageUrls: List<String>? = null,
     val imageUrl: String? = null,
     val externalUrl: String? = null,
 )
@@ -41,6 +42,7 @@ fun AnimalUpdateBody.toUpdateRequestOrNull(): AnimalUpdateRequest? {
         species = speciesEnum,
         status = statusEnum,
         published = published,
+        imageUrls = imageUrls,
         imageUrl = imageUrl,
         externalUrl = externalUrl,
     )

@@ -12,12 +12,13 @@ data class AnimalCreateRequest(
     val species: ShelterSpecies,
     val status: AnimalStatus,
     val published: Boolean,
-    val imageUrl: String?,
+    val imageUrls: List<String>,
     val externalUrl: String?,
 )
 
-fun AnimalCreateRequest.toAnimalResponse(id: UUID): AnimalResponse =
-    AnimalResponse(
+fun AnimalCreateRequest.toAnimalResponse(id: UUID): AnimalResponse {
+    val urls = normalizeAnimalImageUrls(imageUrls)
+    return AnimalResponse(
         id = id.toString(),
         shelterId = shelterId.toString(),
         city = city.trim(),
@@ -26,8 +27,10 @@ fun AnimalCreateRequest.toAnimalResponse(id: UUID): AnimalResponse =
         species = species,
         status = status,
         published = published,
-        imageUrl = imageUrl?.trim()?.takeIf { it.isNotEmpty() },
+        imageUrls = urls,
+        imageUrl = urls.firstOrNull(),
         externalUrl = externalUrl?.trim()?.takeIf { it.isNotEmpty() },
         createdAt = Instant.now().toString(),
         heartCount = 0,
     )
+}

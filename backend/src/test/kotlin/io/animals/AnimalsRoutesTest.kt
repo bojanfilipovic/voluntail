@@ -130,11 +130,12 @@ class AnimalsRoutesTest {
     }
 
     @Test
-    fun `GET animals includes heartCount and createdAt`() {
+    fun `GET animals includes heartCount createdAt and imageUrls`() {
         voluntailTest {
             val body = client.get("/api/animals").bodyAsText()
             assertTrue(body.contains("\"heartCount\""))
             assertTrue(body.contains("\"createdAt\""))
+            assertTrue(body.contains("\"imageUrls\""))
         }
     }
 

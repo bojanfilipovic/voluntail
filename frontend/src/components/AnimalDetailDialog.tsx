@@ -1,4 +1,6 @@
 import type { Animal } from '@/api/animals'
+import { AnimalImageGallery } from '@/components/AnimalImageGallery'
+import { effectiveAnimalImageUrls } from '@/domain/animalGallery'
 import type { Shelter } from '@/api/shelters'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { DialogFooterStack } from '@/components/DialogFooterStack'
@@ -86,23 +88,11 @@ export function AnimalDetailDialog({
       >
         {animal ? (
           <>
-            <div
-              className={cn(
-                'relative flex min-h-[11rem] max-h-56 items-center justify-center bg-muted',
-                'px-6 py-7 sm:px-10',
-              )}
-            >
-              {animal.imageUrl ? (
-                <img
-                  src={animal.imageUrl}
-                  alt=""
-                  className="max-h-[12.5rem] w-full object-contain object-center"
-                  loading="lazy"
-                />
-              ) : (
-                <div className="min-h-32 w-full bg-gradient-to-br from-muted to-muted/60" aria-hidden />
-              )}
-            </div>
+            <AnimalImageGallery
+              variant="dialog"
+              urls={effectiveAnimalImageUrls(animal)}
+              className="max-h-56"
+            />
             <DialogHeader className="border-b px-4 pt-4 pb-2">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0 flex-1 space-y-1">

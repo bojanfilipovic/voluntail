@@ -12,7 +12,7 @@ import re
 import requests
 from bs4 import BeautifulSoup
 
-from shared import DEFAULT_MIGRATIONS_DIR, RawAnimal, generate_migration
+from shared import DEFAULT_MIGRATIONS_DIR, MAX_IMAGE_URLS, RawAnimal, generate_migration
 
 DEFAULT_USER_AGENT = (
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
@@ -41,17 +41,22 @@ def extract(session: requests.Session) -> list[RawAnimal]:
 
     image_rows = main.select("div.image-row")
     animals: list[RawAnimal] = []
-    seen_imgs: set[str] = set()
 
     for row in image_rows:
         imgs = row.select("img")
         if not imgs:
             continue
         first_img = imgs[0]
-        img_src = first_img.get("src", "").strip()
-        if not img_src or img_src in seen_imgs:
+        row_urls: list[str] = []
+        seen_in_row: set[str] = set()
+        for img in imgs:
+            raw = img.get("src", "").strip()
+            if not raw or raw in seen_in_row:
+                continue
+            seen_in_row.add(raw)
+            row_urls.append(raw)
+        if not row_urls:
             continue
-        seen_imgs.add(img_src)
 
         img_alt = first_img.get("alt", "").strip()
         name = ""
@@ -102,7 +107,7 @@ def extract(session: requests.Session) -> list[RawAnimal]:
                 detail_url=ROZ_PAGE,
                 species_guess=_species_hint(name),
                 city="Zwanenburg",
-                image_url=img_src,
+                image_urls=row_urls[:MAX_IMAGE_URLS],
             )
         )
 

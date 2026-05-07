@@ -19,6 +19,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { SPECIES_VALUES, speciesLabel, type ShelterSpecies } from '@/domain/species'
+import { Plus, Trash2 } from 'lucide-react'
 import { toQueryError } from '@/lib/queryError'
 import type { AnimalStatus } from '@/schemas/animals'
 
@@ -45,7 +46,7 @@ export function AddAnimalDialog({
   const [species, setSpecies] = useState<ShelterSpecies>('dog')
   const [status, setStatus] = useState<AnimalStatus>('available')
   const [published, setPublished] = useState(false)
-  const [imageUrl, setImageUrl] = useState('')
+  const [imageRows, setImageRows] = useState<string[]>([''])
   const [externalUrl, setExternalUrl] = useState('')
   const [formError, setFormError] = useState<string | null>(null)
 
@@ -56,6 +57,7 @@ export function AddAnimalDialog({
       setFormError('Choose a shelter.')
       return
     }
+    const imageUrls = [...new Set(imageRows.map((s) => s.trim()).filter(Boolean))]
     const payload: AnimalCreatePayload = {
       shelterId: shelterId.trim(),
       name: name.trim() || 'Unnamed',
@@ -63,7 +65,7 @@ export function AddAnimalDialog({
       species,
       status,
       published,
-      imageUrl: imageUrl.trim() || null,
+      imageUrls,
       externalUrl: externalUrl.trim() || null,
     }
     try {
@@ -168,14 +170,47 @@ export function AddAnimalDialog({
                 />
                 Published (visible on public discovery)
               </label>
-              <div className="space-y-1.5">
-                <Label htmlFor="animal-image">Image URL</Label>
-                <Input
-                  id="animal-image"
-                  inputMode="url"
-                  value={imageUrl}
-                  onChange={(e) => setImageUrl(e.target.value)}
-                />
+              <div className="space-y-2">
+                <Label>Image URLs</Label>
+                <p className="text-muted-foreground text-xs">One per field; first is the thumbnail in lists.</p>
+                <div className="space-y-2">
+                  {imageRows.map((row, i) => (
+                    <div key={i} className="flex gap-2">
+                      <Input
+                        id={i === 0 ? 'animal-image-0' : undefined}
+                        inputMode="url"
+                        placeholder="https://…"
+                        value={row}
+                        onChange={(e) =>
+                          setImageRows((rows) => rows.map((r, j) => (j === i ? e.target.value : r)))
+                        }
+                        className="min-w-0 flex-1"
+                      />
+                      {imageRows.length > 1 ? (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          className="shrink-0"
+                          aria-label={`Remove image URL ${i + 1}`}
+                          onClick={() => setImageRows((rows) => rows.filter((_, j) => j !== i))}
+                        >
+                          <Trash2 className="size-4" aria-hidden />
+                        </Button>
+                      ) : null}
+                    </div>
+                  ))}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="w-full sm:w-auto"
+                    onClick={() => setImageRows((rows) => [...rows, ''])}
+                  >
+                    <Plus className="mr-1 size-4" aria-hidden />
+                    Add another image
+                  </Button>
+                </div>
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="animal-ext">External URL</Label>

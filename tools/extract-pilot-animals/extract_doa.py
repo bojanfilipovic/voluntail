@@ -217,7 +217,7 @@ def main() -> None:
     for i, animal in enumerate(animals, 1):
         img = _fetch_image(session, animal.detail_url, delay)
         if img:
-            animal.image_url = img
+            animal.image_urls = [img]
             fetched += 1
         if i % 10 == 0:
             print(f"  ... {i}/{len(animals)} ({fetched} images)")

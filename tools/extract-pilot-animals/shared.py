@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_MIGRATIONS_DIR = REPO_ROOT / "backend" / "supabase" / "migrations" / "seeds"
+
+MAX_IMAGE_URLS = 15
 
 
 @dataclass
@@ -18,11 +20,20 @@ class RawAnimal:
     detail_url: str
     species_guess: str
     city: str | None
-    image_url: str | None = None
+    image_urls: list[str] = field(default_factory=list)
 
 
 def sql_str(s: str) -> str:
     return "'" + s.replace("'", "''") + "'"
+
+
+def sql_image_urls_array(urls: list[str]) -> str:
+    """Postgres text[] literal for image_urls column."""
+    trimmed = [u.strip() for u in urls if u and u.strip()][:MAX_IMAGE_URLS]
+    if not trimmed:
+        return "ARRAY[]::text[]"
+    parts = ", ".join(sql_str(u) for u in trimmed)
+    return f"ARRAY[{parts}]::text[]"
 
 
 def generate_migration(
@@ -51,7 +62,7 @@ def generate_migration(
 """
     stmts: list[str] = []
     for a in animals:
-        img_sql = sql_str(a.image_url) if a.image_url else "null"
+        urls_sql = sql_image_urls_array(a.image_urls)
         ext_sql = sql_str(a.detail_url) if a.detail_url else "null"
         city_sql = sql_str(a.city or "")
 
@@ -62,9 +73,9 @@ def generate_migration(
 
         stmts.append(
             f"insert into public.animals "
-            f"(shelter_id, city, name, description, species, status, published, image_url, external_url)\n"
+            f"(shelter_id, city, name, description, species, status, published, image_urls, external_url)\n"
             f"select s.id, {city_sql}, {sql_str(a.name)}, {sql_str(a.description)}, "
-            f"{sql_str(a.species_guess)}, 'available', true, {img_sql}, {ext_sql}\n"
+            f"{sql_str(a.species_guess)}, 'available', true, {urls_sql}, {ext_sql}\n"
             f"from public.shelters s\n"
             f"where s.name = {sql_str(shelter_name)}\n"
             f"  and not exists (select 1 from public.animals a {dedup_clause})\n"

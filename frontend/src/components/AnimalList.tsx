@@ -6,6 +6,7 @@ import { HeartButton } from '@/components/HeartButton'
 import { parseAnimalAge } from '@/domain/animalAge'
 import { speciesLabel, type SpeciesFilterValue } from '@/domain/species'
 import type { AnimalStatus } from '@/schemas/animals'
+import { effectiveAnimalImageUrls } from '@/domain/animalGallery'
 import { cn } from '@/lib/utils'
 import { getHeartedIds } from '@/lib/heartStorage'
 import { getShortlistIds } from '@/lib/exploreShortlist'
@@ -155,7 +156,9 @@ export function AnimalList({
         </p>
       ) : (
         <ul className="list-none space-y-3 p-0">
-          {displayAnimals.map((a) => (
+          {displayAnimals.map((a) => {
+            const thumbUrl = effectiveAnimalImageUrls(a)[0]
+            return (
             <li key={a.id}>
               <div
                 role="button"
@@ -169,10 +172,10 @@ export function AnimalList({
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelectAnimal(a) } }}
               >
                 <span className="grid grid-cols-[4.5rem_1fr] items-start gap-3">
-                  {a.imageUrl ? (
+                  {thumbUrl ? (
                     <span className="border-border bg-muted h-[4.5rem] w-[4.5rem] shrink-0 overflow-hidden rounded-md border">
                       <img
-                        src={a.imageUrl}
+                        src={thumbUrl}
                         alt=""
                         className="size-full object-cover"
                         loading="lazy"
@@ -218,7 +221,8 @@ export function AnimalList({
                 </span>
               </div>
             </li>
-          ))}
+            )
+          })}
         </ul>
       )}
     </section>

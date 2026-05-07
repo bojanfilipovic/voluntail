@@ -12,6 +12,7 @@ data class AnimalCreateBody(
     val species: String,
     val status: String,
     val published: Boolean = false,
+    val imageUrls: List<String> = emptyList(),
     val imageUrl: String? = null,
     val externalUrl: String? = null,
 )
@@ -25,6 +26,14 @@ fun AnimalCreateBody.toCreateRequestOrNull(cityFromShelter: String): AnimalCreat
         }
     val speciesEnum = ShelterSpecies.entries.find { it.name == species.trim() } ?: return null
     val statusEnum = AnimalStatus.entries.find { it.name == status.trim() } ?: return null
+    val mergedUrls =
+        when {
+            imageUrls.isNotEmpty() -> normalizeAnimalImageUrls(imageUrls)
+            else ->
+                normalizeAnimalImageUrls(
+                    listOfNotNull(imageUrl?.trim()?.takeIf { it.isNotEmpty() }),
+                )
+        }
     return AnimalCreateRequest(
         shelterId = shelterUuid,
         city = cityFromShelter.trim(),
@@ -33,7 +42,7 @@ fun AnimalCreateBody.toCreateRequestOrNull(cityFromShelter: String): AnimalCreat
         species = speciesEnum,
         status = statusEnum,
         published = published,
-        imageUrl = imageUrl,
+        imageUrls = mergedUrls,
         externalUrl = externalUrl,
     )
 }
