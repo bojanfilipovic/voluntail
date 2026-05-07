@@ -1,4 +1,6 @@
 import type { Animal } from '@/api/animals'
+import { AnimalImageGallery } from '@/components/AnimalImageGallery'
+import { effectiveAnimalImageUrls } from '@/domain/animalGallery'
 import { Button } from '@/components/ui/button'
 import { useId } from 'react'
 import { cn } from '@/lib/utils'
@@ -45,17 +47,12 @@ export function MatchMomentOverlay({ animal, onOpen, onKeepSwiping, rare = false
           'animate-in zoom-in-90 slide-in-from-bottom-4 duration-300 motion-reduce:animate-none',
         )}
       >
-        <div className="bg-muted/60 relative flex h-44 w-full items-center justify-center p-2 sm:h-52">
-          {animal.imageUrl ? (
-            <img
-              src={animal.imageUrl}
-              alt=""
-              className="max-h-full w-full object-contain object-center"
-            />
-          ) : (
-            <span className="text-muted-foreground p-6 text-sm">No photo</span>
-          )}
-          {/* Confetti-like sparkles */}
+        <div className="relative">
+          <AnimalImageGallery
+            variant="overlay"
+            urls={effectiveAnimalImageUrls(animal)}
+            className="bg-muted/60"
+          />
           <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
             <span className="absolute top-3 left-4 animate-bounce text-lg delay-100">&#10024;</span>
             <span className="absolute top-6 right-6 animate-bounce text-xl delay-200">&#127881;</span>

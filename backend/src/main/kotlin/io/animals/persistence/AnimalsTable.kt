@@ -1,5 +1,6 @@
 package io.animals.persistence
 
+import io.voluntail.textArray
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.java.javaUUID
 import org.jetbrains.exposed.v1.javatime.timestampWithTimeZone
@@ -13,6 +14,7 @@ object AnimalsTable : Table("animals") {
     val species = text("species")
     val status = text("status")
     val published = bool("published")
+    val imageUrls = textArray("image_urls")
     val imageUrl = text("image_url").nullable()
     val externalUrl = text("external_url").nullable()
     val createdAt = timestampWithTimeZone("created_at")

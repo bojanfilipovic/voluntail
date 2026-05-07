@@ -59,7 +59,7 @@ python extract.py --out-dir ./out --delay-seconds 4
 
 Output: `out/pilot_animals_raw.json` (gitignored).
 
-Shape: `{ "doa": [ ... ], "roz": [ ... ] }` with `source`, `name`, `description`, `detail_url`, `species_guess`, `city`, `image_url`.
+Shape: `{ "doa": [ ... ], "roz": [ ... ] }` with `source`, `name`, `description`, `detail_url`, `species_guess`, `city`, and image fields (`image_urls` list in `shared.RawAnimal`; generated SQL targets `animals.image_urls`).
 
 ---
 

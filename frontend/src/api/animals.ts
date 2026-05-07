@@ -20,6 +20,8 @@ export type AnimalCreatePayload = {
   species: ShelterSpecies
   status: AnimalStatus
   published: boolean
+  /** Preferred; falls back to legacy imageUrl when empty (server merge). */
+  imageUrls?: string[]
   imageUrl?: string | null
   externalUrl?: string | null
 }

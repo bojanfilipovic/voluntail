@@ -13,7 +13,12 @@ data class AnimalResponse(
     val species: ShelterSpecies,
     val status: AnimalStatus,
     val published: Boolean,
-    val imageUrl: String?,
+    /** Ordered gallery URLs (may be empty). */
+    val imageUrls: List<String> = emptyList(),
+    /**
+     * First image URL for older clients; mirrors [imageUrls].firstOrNull().
+     */
+    val imageUrl: String? = null,
     val externalUrl: String?,
     val createdAt: String,
     val heartCount: Int,

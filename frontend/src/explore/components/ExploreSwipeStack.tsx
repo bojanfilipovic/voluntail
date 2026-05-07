@@ -2,6 +2,8 @@ import { useDrag } from '@use-gesture/react'
 import type { CSSProperties } from 'react'
 import { useCallback, useEffect, useId, useRef, useState } from 'react'
 import type { Animal } from '@/api/animals'
+import { AnimalImageGallery } from '@/components/AnimalImageGallery'
+import { effectiveAnimalImageUrls } from '@/domain/animalGallery'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { parseAnimalAge } from '@/domain/animalAge'
@@ -186,18 +188,11 @@ export function ExploreSwipeStack({
               rareCard && !exitDir && 'ring-2 ring-yellow-400 animate-rare-glow motion-reduce:animate-none',
             )}
           >
-            <div className="bg-muted/60 relative flex h-[min(32vh,15rem)] w-full items-center justify-center p-2 sm:h-64">
-              {current.imageUrl ? (
-                <img
-                  src={current.imageUrl}
-                  alt=""
-                  className="h-full w-full object-contain object-center"
-                  draggable={false}
-                />
-              ) : (
-                <span className="text-muted-foreground p-6 text-sm">No photo</span>
-              )}
-            </div>
+            <AnimalImageGallery
+              variant="card"
+              urls={effectiveAnimalImageUrls(current)}
+              className="bg-muted/60"
+            />
             <CardContent className="pt-3 pb-3">
               <p className="text-base font-semibold">{current.name}</p>
               <p className="text-muted-foreground text-sm">

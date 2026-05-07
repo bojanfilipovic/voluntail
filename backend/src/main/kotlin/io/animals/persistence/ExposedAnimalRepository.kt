@@ -74,7 +74,8 @@ class ExposedAnimalRepository(
                     it[AnimalsTable.species] = request.species.name
                     it[AnimalsTable.status] = request.status.name
                     it[AnimalsTable.published] = request.published
-                    it[AnimalsTable.imageUrl] = request.imageUrl?.trim()?.takeIf { it.isNotEmpty() }
+                    it[AnimalsTable.imageUrls] = request.imageUrls
+                    it[AnimalsTable.imageUrl] = null
                     it[AnimalsTable.externalUrl] = request.externalUrl?.trim()?.takeIf { it.isNotEmpty() }
                 }
                 request.toAnimalResponse(newId)
@@ -124,7 +125,8 @@ class ExposedAnimalRepository(
                     it[AnimalsTable.species] = merged.species.name
                     it[AnimalsTable.status] = merged.status.name
                     it[AnimalsTable.published] = merged.published
-                    it[AnimalsTable.imageUrl] = merged.imageUrl
+                    it[AnimalsTable.imageUrls] = merged.imageUrls
+                    it[AnimalsTable.imageUrl] = null
                     it[AnimalsTable.externalUrl] = merged.externalUrl
                 }
                 merged
@@ -165,6 +167,13 @@ private fun ResultRow.toAnimalResponse(): AnimalResponse {
         AnimalStatus.entries.find { it.name == statusName }
             ?: error("unknown status in animals row: $statusName")
     val createdAt: java.time.OffsetDateTime = this[AnimalsTable.createdAt]
+    val urlsRaw = this[AnimalsTable.imageUrls]
+    val legacyUrl = this[AnimalsTable.imageUrl]?.trim()?.takeIf { it.isNotEmpty() }
+    val effectiveUrls =
+        when {
+            urlsRaw.isNotEmpty() -> urlsRaw
+            else -> listOfNotNull(legacyUrl)
+        }
     return AnimalResponse(
         id = this[AnimalsTable.id].toString(),
         shelterId = this[AnimalsTable.shelterId].toString(),
@@ -174,7 +183,8 @@ private fun ResultRow.toAnimalResponse(): AnimalResponse {
         species = species,
         status = status,
         published = this[AnimalsTable.published],
-        imageUrl = this[AnimalsTable.imageUrl],
+        imageUrls = effectiveUrls,
+        imageUrl = effectiveUrls.firstOrNull(),
         externalUrl = this[AnimalsTable.externalUrl],
         createdAt = createdAt.toInstant().toString(),
         heartCount = this[AnimalsTable.heartCount],

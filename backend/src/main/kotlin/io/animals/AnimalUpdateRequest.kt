@@ -11,6 +11,8 @@ data class AnimalUpdateRequest(
     val species: ShelterSpecies? = null,
     val status: AnimalStatus? = null,
     val published: Boolean? = null,
+    /** When non-null (including empty list), replaces the gallery. */
+    val imageUrls: List<String>? = null,
     val imageUrl: String? = null,
     val externalUrl: String? = null,
 )
@@ -23,11 +25,21 @@ fun AnimalUpdateRequest.isNoOp(): Boolean =
         species == null &&
         status == null &&
         published == null &&
+        imageUrls == null &&
         imageUrl == null &&
         externalUrl == null
 
-fun AnimalUpdateRequest.applyTo(current: AnimalResponse): AnimalResponse =
-    current.copy(
+fun AnimalUpdateRequest.applyTo(current: AnimalResponse): AnimalResponse {
+    val nextUrls: List<String> =
+        when {
+            imageUrls != null -> normalizeAnimalImageUrls(imageUrls)
+            imageUrl != null ->
+                normalizeAnimalImageUrls(
+                    listOfNotNull(imageUrl.trim().takeIf { it.isNotEmpty() }),
+                )
+            else -> current.imageUrls
+        }
+    return current.copy(
         shelterId = shelterId?.toString() ?: current.shelterId,
         city = city?.trim()?.takeIf { it.isNotEmpty() } ?: current.city,
         name = name?.trim()?.takeIf { it.isNotEmpty() } ?: current.name,
@@ -35,14 +47,12 @@ fun AnimalUpdateRequest.applyTo(current: AnimalResponse): AnimalResponse =
         species = species ?: current.species,
         status = status ?: current.status,
         published = published ?: current.published,
-        imageUrl =
-            when (imageUrl) {
-                null -> current.imageUrl
-                else -> imageUrl.trim().takeIf { it.isNotEmpty() }
-            },
+        imageUrls = nextUrls,
+        imageUrl = nextUrls.firstOrNull(),
         externalUrl =
             when (externalUrl) {
                 null -> current.externalUrl
                 else -> externalUrl.trim().takeIf { it.isNotEmpty() }
             },
     )
+}

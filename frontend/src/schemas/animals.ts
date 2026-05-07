@@ -18,6 +18,7 @@ export const animalSchema = z.object({
   species: shelterSpeciesEnum,
   status: animalStatusEnum,
   published: z.boolean(),
+  imageUrls: z.array(z.string()).default([]),
   imageUrl: z.string().nullish(),
   externalUrl: z.string().nullish(),
   createdAt: z.string(),
@@ -36,6 +37,7 @@ export const animalPatchPayloadSchema = z.object({
   species: shelterSpeciesEnum.optional(),
   status: animalStatusEnum.optional(),
   published: z.boolean().optional(),
+  imageUrls: z.array(z.string()).optional(),
   imageUrl: z.string().nullish(),
   externalUrl: z.string().nullish(),
 })

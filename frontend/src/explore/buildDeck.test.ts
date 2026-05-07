@@ -11,6 +11,7 @@ const sample = (over: Partial<Animal> & { id: string }): Animal => ({
   species: over.species ?? 'dog',
   status: over.status ?? 'available',
   published: over.published ?? true,
+  imageUrls: over.imageUrls ?? [],
   imageUrl: over.imageUrl ?? null,
   externalUrl: over.externalUrl ?? null,
   createdAt: over.createdAt ?? '2026-05-01T00:00:00Z',
