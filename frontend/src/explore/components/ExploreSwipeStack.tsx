@@ -191,7 +191,7 @@ export function ExploreSwipeStack({
             <AnimalImageGallery
               variant="card"
               urls={effectiveAnimalImageUrls(current)}
-              className="bg-muted/60"
+              className="-mt-4 overflow-hidden rounded-t-xl"
             />
             <CardContent className="pt-3 pb-3">
               <p className="text-base font-semibold">{current.name}</p>

@@ -18,7 +18,10 @@ export const animalSchema = z.object({
   species: shelterSpeciesEnum,
   status: animalStatusEnum,
   published: z.boolean(),
-  imageUrls: z.array(z.string()).default([]),
+  imageUrls: z
+    .union([z.array(z.string()), z.null()])
+    .optional()
+    .transform((v) => v ?? []),
   imageUrl: z.string().nullish(),
   externalUrl: z.string().nullish(),
   createdAt: z.string(),
