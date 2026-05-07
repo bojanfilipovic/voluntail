@@ -1,4 +1,5 @@
 import {
+  animalHeartResponseSchema,
   animalSchema,
   animalsListSchema,
   type Animal,
@@ -6,8 +7,12 @@ import {
 } from '@/schemas/animals'
 import type { ShelterSpecies } from '@/domain/species'
 import type { AnimalListQuery } from '@/lib/queryKeys'
-import { errorFromFetchFailure, errorMessageFromResponse } from '@/lib/apiErrors'
-import { parseJsonResponse } from '@/lib/http'
+import { buildCmsHeaders } from '@/lib/cmsHeaders'
+import {
+  fetchExpectEmpty,
+  fetchJsonZod,
+  jsonHeaders,
+} from '@/lib/apiRequest'
 import type { AnimalStatus } from '@/schemas/animals'
 
 export type { Animal }
@@ -28,14 +33,7 @@ export type AnimalCreatePayload = {
 
 const ANIMALS_URL = '/api/animals'
 const INVALID_JSON_ANIMALS = 'Invalid JSON from /api/animals'
-
-const CMS_HEADER = 'X-CMS-Key'
-
-function cmsHeaders(): HeadersInit {
-  const key = import.meta.env.VITE_CMS_API_KEY?.trim()
-  if (!key) return {}
-  return { [CMS_HEADER]: key }
-}
+const INVALID_JSON_HEART = 'Invalid JSON from heart endpoint'
 
 function buildListUrl(filters: AnimalListQuery): string {
   const p = new URLSearchParams()
@@ -48,108 +46,67 @@ function buildListUrl(filters: AnimalListQuery): string {
 
 /** Public list only: never send CMS key (no unpublished rows from the server). */
 export async function fetchAnimalsPublic(filters: AnimalListQuery): Promise<Animal[]> {
-  let res: Response
-  try {
-    res = await fetch(buildListUrl(filters), { headers: {} })
-  } catch (e) {
-    throw errorFromFetchFailure(e)
-  }
-  if (!res.ok) {
-    throw new Error(await errorMessageFromResponse(res, 'publicRead'))
-  }
-  const raw = await parseJsonResponse(res, INVALID_JSON_ANIMALS)
-  return animalsListSchema.parse(raw)
+  return fetchJsonZod(
+    buildListUrl(filters),
+    { headers: {} },
+    INVALID_JSON_ANIMALS,
+    animalsListSchema,
+    'publicRead',
+  )
 }
 
 /** CMS key when set widens listing to unpublished rows (server-side). */
 export async function fetchAnimals(filters: AnimalListQuery): Promise<Animal[]> {
-  let res: Response
-  try {
-    res = await fetch(buildListUrl(filters), {
-      headers: { ...cmsHeaders() },
-    })
-  } catch (e) {
-    throw errorFromFetchFailure(e)
-  }
-  if (!res.ok) {
-    throw new Error(await errorMessageFromResponse(res, 'publicRead'))
-  }
-  const raw = await parseJsonResponse(res, INVALID_JSON_ANIMALS)
-  return animalsListSchema.parse(raw)
+  return fetchJsonZod(
+    buildListUrl(filters),
+    { headers: { ...buildCmsHeaders() } },
+    INVALID_JSON_ANIMALS,
+    animalsListSchema,
+    'publicRead',
+  )
 }
 
 export async function createAnimal(body: AnimalCreatePayload): Promise<Animal> {
-  let res: Response
-  try {
-    res = await fetch(ANIMALS_URL, {
+  return fetchJsonZod(
+    ANIMALS_URL,
+    {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...cmsHeaders(),
-      },
+      headers: jsonHeaders(buildCmsHeaders()),
       body: JSON.stringify(body),
-    })
-  } catch (e) {
-    throw errorFromFetchFailure(e)
-  }
-  if (!res.ok) {
-    throw new Error(await errorMessageFromResponse(res, 'default'))
-  }
-  const raw = await parseJsonResponse(res, INVALID_JSON_ANIMALS)
-  return animalSchema.parse(raw)
+    },
+    INVALID_JSON_ANIMALS,
+    animalSchema,
+  )
 }
 
 export async function updateAnimal(
   id: string,
   body: AnimalPatchPayload,
 ): Promise<Animal> {
-  let res: Response
-  try {
-    res = await fetch(`${ANIMALS_URL}/${encodeURIComponent(id)}`, {
+  return fetchJsonZod(
+    `${ANIMALS_URL}/${encodeURIComponent(id)}`,
+    {
       method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        ...cmsHeaders(),
-      },
+      headers: jsonHeaders(buildCmsHeaders()),
       body: JSON.stringify(body),
-    })
-  } catch (e) {
-    throw errorFromFetchFailure(e)
-  }
-  if (!res.ok) {
-    throw new Error(await errorMessageFromResponse(res, 'default'))
-  }
-  const raw = await parseJsonResponse(res, INVALID_JSON_ANIMALS)
-  return animalSchema.parse(raw)
+    },
+    INVALID_JSON_ANIMALS,
+    animalSchema,
+  )
 }
 
 export async function deleteAnimal(id: string): Promise<void> {
-  let res: Response
-  try {
-    res = await fetch(`${ANIMALS_URL}/${encodeURIComponent(id)}`, {
-      method: 'DELETE',
-      headers: { ...cmsHeaders() },
-    })
-  } catch (e) {
-    throw errorFromFetchFailure(e)
-  }
-  if (res.status === 204) return
-  if (!res.ok) {
-    throw new Error(await errorMessageFromResponse(res, 'default'))
-  }
+  return fetchExpectEmpty(`${ANIMALS_URL}/${encodeURIComponent(id)}`, {
+    method: 'DELETE',
+    headers: buildCmsHeaders(),
+  })
 }
 
 export async function heartAnimal(id: string): Promise<{ heartCount: number }> {
-  let res: Response
-  try {
-    res = await fetch(`${ANIMALS_URL}/${encodeURIComponent(id)}/heart`, {
-      method: 'POST',
-    })
-  } catch (e) {
-    throw errorFromFetchFailure(e)
-  }
-  if (!res.ok) {
-    throw new Error(await errorMessageFromResponse(res, 'default'))
-  }
-  return (await parseJsonResponse(res, 'Invalid JSON from heart endpoint')) as { heartCount: number }
+  return fetchJsonZod(
+    `${ANIMALS_URL}/${encodeURIComponent(id)}/heart`,
+    { method: 'POST' },
+    INVALID_JSON_HEART,
+    animalHeartResponseSchema,
+  )
 }

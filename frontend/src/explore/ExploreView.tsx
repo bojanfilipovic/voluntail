@@ -4,25 +4,20 @@ import type { Animal } from '@/api/animals'
 import { fetchAnimalsPublic } from '@/api/animals'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
 import { toQueryError } from '@/lib/queryError'
 import { animalQueryKeys } from '@/lib/queryKeys'
 import { buildDeck } from '@/explore/buildDeck'
 import { ExploreFormFields } from '@/explore/components/ExploreFormFields'
+import { ExploreLocalDataConfirmDialog } from '@/explore/components/ExploreLocalDataConfirmDialog'
+import { ExploreSettingsDialog } from '@/explore/components/ExploreSettingsDialog'
+import { ExploreShortlistRow } from '@/explore/components/ExploreShortlistRow'
 import { ExploreSwipeStack } from '@/explore/components/ExploreSwipeStack'
+import { ExploreToolbar } from '@/explore/components/ExploreToolbar'
 import { MatchMomentOverlay } from '@/explore/components/MatchMomentOverlay'
 import { rollMatchMoment, rollRareMatch } from '@/explore/matchMomentConfig'
 import { shuffleIdsInPlace } from '@/explore/shuffleIds'
 import { useExploreSessionState } from '@/explore/useExploreSessionState'
 import { cn } from '@/lib/utils'
-import { intentLabel } from '@/explore/labels'
-import { Heart, Settings } from 'lucide-react'
 
 type Props = {
   onBack: () => void
@@ -30,53 +25,6 @@ type Props = {
 }
 
 const SWIPE_VIEW_TITLE = 'Swipe deck'
-
-function ExploreShortlistRow({
-  animals,
-  onPick,
-  compact = false,
-}: {
-  animals: Animal[]
-  onPick: (a: Animal) => void
-  /** Cap height so the swipe actions stay on screen on small viewports. */
-  compact?: boolean
-}) {
-  if (animals.length === 0) return null
-  return (
-    <div
-      className={cn(
-        'border-border bg-muted/20 w-full shrink-0 rounded-lg border p-3',
-        'animate-in fade-in slide-in-from-bottom-2 duration-300 motion-reduce:animate-none',
-        compact && 'max-h-[30vh] min-h-0 sm:max-h-40',
-      )}
-    >
-      <p className="text-muted-foreground flex items-center gap-2 text-xs font-medium">
-        <Heart className="size-4" aria-hidden />
-        Your matches ({animals.length})
-      </p>
-      <ul
-        className={cn(
-          'mt-2 flex flex-wrap gap-2',
-          compact ? 'max-h-24 overflow-y-auto sm:max-h-28' : 'max-h-32 overflow-y-auto',
-        )}
-      >
-        {animals.map((a) => (
-          <li key={a.id}>
-            <Button
-              type="button"
-              size="sm"
-              variant="secondary"
-              className="transition active:scale-95 motion-reduce:active:scale-100"
-              onClick={() => onPick(a)}
-            >
-              {a.name}
-            </Button>
-          </li>
-        ))}
-      </ul>
-    </div>
-  )
-}
 
 export function ExploreView({ onBack, onOpenAnimal }: Props) {
   const { session, patch, sessionPassed, setSessionPassed, setDisplayName } =
@@ -296,7 +244,7 @@ export function ExploreView({ onBack, onOpenAnimal }: Props) {
             </Button>
           </CardContent>
         </Card>
-        <SettingsDialog
+        <ExploreSettingsDialog
           open={settingsOpen}
           onOpenChange={setSettingsOpen}
           session={session}
@@ -306,7 +254,7 @@ export function ExploreView({ onBack, onOpenAnimal }: Props) {
           onRequestReshuffle={requestReshuffle}
           onRequestStartOver={requestStartOver}
         />
-        <LocalDataConfirmDialog
+        <ExploreLocalDataConfirmDialog
           kind={localDataConfirm}
           onOpenChange={(o) => {
             if (!o) setLocalDataConfirm(null)
@@ -454,7 +402,7 @@ export function ExploreView({ onBack, onOpenAnimal }: Props) {
         />
       ) : null}
 
-      <SettingsDialog
+      <ExploreSettingsDialog
         open={settingsOpen}
         onOpenChange={setSettingsOpen}
         session={session}
@@ -465,7 +413,7 @@ export function ExploreView({ onBack, onOpenAnimal }: Props) {
         onRequestStartOver={requestStartOver}
       />
 
-      <LocalDataConfirmDialog
+      <ExploreLocalDataConfirmDialog
         kind={localDataConfirm}
         onOpenChange={(o) => {
           if (!o) setLocalDataConfirm(null)
@@ -474,162 +422,5 @@ export function ExploreView({ onBack, onOpenAnimal }: Props) {
         onConfirmStartOver={applyStartOver}
       />
     </div>
-  )
-}
-
-type ToolbarProps = {
-  title: string
-  displayName?: string
-  intent?: import('@/explore/types').ExploreIntent
-  onOpenSettings: () => void
-}
-
-function ExploreToolbar({ title, displayName, intent, onOpenSettings }: ToolbarProps) {
-  return (
-    <div className="border-border bg-background/95 flex items-center justify-between gap-2 border-b px-4 py-2">
-      <div className="min-w-0 flex-1">
-        <h2 className="min-w-0 truncate text-sm font-semibold tracking-tight">{title}</h2>
-        {displayName ? (
-          <p className="text-muted-foreground min-w-0 truncate text-xs">
-            {displayName}{intent && intent !== 'undecided' ? ` \u00b7 ${intentLabel(intent)}` : ''}
-          </p>
-        ) : null}
-      </div>
-      <Button
-        type="button"
-        size="icon-sm"
-        variant="secondary"
-        onClick={onOpenSettings}
-        className="transition active:scale-95 motion-reduce:active:scale-100"
-        aria-label="Swipe deck settings"
-      >
-        <Settings className="size-4" />
-      </Button>
-    </div>
-  )
-}
-
-type LocalDataConfirmProps = {
-  kind: null | 'reshuffle' | 'startOver'
-  onOpenChange: (open: boolean) => void
-  onConfirmReshuffle: () => void
-  onConfirmStartOver: () => void
-}
-
-function LocalDataConfirmDialog({
-  kind,
-  onOpenChange,
-  onConfirmReshuffle,
-  onConfirmStartOver,
-}: LocalDataConfirmProps) {
-  return (
-    <Dialog open={kind !== null} onOpenChange={onOpenChange}>
-      <DialogContent showCloseButton className="sm:max-w-md" aria-describedby={undefined}>
-        {kind === 'reshuffle' ? (
-          <>
-            <DialogHeader>
-              <DialogTitle>Reshuffle deck?</DialogTitle>
-              <p className="text-muted-foreground text-sm">
-                All animals come back into the deck — passed ones and &ldquo;no match&rdquo; ones.
-                Your saved matches stay.
-              </p>
-            </DialogHeader>
-            <DialogFooter>
-              <Button type="button" variant="secondary" onClick={() => onOpenChange(false)}>
-                Cancel
-              </Button>
-              <Button type="button" onClick={onConfirmReshuffle}>
-                Reshuffle
-              </Button>
-            </DialogFooter>
-          </>
-        ) : null}
-        {kind === 'startOver' ? (
-          <>
-            <DialogHeader>
-              <DialogTitle>Start over?</DialogTitle>
-              <p className="text-muted-foreground text-sm">
-                This resets everything — your matches, passed animals, and deck.
-                Your display name and filters stay the same.
-              </p>
-            </DialogHeader>
-            <DialogFooter>
-              <Button type="button" variant="secondary" onClick={() => onOpenChange(false)}>
-                Cancel
-              </Button>
-              <Button type="button" variant="destructive" onClick={onConfirmStartOver}>
-                Start over
-              </Button>
-            </DialogFooter>
-          </>
-        ) : null}
-      </DialogContent>
-    </Dialog>
-  )
-}
-
-type SProps = {
-  open: boolean
-  onOpenChange: (o: boolean) => void
-  session: import('@/explore/types').ExplorePersisted
-  setDisplayName: (s: string) => void
-  patch: (fn: (s: import('@/explore/types').ExplorePersisted) => import('@/explore/types').ExplorePersisted) => void
-  canReshuffle: boolean
-  onRequestReshuffle: () => void
-  onRequestStartOver: () => void
-}
-
-function SettingsDialog({
-  open,
-  onOpenChange,
-  session,
-  setDisplayName,
-  patch,
-  canReshuffle,
-  onRequestReshuffle,
-  onRequestStartOver,
-}: SProps) {
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent showCloseButton className="sm:max-w-md" aria-describedby={undefined}>
-        <DialogHeader>
-          <DialogTitle>Swipe deck settings</DialogTitle>
-        </DialogHeader>
-        <ExploreFormFields
-          idSuffix="settings"
-          displayName={session.displayName}
-          onDisplayNameChange={setDisplayName}
-          intent={session.intent}
-          onIntentChange={(intent) => patch((s) => ({ ...s, intent }))}
-        />
-        <div className="grid gap-2 border-t pt-4">
-          <p className="text-muted-foreground text-xs">Data stays in this browser only. Nothing is sent to a server.</p>
-          <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-            <Button
-              type="button"
-              variant="secondary"
-              disabled={!canReshuffle}
-              onClick={onRequestReshuffle}
-              className="w-full transition active:scale-[0.99] enabled:opacity-100 disabled:opacity-40 sm:w-auto"
-            >
-              Reshuffle deck
-            </Button>
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={onRequestStartOver}
-              className="w-full text-destructive transition active:scale-[0.99] sm:w-auto"
-            >
-              Start over
-            </Button>
-          </div>
-        </div>
-        <DialogFooter>
-          <Button type="button" onClick={() => onOpenChange(false)}>
-            Done
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
   )
 }
