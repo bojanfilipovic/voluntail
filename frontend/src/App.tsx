@@ -351,7 +351,7 @@ function App() {
         onCycleTheme={cycleTheme}
         stats={communityStats}
       />
-      <WelcomeOverlay onGoExplore={() => navigateView('explore')} />
+      <WelcomeOverlay />
       <main
         className={
           appView === 'directory'

@@ -1,7 +1,9 @@
 import type { Shelter } from '@/api/shelters'
 import { SpeciesFilterBar, type SpeciesFilterRow } from '@/components/SpeciesFilterBar'
+import { Button } from '@/components/ui/button'
 import { speciesLabel, type SpeciesFilterValue } from '@/domain/species'
 import { cn } from '@/lib/utils'
+import { ExternalLink } from 'lucide-react'
 
 type Props = {
   shelters: Shelter[] | undefined
@@ -100,18 +102,22 @@ export function ShelterList({
                           onClick={(e) => e.stopPropagation()}
                           rel="noreferrer noopener"
                           target="_blank"
-                          className="inline-flex items-center rounded-md bg-emerald-600 px-2 py-0.5 text-xs font-medium text-white hover:bg-emerald-700"
+                          aria-label="Website (opens in new tab)"
+                          className="inline-flex h-8 items-center gap-1 rounded-md bg-emerald-600 px-3 text-xs font-medium text-white hover:bg-emerald-700"
                         >
-                          More info
+                          Website
+                          <ExternalLink className="size-3" aria-hidden />
                         </a>
                       ) : null}
-                      <button
+                      <Button
                         type="button"
+                        variant="secondary"
+                        size="sm"
                         onClick={(e) => { e.stopPropagation(); onViewAnimals(s.id) }}
-                        className="text-primary inline-flex items-center text-xs font-medium underline-offset-4 hover:underline"
+                        className="h-8 px-3 text-xs"
                       >
                         Animals
-                      </button>
+                      </Button>
                     </span>
                   </span>
                 </span>

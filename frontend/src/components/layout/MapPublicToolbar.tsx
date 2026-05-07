@@ -1,4 +1,6 @@
 import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
+import { MapPin } from 'lucide-react'
 
 type Props = {
   placementMode: boolean
@@ -35,11 +37,15 @@ export function MapPublicToolbar({
       <Button
         type="button"
         size="sm"
-        variant={placementMode ? 'secondary' : 'outline'}
-        className="shadow-md dark:border-border dark:bg-background dark:text-foreground"
+        variant={placementMode ? 'secondary' : 'default'}
+        className={cn(
+          'shadow-md',
+          !placementMode && 'gap-1.5 bg-emerald-600 text-white hover:bg-emerald-700',
+        )}
         onClick={onStartAddPin}
       >
-        Suggest Shelter
+        <MapPin className="size-4" aria-hidden />
+        Suggest a shelter
       </Button>
       {suggestFlowActive ? (
         <span className="inline-flex flex-wrap items-center gap-2 rounded-lg bg-background/90 px-2 py-1 shadow-md backdrop-blur-sm">

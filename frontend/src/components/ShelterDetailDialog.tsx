@@ -7,6 +7,8 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Button, buttonVariants } from '@/components/ui/button'
+import { DialogFooterStack } from '@/components/DialogFooterStack'
+import { ShareFeedbackRow } from '@/components/ShareFeedbackRow'
 import { cn } from '@/lib/utils'
 import type { Shelter } from '@/api/shelters'
 import { speciesLabel } from '@/domain/species'
@@ -86,10 +88,7 @@ export function ShelterDetailDialog({
             <div className="space-y-3 px-4 py-3 text-sm leading-relaxed">
               <p>{shelter.description}</p>
             </div>
-            <div
-              className="border-border/50 flex flex-col gap-2 rounded-b-xl border-t bg-muted/40 px-4 py-3 pb-4"
-              data-slot="dialog-footer"
-            >
+            <DialogFooterStack>
               <div
                 className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto"
                 role="group"
@@ -121,19 +120,11 @@ export function ShelterDetailDialog({
                     Donate
                   </a>
                 ) : null}
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="shrink-0"
-                  onClick={onShareFeedback}
-                >
-                  Share feedback
-                </Button>
               </div>
+              <ShareFeedbackRow onClick={onShareFeedback} />
               {cmsConfigured ? (
                 <div
-                  className="border-border/50 flex w-full min-w-0 flex-nowrap items-center justify-between gap-2 border-t pt-2"
+                  className="border-border/50 flex w-full min-w-0 flex-nowrap items-center justify-between gap-2 border-t pt-3"
                   role="group"
                   aria-label="Curation"
                 >
@@ -159,7 +150,7 @@ export function ShelterDetailDialog({
                   </Button>
                 </div>
               ) : null}
-            </div>
+            </DialogFooterStack>
           </>
         ) : null}
       </DialogContent>
