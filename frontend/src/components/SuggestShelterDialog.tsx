@@ -160,7 +160,7 @@ export function SuggestShelterDialog({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className={shelterFormDialogContentClassName}>
         <DialogHeader className={shelterFormDialogHeaderClassName}>
-          <DialogTitle>Suggest shelter</DialogTitle>
+          <DialogTitle>Suggest a shelter</DialogTitle>
         </DialogHeader>
         {mutation.isSuccess ? (
           <div className="flex min-h-0 flex-1 flex-col gap-4 py-4">
@@ -221,6 +221,20 @@ export function SuggestShelterDialog({
                     value={description}
                     onChange={(e) => {
                       setDescription(e.target.value)
+                      mutation.reset()
+                    }}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="suggest-comment">Comment</Label>
+                  <Textarea
+                    id="suggest-comment"
+                    name="comment"
+                    rows={2}
+                    placeholder="Website URL, Google Maps link, socials, anything that helps me find this shelter."
+                    value={comment}
+                    onChange={(e) => {
+                      setComment(e.target.value)
                       mutation.reset()
                     }}
                   />
@@ -310,19 +324,6 @@ export function SuggestShelterDialog({
                     value={donationUrl}
                     onChange={(e) => {
                       setDonationUrl(e.target.value)
-                      mutation.reset()
-                    }}
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="suggest-comment">Comment</Label>
-                  <Textarea
-                    id="suggest-comment"
-                    name="comment"
-                    rows={2}
-                    value={comment}
-                    onChange={(e) => {
-                      setComment(e.target.value)
                       mutation.reset()
                     }}
                   />

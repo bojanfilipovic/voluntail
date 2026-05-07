@@ -1,12 +1,13 @@
 import type { Animal } from '@/api/animals'
 import type { Shelter } from '@/api/shelters'
 import { Button, buttonVariants } from '@/components/ui/button'
+import { DialogFooterStack } from '@/components/DialogFooterStack'
 import { HeartButton } from '@/components/HeartButton'
+import { ShareFeedbackRow } from '@/components/ShareFeedbackRow'
 import {
   Dialog,
   DialogClose,
   DialogContent,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
@@ -130,97 +131,86 @@ export function AnimalDetailDialog({
             </DialogHeader>
             <div className="max-h-[min(50vh,22rem)] space-y-3 overflow-y-auto px-4 py-3 text-sm leading-relaxed">
               <p className="text-foreground/95 whitespace-pre-wrap">{animal.description}</p>
-              {animal.externalUrl ? (
-                <p>
-                  <a
-                    href={animal.externalUrl}
-                    rel="noreferrer noopener"
-                    target="_blank"
-                    className={cn(buttonVariants({ variant: 'default', size: 'sm' }), 'bg-emerald-600 text-white hover:bg-emerald-700')}
-                  >
-                    More info
-                  </a>
-                </p>
-              ) : null}
-              {shelter ? (
-                <div className="space-y-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="w-full sm:w-auto"
-                    aria-expanded={shelterDetailsOpen}
-                    aria-controls="animal-dialog-shelter-details"
-                    onClick={() => setShelterDetailsOpen((open) => !open)}
-                  >
-                    {shelterDetailsOpen ? 'Hide shelter details' : 'Shelter details'}
-                  </Button>
-                  {shelterDetailsOpen ? (
-                    <div
-                      className="border-border bg-muted/30 space-y-3 rounded-lg border p-3"
-                      id="animal-dialog-shelter-details"
-                    >
-                      <button
-                        type="button"
-                        className="text-primary text-sm font-medium underline-offset-4 hover:underline"
-                        onClick={onShelterClick}
-                      >
-                        {shelter.name}
-                      </button>
-                      <p className="text-muted-foreground text-sm">
-                        {shelter.city}
-                        {shelter.species.length
-                          ? ` · ${shelter.species.map(speciesLabel).join(', ')}`
-                          : ''}
-                      </p>
-                      <p className="text-foreground/95 leading-relaxed">{shelter.description}</p>
-                      <div className="flex flex-wrap gap-2">
-                        {shelter.signupUrl ? (
-                          <a
-                            href={shelter.signupUrl}
-                            rel="noreferrer noopener"
-                            target="_blank"
-                            className={cn(buttonVariants({ variant: 'default', size: 'sm' }))}
-                          >
-                            Volunteer
-                          </a>
-                        ) : null}
-                        {shelter.donationUrl ? (
-                          <a
-                            href={shelter.donationUrl}
-                            rel="noreferrer noopener"
-                            target="_blank"
-                            className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}
-                          >
-                            Donate
-                          </a>
-                        ) : null}
-                      </div>
-                    </div>
-                  ) : null}
-                </div>
-              ) : null}
               {!animal.published ? (
                 <p className="text-destructive text-sm font-medium">
                   Unpublished — only visible with CMS key in the API.
                 </p>
               ) : null}
             </div>
-            <DialogFooter
-              className={cn(
-                'border-t bg-muted/40 flex flex-col gap-3 px-4 py-3',
-                showCms && 'sm:flex-row sm:items-center sm:justify-between sm:gap-4',
-              )}
-            >
-              <div className="flex min-w-0 flex-1 flex-wrap gap-2">
-                <Button
+            {shelter && shelterDetailsOpen ? (
+              <div
+                className="border-border bg-muted/30 mx-4 mb-3 space-y-3 rounded-lg border p-3 text-sm"
+                id="animal-dialog-shelter-details"
+              >
+                <button
                   type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={onShareFeedback}
+                  className="text-primary text-sm font-medium underline-offset-4 hover:underline"
+                  onClick={onShelterClick}
                 >
-                  Share feedback
-                </Button>
+                  {shelter.name}
+                </button>
+                <p className="text-muted-foreground text-sm">
+                  {shelter.city}
+                  {shelter.species.length
+                    ? ` · ${shelter.species.map(speciesLabel).join(', ')}`
+                    : ''}
+                </p>
+                <p className="text-foreground/95 leading-relaxed">{shelter.description}</p>
+                <div className="flex flex-wrap gap-2">
+                  {shelter.signupUrl ? (
+                    <a
+                      href={shelter.signupUrl}
+                      rel="noreferrer noopener"
+                      target="_blank"
+                      className={cn(buttonVariants({ variant: 'default', size: 'sm' }))}
+                    >
+                      Volunteer
+                    </a>
+                  ) : null}
+                  {shelter.donationUrl ? (
+                    <a
+                      href={shelter.donationUrl}
+                      rel="noreferrer noopener"
+                      target="_blank"
+                      className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}
+                    >
+                      Donate
+                    </a>
+                  ) : null}
+                </div>
+              </div>
+            ) : null}
+            <DialogFooterStack>
+              <div
+                className="flex min-w-0 flex-wrap items-center gap-2"
+                role="group"
+                aria-label="Animal actions"
+              >
+                {animal.externalUrl ? (
+                  <a
+                    href={animal.externalUrl}
+                    rel="noreferrer noopener"
+                    target="_blank"
+                    className={cn(
+                      buttonVariants({ variant: 'default', size: 'sm' }),
+                      'bg-emerald-600 text-white hover:bg-emerald-700',
+                    )}
+                  >
+                    More info
+                  </a>
+                ) : null}
+                {shelter ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    aria-expanded={shelterDetailsOpen}
+                    aria-controls="animal-dialog-shelter-details"
+                    onClick={() => setShelterDetailsOpen((open) => !open)}
+                  >
+                    {shelterDetailsOpen ? 'Hide shelter details' : 'Shelter details'}
+                  </Button>
+                ) : null}
                 <Button
                   type="button"
                   variant="outline"
@@ -231,8 +221,15 @@ export function AnimalDetailDialog({
                 >
                   <Share2 className="size-3.5" aria-hidden />
                 </Button>
-                {showCms ? (
-                  <>
+              </div>
+              <ShareFeedbackRow onClick={onShareFeedback} />
+              {showCms ? (
+                <div
+                  className="border-border/50 flex w-full min-w-0 flex-wrap items-center justify-between gap-2 border-t pt-3"
+                  role="group"
+                  aria-label="Curation"
+                >
+                  <div className="flex min-w-0 flex-wrap items-center gap-2">
                     <Button type="button" size="sm" variant="secondary" onClick={onEdit}>
                       Edit
                     </Button>
@@ -249,15 +246,12 @@ export function AnimalDetailDialog({
                           ? 'Unpublish'
                           : 'Publish'}
                     </Button>
-                  </>
-                ) : null}
-              </div>
-              {showCms ? (
-                <div className="flex w-full justify-end sm:w-auto sm:shrink-0">
+                  </div>
                   <Button
                     type="button"
                     size="sm"
                     variant="destructive"
+                    className="shrink-0"
                     onClick={onDelete}
                     disabled={deleteBusy}
                   >
@@ -265,7 +259,7 @@ export function AnimalDetailDialog({
                   </Button>
                 </div>
               ) : null}
-            </DialogFooter>
+            </DialogFooterStack>
           </>
         ) : null}
       </DialogContent>

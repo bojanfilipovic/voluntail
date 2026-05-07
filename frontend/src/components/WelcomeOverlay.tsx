@@ -25,11 +25,7 @@ function markWelcomed() {
   } catch { /* noop */ }
 }
 
-type Props = {
-  onGoExplore: () => void
-}
-
-export function WelcomeOverlay({ onGoExplore }: Props) {
+export function WelcomeOverlay() {
   const [open, setOpen] = useState(() => !hasBeenWelcomed())
 
   if (!open) return null
@@ -39,19 +35,13 @@ export function WelcomeOverlay({ onGoExplore }: Props) {
     setOpen(false)
   }
 
-  const handleExplore = () => {
-    markWelcomed()
-    setOpen(false)
-    onGoExplore()
-  }
-
   return (
     <Dialog open onOpenChange={(o) => { if (!o) handleDismiss() }}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="text-xl">Welcome to Voluntail</DialogTitle>
           <DialogDescription>
-            Discover animal shelters in the Netherlands and find ways to help.
+            Discover animal shelters and find ways to help.
           </DialogDescription>
         </DialogHeader>
         <ul className="space-y-3 py-2 text-sm">
@@ -69,12 +59,8 @@ export function WelcomeOverlay({ onGoExplore }: Props) {
           </li>
         </ul>
         <div className="flex flex-col gap-2 pt-2 sm:flex-row sm:justify-end">
-          <Button variant="outline" onClick={handleDismiss}>
-            Go to map
-          </Button>
-          <Button className="bg-emerald-600 text-white hover:bg-emerald-700" onClick={handleExplore}>
-            <Compass className="size-4" aria-hidden />
-            Try Explore
+          <Button onClick={handleDismiss}>
+            Go
           </Button>
         </div>
       </DialogContent>
