@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Extract animal listings from DOA dierenasiel (WordPress/Elementor).
 
-Fetches listing pages + each detail page for the real photo URL.
+Fetches listing pages + each detail page for animal photo URLs (gallery when present).
 """
 
 from __future__ import annotations
@@ -16,7 +16,7 @@ from urllib.robotparser import RobotFileParser
 import requests
 from bs4 import BeautifulSoup
 
-from shared import DEFAULT_MIGRATIONS_DIR, RawAnimal, generate_migration
+from shared import DEFAULT_MIGRATIONS_DIR, MAX_IMAGE_URLS, RawAnimal, generate_migration
 
 # Browser-like UA required: DOA's WAF rejects non-browser User-Agent strings.
 DEFAULT_USER_AGENT = (
@@ -96,34 +96,63 @@ def _looks_like_animal_image(url: str) -> bool:
     return False
 
 
-def _fetch_image(session: requests.Session, detail_url: str, delay: float) -> str | None:
+def _normalize_img_src(raw: str, base_url: str) -> str:
+    src = raw.strip()
+    if src.startswith("//"):
+        src = "https:" + src
+    if src.startswith("/"):
+        src = urljoin(base_url, src)
+    return src
+
+
+def _fetch_detail_images(
+    session: requests.Session,
+    detail_url: str,
+    delay: float,
+    *,
+    max_urls: int = MAX_IMAGE_URLS,
+) -> list[str]:
+    """Collect ordered gallery URLs from the adoptie detail page.
+
+    Kenneldata URLs (shelter photo API) are listed first; then other plausible animal images.
+    """
     _ensure_robots_allow(detail_url)
     try:
         r = session.get(detail_url, timeout=45)
         r.raise_for_status()
     except Exception:
-        return None
+        return []
     finally:
         time.sleep(delay)
     soup = BeautifulSoup(r.text, "html.parser")
-    candidates: list[str] = []
-    for img in soup.select(".elementor-widget-image img, .elementor-section img"):
-        src = img.get("data-src") or img.get("src") or ""
-        if not src or "logo" in src.lower() or "placeholder" in src.lower():
+    seen: set[str] = set()
+    ordered: list[str] = []
+
+    selectors = (
+        ".elementor-widget-image img, "
+        ".elementor-widget-image-carousel img, "
+        ".elementor-widget-slide img, "
+        ".elementor-section img, "
+        "img[src*='kenneldata']"
+    )
+    for img in soup.select(selectors):
+        raw = img.get("data-src") or img.get("data-lazy-src") or img.get("src") or ""
+        if not raw or "logo" in raw.lower() or "placeholder" in raw.lower():
             continue
-        if "elementor/thumbs" in src.lower():
+        if "elementor/thumbs" in raw.lower():
             continue
-        if src.startswith("//"):
-            src = "https:" + src
-        if src.startswith("/"):
-            src = urljoin(detail_url, src)
-        if _looks_like_animal_image(src):
-            candidates.append(src)
-    # Prefer kenneldata images (actual per-animal photos from shelter system)
-    for c in candidates:
-        if "kenneldata" in c:
-            return c
-    return candidates[0] if candidates else None
+        src = _normalize_img_src(raw, detail_url)
+        if not _looks_like_animal_image(src):
+            continue
+        if src in seen:
+            continue
+        seen.add(src)
+        ordered.append(src)
+
+    kennel = [u for u in ordered if "kenneldata" in u]
+    rest = [u for u in ordered if "kenneldata" not in u]
+    merged = kennel + rest
+    return merged[:max_urls]
 
 
 # ---------------------------------------------------------------------------
@@ -212,16 +241,19 @@ def main() -> None:
     animals = _fetch_listings(session, args.max_pages, delay)
     print(f"[doa] Found {len(animals)} animals")
 
-    print("[doa] Fetching detail images...")
+    print("[doa] Fetching detail images (gallery when available)...")
     fetched = 0
+    multi = 0
     for i, animal in enumerate(animals, 1):
-        img = _fetch_image(session, animal.detail_url, delay)
-        if img:
-            animal.image_urls = [img]
+        urls = _fetch_detail_images(session, animal.detail_url, delay)
+        if urls:
+            animal.image_urls = urls
             fetched += 1
+            if len(urls) > 1:
+                multi += 1
         if i % 10 == 0:
-            print(f"  ... {i}/{len(animals)} ({fetched} images)")
-    print(f"[doa] Got images for {fetched}/{len(animals)} animals")
+            print(f"  ... {i}/{len(animals)} ({fetched} with images, {multi} with 2+ photos)")
+    print(f"[doa] Got images for {fetched}/{len(animals)} animals ({multi} with multiple photos)")
 
     sql_path = generate_migration(
         animals,

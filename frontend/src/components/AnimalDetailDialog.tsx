@@ -83,15 +83,15 @@ export function AnimalDetailDialog({
   return (
     <Dialog open={Boolean(animal)} onOpenChange={(next) => !next && onClose()}>
       <DialogContent
-        className="max-w-lg gap-0 overflow-hidden p-0 sm:max-w-lg"
+        className="max-w-lg gap-0 p-0 sm:max-w-lg"
         showCloseButton={false}
       >
         {animal ? (
           <>
             <AnimalImageGallery
-              variant="dialog"
+              variant="card"
               urls={effectiveAnimalImageUrls(animal)}
-              className="max-h-56"
+              className="overflow-hidden rounded-t-xl"
             />
             <DialogHeader className="border-b px-4 pt-4 pb-2">
               <div className="flex items-start justify-between gap-3">
