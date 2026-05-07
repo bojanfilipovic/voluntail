@@ -1,10 +1,6 @@
-import {
-  errorFromFetchFailure,
-  friendlyHttpStatusMessage,
-  isProbablyInfrastructureErrorBody,
-  plainTextErrorBody,
-} from '@/lib/apiErrors'
+import { apiFetch } from '@/lib/apiRequest'
 import { parseJsonResponse } from '@/lib/http'
+import { throwIfSuggestionPostFailed } from '@/lib/suggestionPostErrors'
 import {
   suggestionCreatedSchema,
   type SuggestionCreated,
@@ -40,34 +36,13 @@ export async function postSuggestion(payload: {
     body.animalId = payload.animalId
   }
 
-  let res: Response
-  try {
-    res = await fetch(SUGGESTIONS_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    })
-  } catch (e) {
-    throw errorFromFetchFailure(e)
-  }
+  const res = await apiFetch(SUGGESTIONS_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  })
 
-  if (!res.ok) {
-    const rawText = await res.text().catch(() => '')
-    const plain = plainTextErrorBody(rawText)
-    const usePlain = plain && !isProbablyInfrastructureErrorBody(plain)
-    if (res.status === 503) {
-      throw new Error(
-        (usePlain ? plain : null) ?? 'Feedback is temporarily unavailable.',
-      )
-    }
-    if (res.status === 429) {
-      throw new Error((usePlain ? plain : null) ?? 'Feedback inbox is full for this pilot.')
-    }
-    if (res.status === 400) {
-      throw new Error((usePlain ? plain : null) ?? 'Invalid suggestion.')
-    }
-    throw new Error((usePlain ? plain : null) ?? friendlyHttpStatusMessage(res.status))
-  }
+  await throwIfSuggestionPostFailed(res)
 
   const raw = await parseJsonResponse(res, INVALID_JSON_SUGGESTIONS)
   return suggestionCreatedSchema.parse(raw)
