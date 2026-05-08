@@ -48,6 +48,8 @@ export type DirectoryLayoutProps = {
   cancelSuggestDisabled: boolean
   onStartAddPin: () => void
   onStartSuggestShelter: () => void
+  /** Map empty-viewport hint → same flow as “Suggest shelter” in the public toolbar. */
+  onSuggestShelter?: () => void
   onEnterDetails: () => void
   onEnterSuggestDetails: () => void
   onCancelPlacement: () => void
@@ -103,6 +105,7 @@ export function DirectoryLayout({
   cancelSuggestDisabled,
   onStartAddPin,
   onStartSuggestShelter,
+  onSuggestShelter,
   onEnterDetails,
   onEnterSuggestDetails,
   onCancelPlacement,
@@ -229,6 +232,7 @@ export function DirectoryLayout({
               draftLocation={draftLocation}
               onDraftPosition={onDraftPosition}
               isDark={isDark}
+              onSuggestShelter={onSuggestShelter}
             />
           </Suspense>
           <div className="pointer-events-none absolute top-2 left-2 z-10">

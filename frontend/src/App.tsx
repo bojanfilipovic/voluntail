@@ -299,6 +299,7 @@ function App() {
             cancelSuggestDisabled={cancelSuggestDisabled}
             onStartAddPin={handleStartAddPin}
             onStartSuggestShelter={handleStartSuggestShelter}
+            onSuggestShelter={handleStartSuggestShelter}
             onEnterDetails={handleEnterDetails}
             onEnterSuggestDetails={handleEnterSuggestDetails}
             onCancelPlacement={handleCancelPlacement}
