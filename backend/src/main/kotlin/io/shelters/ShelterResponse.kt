@@ -11,6 +11,8 @@ data class ShelterResponse(
     val latitude: Double,
     val longitude: Double,
     val species: List<ShelterSpecies>,
+    /** ISO 3166-1 alpha-2 from server-side coordinate bounding regions (no external geocoding). */
+    val countryCode: String?,
     val signupUrl: String?,
     val imageUrl: String?,
     val donationUrl: String?,

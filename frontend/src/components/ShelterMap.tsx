@@ -9,17 +9,14 @@ import {
   shelterGeometryKey,
 } from '@/map/shelterBounds'
 import {
-  resolveShelterCountriesWithTilequery,
-  type ShelterCountryResolution,
-} from '@/map/mapboxShelterCountries'
-import {
   ensureShelterPinImages,
   SHELTER_PIN_IMAGE_IDS,
 } from '@/map/shelterPinImages'
+import { countryIsoFromLatLon } from '@/map/shelterCountryIso'
 import type { Shelter } from '@/api/shelters'
 import bbox from '@turf/bbox'
 import type { Feature, FeatureCollection, MultiPolygon, Polygon } from 'geojson'
-import type { GeoJSONSource, MapMouseEvent } from 'mapbox-gl'
+import type { GeoJSONSource, Map as MapboxMap, MapMouseEvent } from 'mapbox-gl'
 import { Maximize2 } from 'lucide-react'
 import {
   forwardRef,
@@ -64,6 +61,22 @@ const CLUSTER_INTERACTIVE = [
 function countryLayerIds(hasCountries: boolean): string[] {
   if (!hasCountries) return []
   return [LAYER_COUNTRY_FILL]
+}
+
+/** Whether any shelter cluster/unclustered symbol is visible (aligned with rendered pins, not raw lng/lat contains). */
+function shelterPinsVisibleInViewport(map: MapboxMap): boolean {
+  const canvas = map.getCanvas()
+  const box: [[number, number], [number, number]] = [
+    [0, 0],
+    [canvas.width, canvas.height],
+  ]
+  try {
+    const feats = map.queryRenderedFeatures(box, { layers: [...CLUSTER_INTERACTIVE] })
+    return feats.length > 0
+  } catch {
+    /* Style/layers not ready — avoid false “empty area” banner */
+    return true
+  }
 }
 
 export type MapCenter = { latitude: number; longitude: number }
@@ -138,17 +151,26 @@ export const ShelterMap = forwardRef<ShelterMapHandle, Props>(
     }, [points, boundsKey])
 
     const [mapReady, setMapReady] = useState(false)
-    const [countryResolution, setCountryResolution] = useState<ShelterCountryResolution | null>(
-      null,
-    )
     const [emptyViewportHint, setEmptyViewportHint] = useState(false)
 
     const lastFittedBoundsKeyRef = useRef<string | null>(null)
 
-    const isoCodes = useMemo(
-      () => countryResolution?.isoCodes ?? new Set<string>(),
-      [countryResolution],
-    )
+    const { isoCodes, isoByShelterId } = useMemo(() => {
+      const byId = new Map<string, string>()
+      const codes = new Set<string>()
+      for (const s of points) {
+        const fromApi = s.countryCode?.trim().toUpperCase()
+        const code =
+          fromApi && fromApi.length === 2
+            ? fromApi
+            : countryIsoFromLatLon(s.latitude, s.longitude)
+        if (code && code.length === 2) {
+          codes.add(code)
+          byId.set(s.id, code)
+        }
+      }
+      return { isoCodes: codes, isoByShelterId: byId }
+    }, [points])
 
     const shelterFeatureCollection = useMemo((): FeatureCollection => {
       return {
@@ -187,7 +209,7 @@ export const ShelterMap = forwardRef<ShelterMapHandle, Props>(
 
     /**
      * ISO highlight on Mapbox Countries — disputed=false only.
-     * Omit worldview filter so EU-only tiles (e.g. HR) still render; Tilequery already picks ISO per shelter.
+     * Omit worldview filter so EU-only tiles (e.g. HR) still render; ISO list comes from GET /api/shelters `countryCode`.
      */
     const countryFillFilter = useMemo(() => {
       const codes = [...isoCodes].sort()
@@ -197,28 +219,6 @@ export const ShelterMap = forwardRef<ShelterMapHandle, Props>(
         ['in', ['get', 'iso_3166_1'], ['literal', codes]],
       ] as never
     }, [isoCodes])
-
-    useEffect(() => {
-      const pts = pointsRef.current
-      if (!token || pts.length === 0) {
-        startTransition(() => setCountryResolution(null))
-        return
-      }
-
-      let cancelled = false
-
-      resolveShelterCountriesWithTilequery(pts, token)
-        .then((res) => {
-          if (!cancelled) setCountryResolution(res)
-        })
-        .catch(() => {
-          if (!cancelled) setCountryResolution(null)
-        })
-
-      return () => {
-        cancelled = true
-      }
-    }, [token, boundsKey])
 
     const resizeMap = useCallback(() => {
       const map = mapRef.current?.getMap()
@@ -288,12 +288,8 @@ export const ShelterMap = forwardRef<ShelterMapHandle, Props>(
       const update = () => {
         clearTimeout(timeoutId)
         timeoutId = setTimeout(() => {
-          const b = map.getBounds()
-          if (!b) return
-          const has = points.some((p) =>
-            b.contains({ lng: p.longitude, lat: p.latitude }),
-          )
-          startTransition(() => setEmptyViewportHint(!has))
+          const visible = shelterPinsVisibleInViewport(map)
+          startTransition(() => setEmptyViewportHint(points.length > 0 && !visible))
         }, 350)
       }
 
@@ -630,9 +626,9 @@ export const ShelterMap = forwardRef<ShelterMapHandle, Props>(
                 className="bg-background/90 text-xs shadow-sm backdrop-blur-sm"
                 onClick={() => {
                   const map = mapRef.current?.getMap()
-                  if (!map || !countryResolution) return
+                  if (!map) return
                   const inCountry = points.filter(
-                    (s) => countryResolution.isoByShelterId.get(s.id) === iso,
+                    (s) => isoByShelterId.get(s.id) === iso,
                   )
                   const bb = boundsFromShelters(inCountry)
                   if (!bb) return

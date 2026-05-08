@@ -24,6 +24,7 @@ fun ShelterCreateRequest.toShelterResponse(id: UUID): ShelterResponse =
         latitude = latitude,
         longitude = longitude,
         species = species,
+        countryCode = countryIsoFromLatLon(latitude, longitude),
         signupUrl = signupUrl.trimmedNonBlank(),
         imageUrl = imageUrl.trimmedNonBlank(),
         donationUrl = donationUrl.trimmedNonBlank(),

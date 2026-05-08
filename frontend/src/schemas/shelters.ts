@@ -12,6 +12,8 @@ export const shelterSchema = z.object({
   latitude: z.number(),
   longitude: z.number(),
   species: z.array(shelterSpeciesEnum),
+  /** ISO 3166-1 alpha-2 from backend coordinate regions — omit if older API. */
+  countryCode: z.string().optional().nullable(),
   signupUrl: z.string().nullish(),
   imageUrl: z.string().nullish(),
   donationUrl: z.string().nullish(),
