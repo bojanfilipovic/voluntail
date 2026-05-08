@@ -14,86 +14,35 @@ Offline tooling only — **not** production. Defaults and docs assume **respectf
 
 ## Architecture
 
-Each shelter is a `ShelterExtractor` class in `extract.py`:
+Standalone scripts (each calls `shared.generate_migration`):
 
-```python
-class ShelterExtractor(ABC):
-    source_id: str       # e.g. "doa", "roz"
-    shelter_name: str    # must match DB shelter name
-    listing_url: str
+| Script | Shelter DB `name` | Listing |
+|--------|-------------------|---------|
+| `extract_doa.py` | `DOA dierenasiel` | DOA adopt pages |
+| `extract_roz.py` | `Reptielenopvang Zwanenburg` | Shopify “in opvang” |
+| `extract_snoopy.py` | `Udruga Snoopy` | `https://snoopy.hr/udomi/` |
 
-    def fetch_animals(self, session, max_pages, delay) -> list[RawAnimal]: ...
-    def fetch_image(self, session, detail_url, delay) -> str | None: ...
-```
-
-To add a new shelter: implement the class and add it to `EXTRACTORS` list.
+Add a new shelter: copy an existing script, adjust parsing + `SHELTER_NAME`, run once, review the generated SQL under `backend/supabase/migrations/seeds/`.
 
 ---
 
-## 1. Extract (HTTP → JSON)
+## Run an extractor (writes `.sql` directly)
 
 ```bash
 cd tools/extract-pilot-animals
-python3 -m venv .venv && source .venv/bin/activate
+python3 -m venv .venv && source .venv/bin/activate   # once
 pip install -r requirements.txt
 ```
 
-```bash
-python extract.py --out-dir ./out
-```
-
-This fetches listing pages and then each animal's detail page for the real photo URL.
-
-For extra caution between pages:
+Each script writes a timestamped file under `backend/supabase/migrations/seeds/` — **review** before applying.
 
 ```bash
-python extract.py --out-dir ./out --delay-seconds 4
+python extract_doa.py --delay-seconds 3 --max-pages 3
+python extract_roz.py
+python extract_snoopy.py --delay-seconds 3
 ```
 
-| Flag | Default | Role |
-|------|---------|------|
-| `--delay-seconds` | **3.0** | Wait after each page/detail fetch. Values below 2 print a warning. |
-| `--doa-pages` | 5 | Max listing pages for DOA |
-| `--roz-pages` | 8 | Max listing pages for ROZ |
-| `--user-agent` | see source | Sent on every request |
-
-Output: `out/pilot_animals_raw.json` (gitignored).
-
-Shape: `{ "doa": [ ... ], "roz": [ ... ] }` with `source`, `name`, `description`, `detail_url`, `species_guess`, `city`, and image fields (`image_urls` list in `shared.RawAnimal`; generated SQL targets `animals.image_urls`).
-
----
-
-## 2. Generate SQL migration (JSON → `.sql`)
-
-```bash
-python json_to_migration.py out/pilot_animals_raw.json
-```
-
-Writes `backend/supabase/migrations/<UTC_YYYYMMDDHHMMSS>_import_pilot_animals_from_extract.sql`. **Review** the file, then apply via your Supabase process.
-
-| Flag | Meaning |
-|------|---------|
-| `--dry-run` | Print target path and counts; no file written |
-| `--output PATH` | Exact output path (disables auto timestamp name) |
-| `--migrations-dir DIR` | Override migrations directory |
-
-**Behaviour:**
-- Maps `source` → shelter (`doa` → DOA dierenasiel, `roz` → Reptielenopvang Zwanenburg)
-- Uses real `image_url` from extract when present; falls back to picsum placeholder
-- **Idempotent:** skips insert if `external_url` already exists in animals table (safe to re-run)
-- Species aligned with backend enums (unknown → `reptile`)
-
----
-
-## Full workflow (copy-paste)
-
-```bash
-cd tools/extract-pilot-animals
-source .venv/bin/activate
-python extract.py --out-dir ./out
-python json_to_migration.py out/pilot_animals_raw.json
-# Review the generated .sql file, then apply to Supabase
-```
+Common flags: `--delay-seconds`, `--migrations-dir`, `--user-agent` (see `--help` per script).
 
 ---
 
@@ -103,6 +52,7 @@ Before large pulls, verify:
 
 - `https://doa-dierenasiel.nl/robots.txt`
 - `https://reptielenopvang.nl/robots.txt`
+- `https://snoopy.hr/robots.txt`
 
 The script enforces `can_fetch` for your User-Agent when rules load (no CLI switch to bypass).
 
