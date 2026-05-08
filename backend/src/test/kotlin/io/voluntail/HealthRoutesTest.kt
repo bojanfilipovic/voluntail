@@ -8,7 +8,6 @@ import kotlin.test.assertEquals
 
 /** HTTP entry and liveness endpoints. */
 class HealthRoutesTest {
-
     @Test
     fun `GET root returns OK`() {
         voluntailTest {

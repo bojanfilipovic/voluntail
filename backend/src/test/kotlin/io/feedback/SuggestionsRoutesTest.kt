@@ -14,7 +14,6 @@ import kotlin.test.assertEquals
  * HTTP smoke tests for `/api/suggestions` (validation + 503 without DB in default test env).
  */
 class SuggestionsRoutesTest {
-
     @Test
     fun `POST suggestion with empty message returns 400`() {
         voluntailTest {

@@ -10,7 +10,6 @@ import kotlin.test.assertEquals
  * Unit-style check: [voluntailJson] round-trips [ShelterSpecies] lists like Exposed `jsonb` expects.
  */
 class VoluntailJsonShelterSpeciesTest {
-
     @Test
     fun `species list serializes compatibly with jsonb column configuration`() {
         val serializer = ListSerializer(ShelterSpecies.serializer())

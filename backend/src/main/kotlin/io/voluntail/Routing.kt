@@ -20,17 +20,26 @@ private val serviceInfo =
 
 fun Application.configureRouting() {
     val repos = createApplicationRepositories()
-    val persistence = if (System.getenv("DB_URL")?.trim().orEmpty().isNotEmpty()) "postgres" else "in-memory"
+    val persistence =
+        if (System
+                .getenv("DB_URL")
+                ?.trim()
+                .orEmpty()
+                .isNotEmpty()
+        ) {
+            "postgres"
+        } else {
+            "in-memory"
+        }
     logApplicationStartup(
         persistence = persistence,
         feedbackAvailable = repos.feedbackRepository != null,
     )
     routing {
-        get("/") {
-            call.respond(serviceInfo)
-        }
-        get("/health") {
-            call.respond(serviceInfo)
+        listOf("/", "/health").forEach { path ->
+            get(path) {
+                call.respond(serviceInfo)
+            }
         }
         shelterRoutes(repos.shelterRepository)
         animalRoutes(repos.shelterRepository, repos.animalRepository)

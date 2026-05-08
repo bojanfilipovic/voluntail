@@ -6,6 +6,13 @@ import kotlinx.serialization.json.jsonPrimitive
 
 internal const val TEST_CMS_KEY = "test-secret"
 
-internal fun jsonStringField(body: String, field: String): String =
-    Json.parseToJsonElement(body).jsonObject[field]?.jsonPrimitive?.content
+internal fun jsonStringField(
+    body: String,
+    field: String,
+): String =
+    Json
+        .parseToJsonElement(body)
+        .jsonObject[field]
+        ?.jsonPrimitive
+        ?.content
         ?: error("missing JSON string field \"$field\"")

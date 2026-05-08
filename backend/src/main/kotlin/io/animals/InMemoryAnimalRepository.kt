@@ -31,8 +31,7 @@ class InMemoryAnimalRepository(
         return out.sortedBy { it.name }
     }
 
-    override suspend fun findById(id: UUID): AnimalResponse? =
-        rows.firstOrNull { it.id == id.toString() }
+    override suspend fun findById(id: UUID): AnimalResponse? = rows.firstOrNull { it.id == id.toString() }
 
     override suspend fun insert(request: AnimalCreateRequest): AnimalResponse {
         val id = UUID.randomUUID()
@@ -57,8 +56,7 @@ class InMemoryAnimalRepository(
         return merged
     }
 
-    override suspend fun delete(id: UUID): Boolean =
-        rows.removeIf { it.id == id.toString() }
+    override suspend fun delete(id: UUID): Boolean = rows.removeIf { it.id == id.toString() }
 
     override suspend fun incrementHeartCount(id: UUID): Int? {
         val idx = rows.indexOfFirst { it.id == id.toString() && it.published }

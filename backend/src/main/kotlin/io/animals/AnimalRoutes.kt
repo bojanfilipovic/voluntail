@@ -49,7 +49,9 @@ fun Route.animalRoutes(
                         }
                 }
             val cityFilter =
-                call.request.queryParameters["city"]?.trim()?.takeIf { it.isNotEmpty() }
+                call.request.queryParameters["city"]
+                    ?.trim()
+                    ?.takeIf { it.isNotEmpty() }
             val visibility =
                 if (call.isCmsAuthorized()) {
                     AnimalListVisibility.Cms
@@ -180,4 +182,6 @@ fun Route.animalRoutes(
 }
 
 @kotlinx.serialization.Serializable
-data class HeartCountResponse(val heartCount: Int)
+data class HeartCountResponse(
+    val heartCount: Int,
+)

@@ -8,7 +8,6 @@ import io.shelters.ShelterUpdateRequest
 import io.shelters.applyTo
 import io.shelters.toShelterResponse
 import io.shelters.trimmedNonBlank
-import java.util.UUID
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.jetbrains.exposed.v1.core.ResultRow
@@ -20,6 +19,7 @@ import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.suspendTransaction
 import org.jetbrains.exposed.v1.jdbc.update
+import java.util.UUID
 import kotlin.uuid.ExperimentalUuidApi
 
 @OptIn(ExperimentalUuidApi::class)
@@ -106,9 +106,10 @@ class ExposedShelterRepository(
 
 private fun ResultRow.toShelterResponse(): ShelterResponse {
     val speciesStrings: List<String> = this[SheltersTable.species]
-    val speciesList = speciesStrings.mapNotNull { name ->
-        ShelterSpecies.entries.find { it.name == name }
-    }
+    val speciesList =
+        speciesStrings.mapNotNull { name ->
+            ShelterSpecies.entries.find { it.name == name }
+        }
     return ShelterResponse(
         id = this[SheltersTable.id].toString(),
         name = this[SheltersTable.name],

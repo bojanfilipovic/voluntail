@@ -1,14 +1,14 @@
 package io.feedback
 
 import io.ktor.http.HttpStatusCode
-import io.ktor.server.application.ApplicationCall
+import io.ktor.server.plugins.BadRequestException
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondText
-import io.ktor.server.plugins.BadRequestException
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
+import io.voluntail.respondInvalidJsonBody
 import kotlinx.serialization.SerializationException
 
 const val SUGGESTION_MAX_MESSAGE_LENGTH = 4000
@@ -24,10 +24,10 @@ fun Route.feedbackRoutes(
                 try {
                     call.receive<SuggestionCreateRequest>()
                 } catch (_: SerializationException) {
-                    invalidSuggestionBody(call)
+                    call.respondInvalidJsonBody()
                     return@post
                 } catch (_: BadRequestException) {
-                    invalidSuggestionBody(call)
+                    call.respondInvalidJsonBody()
                     return@post
                 }
 
@@ -74,11 +74,4 @@ fun Route.feedbackRoutes(
             }
         }
     }
-}
-
-private suspend fun invalidSuggestionBody(call: ApplicationCall) {
-    call.respondText(
-        "Invalid JSON body",
-        status = HttpStatusCode.BadRequest,
-    )
 }

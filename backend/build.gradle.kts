@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.kotlin.jvm)
     alias(libs.plugins.ktor)
     alias(libs.plugins.kotlin.plugin.serialization)
+    alias(libs.plugins.ktlint)
 }
 
 group = "io"
@@ -16,6 +17,15 @@ application {
 
 kotlin {
     jvmToolchain(21)
+}
+
+ktlint {
+    additionalEditorconfig.set(
+        mapOf(
+            "ktlint_standard_enum-entry-name-case" to "disabled",
+            "ktlint_standard_filename" to "disabled",
+        ),
+    )
 }
 
 tasks.withType<KotlinCompile>().configureEach {

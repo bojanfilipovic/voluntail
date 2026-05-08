@@ -11,7 +11,6 @@ import io.animals.applyTo
 import io.animals.toAnimalResponse
 import io.shelters.ShelterSpecies
 import io.shelters.persistence.SheltersTable
-import java.util.UUID
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.jetbrains.exposed.v1.core.Op
@@ -26,6 +25,8 @@ import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.suspendTransaction
 import org.jetbrains.exposed.v1.jdbc.update
+import java.util.UUID
+
 class ExposedAnimalRepository(
     private val database: Database,
 ) : AnimalRepository {
@@ -113,7 +114,7 @@ class ExposedAnimalRepository(
                             .selectAll()
                             .where { SheltersTable.id eq newShelterUuid }
                             .firstOrNull()
-                                ?.get(SheltersTable.city)
+                            ?.get(SheltersTable.city)
                             ?: return@suspendTransaction null
                     merged = merged.copy(city = shelterCity)
                 }

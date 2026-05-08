@@ -1,7 +1,7 @@
 package io.shelters
 
-import java.util.UUID
 import kotlinx.serialization.Serializable
+import java.util.UUID
 
 @Serializable
 data class ShelterCreateRequest(
@@ -30,5 +30,4 @@ fun ShelterCreateRequest.toShelterResponse(id: UUID): ShelterResponse =
         city = city.trim(),
     )
 
-internal fun String?.trimmedNonBlank(): String? =
-    this?.trim()?.takeIf { it.isNotEmpty() }
+internal fun String?.trimmedNonBlank(): String? = this?.trim()?.takeIf { it.isNotEmpty() }
