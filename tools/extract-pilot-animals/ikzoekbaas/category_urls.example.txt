@@ -1,0 +1,10 @@
+# From tools/extract-pilot-animals/:
+#   python ikzoekbaas/extract_ikzoekbaas.py --category-urls-file ikzoekbaas/category_urls.example.txt --delay-seconds 3
+# Requires: pip install -r requirements.txt && playwright install chromium
+
+https://ikzoekbaas.dierenbescherming.nl/zoek-asieldieren/honden?animalAvailability=available
+https://ikzoekbaas.dierenbescherming.nl/zoek-asieldieren/katten?animalAvailability=available
+https://ikzoekbaas.dierenbescherming.nl/zoek-asieldieren/konijnen-en-knagers
+https://ikzoekbaas.dierenbescherming.nl/zoek-asieldieren/vogels
+https://ikzoekbaas.dierenbescherming.nl/zoek-asieldieren/ex-proefdieren
+https://ikzoekbaas.dierenbescherming.nl/zoek-asieldieren/overige

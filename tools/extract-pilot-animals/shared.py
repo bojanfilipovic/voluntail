@@ -21,6 +21,8 @@ class RawAnimal:
     species_guess: str
     city: str | None
     image_urls: list[str] = field(default_factory=list)
+    """When set, SQL targets this `public.shelters.name` (multi-shelter sources like Ik Zoek Baas)."""
+    resolved_shelter_name: str | None = None
 
 
 def sql_str(s: str) -> str:
@@ -57,7 +59,7 @@ def generate_migration(
     header = f"""-- {source_label} animals import
 -- Generated at (UTC): {now.isoformat()}
 -- Animals: {len(animals)}
--- Idempotent: skips rows where {dedup_column} already exists for this shelter.
+-- Idempotent: skips rows where {dedup_column} already exists (scoped by shelter on each insert).
 
 """
     stmts: list[str] = []
@@ -65,6 +67,7 @@ def generate_migration(
         urls_sql = sql_image_urls_array(a.image_urls)
         ext_sql = sql_str(a.detail_url) if a.detail_url else "null"
         city_sql = sql_str(a.city or "")
+        row_shelter = (a.resolved_shelter_name or "").strip() or shelter_name
 
         if dedup_column == "name":
             dedup_clause = f"where a.name = {sql_str(a.name)} and a.shelter_id = s.id"
@@ -77,7 +80,7 @@ def generate_migration(
             f"select s.id, {city_sql}, {sql_str(a.name)}, {sql_str(a.description)}, "
             f"{sql_str(a.species_guess)}, 'available', true, {urls_sql}, {ext_sql}\n"
             f"from public.shelters s\n"
-            f"where s.name = {sql_str(shelter_name)}\n"
+            f"where s.name = {sql_str(row_shelter)}\n"
             f"  and not exists (select 1 from public.animals a {dedup_clause})\n"
             f"limit 1;\n"
         )
