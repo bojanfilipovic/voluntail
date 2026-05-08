@@ -276,6 +276,8 @@ export function ExploreView({ onBack, onOpenAnimal }: Props) {
         title={SWIPE_VIEW_TITLE}
         displayName={session.deckEntered ? session.displayName : undefined}
         intent={session.deckEntered ? session.intent : undefined}
+        deckMatches={session.deckEntered ? shortlistAnimals : undefined}
+        onPickDeckMatch={session.deckEntered ? onOpenAnimal : undefined}
       />
 
       <div
@@ -292,11 +294,9 @@ export function ExploreView({ onBack, onOpenAnimal }: Props) {
               : 'flex flex-col gap-6',
           )}
         >
-          <ExploreShortlistRow
-            animals={shortlistAnimals}
-            onPick={onOpenAnimal}
-            compact={showSwipeLayout}
-          />
+          {!session.deckEntered ? (
+            <ExploreShortlistRow animals={shortlistAnimals} onPick={onOpenAnimal} />
+          ) : null}
 
           {!session.deckEntered ? (
             <div className="space-y-4">

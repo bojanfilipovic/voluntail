@@ -122,9 +122,11 @@ export function ExploreSwipeStack({
   const metaLine = `${speciesLabel(current.species)}${current.city ? ` \u00b7 ${current.city}` : ''}${parseAnimalAge(current.description) ? ` \u00b7 ${parseAnimalAge(current.description)}` : ''}`
 
   const mobileHeroOverlay = (
-    <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[8] bg-gradient-to-t from-black/85 via-black/50 to-transparent px-3 pt-10 pb-28 sm:hidden">
-      <p className="text-base font-semibold tracking-tight text-white drop-shadow-md">{current.name}</p>
-      <p className="mt-0.5 text-sm leading-snug text-white/90 drop-shadow-sm">{metaLine}</p>
+    <div className="pointer-events-none absolute inset-0 z-[8] flex flex-col justify-end bg-gradient-to-t from-black/85 via-black/45 to-transparent px-3 pb-3 pt-14 sm:hidden">
+      <div className="min-w-0">
+        <p className="text-base font-semibold tracking-tight text-white drop-shadow-md">{current.name}</p>
+        <p className="mt-0.5 text-sm leading-snug text-white/90 drop-shadow-sm">{metaLine}</p>
+      </div>
     </div>
   )
 

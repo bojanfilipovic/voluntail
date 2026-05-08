@@ -83,7 +83,9 @@ export function AnimalDetailDialog({
   return (
     <Dialog open={Boolean(animal)} onOpenChange={(next) => !next && onClose()}>
       <DialogContent
-        className="max-w-lg gap-0 p-0 sm:max-w-lg"
+        className={cn(
+          'flex max-h-[min(92dvh,calc(100dvh-2rem))] max-w-lg flex-col overflow-hidden gap-0 p-0 sm:max-w-lg',
+        )}
         showCloseButton={false}
       >
         {animal ? (
@@ -91,9 +93,9 @@ export function AnimalDetailDialog({
             <AnimalImageGallery
               variant="card"
               urls={effectiveAnimalImageUrls(animal)}
-              className="overflow-hidden rounded-t-xl"
+              className="shrink-0 overflow-hidden rounded-t-xl"
             />
-            <DialogHeader className="border-b px-4 pt-4 pb-2">
+            <DialogHeader className="border-b shrink-0 px-4 pt-4 pb-2">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0 flex-1 space-y-1">
                   <div className="flex items-center gap-2">
@@ -119,58 +121,58 @@ export function AnimalDetailDialog({
                 </DialogClose>
               </div>
             </DialogHeader>
-            <div className="max-h-[min(50vh,22rem)] space-y-3 overflow-y-auto px-4 py-3 text-sm leading-relaxed">
+            <div className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain px-4 py-3 text-sm leading-relaxed [-webkit-overflow-scrolling:touch]">
               <p className="text-foreground/95 whitespace-pre-wrap">{animal.description}</p>
               {!animal.published ? (
                 <p className="text-destructive text-sm font-medium">
                   Unpublished — only visible with CMS key in the API.
                 </p>
               ) : null}
-            </div>
-            {shelter && shelterDetailsOpen ? (
-              <div
-                className="border-border bg-muted/30 mx-4 mb-3 space-y-3 rounded-lg border p-3 text-sm"
-                id="animal-dialog-shelter-details"
-              >
-                <button
-                  type="button"
-                  className="text-primary text-sm font-medium underline-offset-4 hover:underline"
-                  onClick={onShelterClick}
+              {shelter && shelterDetailsOpen ? (
+                <div
+                  className="border-border bg-muted/30 space-y-3 rounded-lg border p-3 text-sm"
+                  id="animal-dialog-shelter-details"
                 >
-                  {shelter.name}
-                </button>
-                <p className="text-muted-foreground text-sm">
-                  {shelter.city}
-                  {shelter.species.length
-                    ? ` · ${shelter.species.map(speciesLabel).join(', ')}`
-                    : ''}
-                </p>
-                <p className="text-foreground/95 leading-relaxed">{shelter.description}</p>
-                <div className="flex flex-wrap gap-2">
-                  {shelter.signupUrl ? (
-                    <a
-                      href={shelter.signupUrl}
-                      rel="noreferrer noopener"
-                      target="_blank"
-                      className={cn(buttonVariants({ variant: 'default', size: 'sm' }))}
-                    >
-                      Volunteer
-                    </a>
-                  ) : null}
-                  {shelter.donationUrl ? (
-                    <a
-                      href={shelter.donationUrl}
-                      rel="noreferrer noopener"
-                      target="_blank"
-                      className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}
-                    >
-                      Donate
-                    </a>
-                  ) : null}
+                  <button
+                    type="button"
+                    className="text-primary text-sm font-medium underline-offset-4 hover:underline"
+                    onClick={onShelterClick}
+                  >
+                    {shelter.name}
+                  </button>
+                  <p className="text-muted-foreground text-sm">
+                    {shelter.city}
+                    {shelter.species.length
+                      ? ` · ${shelter.species.map(speciesLabel).join(', ')}`
+                      : ''}
+                  </p>
+                  <p className="text-foreground/95 leading-relaxed">{shelter.description}</p>
+                  <div className="flex flex-wrap gap-2">
+                    {shelter.signupUrl ? (
+                      <a
+                        href={shelter.signupUrl}
+                        rel="noreferrer noopener"
+                        target="_blank"
+                        className={cn(buttonVariants({ variant: 'default', size: 'sm' }))}
+                      >
+                        Volunteer
+                      </a>
+                    ) : null}
+                    {shelter.donationUrl ? (
+                      <a
+                        href={shelter.donationUrl}
+                        rel="noreferrer noopener"
+                        target="_blank"
+                        className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}
+                      >
+                        Donate
+                      </a>
+                    ) : null}
+                  </div>
                 </div>
-              </div>
-            ) : null}
-            <DialogFooterStack>
+              ) : null}
+            </div>
+            <DialogFooterStack className="shrink-0">
               <div
                 className="flex min-w-0 flex-wrap items-center gap-2"
                 role="group"
