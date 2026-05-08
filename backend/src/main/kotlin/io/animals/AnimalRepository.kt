@@ -36,4 +36,7 @@ interface AnimalRepository {
 
     /** Increment heart_count by 1 for a published animal. Returns new count, or null if not found/unpublished. */
     suspend fun incrementHeartCount(id: UUID): Int?
+
+    /** Decrement heart_count by 1 for a published animal (floored at 0). Returns new count, or null if not found/unpublished. */
+    suspend fun decrementHeartCount(id: UUID): Int?
 }

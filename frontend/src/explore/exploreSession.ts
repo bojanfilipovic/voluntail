@@ -3,8 +3,14 @@ import { pickFunnyDisplayName } from '@/explore/funnyDisplayNames'
 import {
   type ExploreIntent,
   type ExplorePersisted,
+  EXPLORE_SESSION_CHANGED_EVENT,
   EXPLORE_STORAGE_KEY,
 } from '@/explore/types'
+
+function notifyExploreSessionChanged(): void {
+  if (typeof window === 'undefined') return
+  window.dispatchEvent(new CustomEvent(EXPLORE_SESSION_CHANGED_EVENT))
+}
 
 const INTENTS: readonly ExploreIntent[] = [
   'volunteer',
@@ -93,6 +99,7 @@ export function saveExploreSession(session: ExplorePersisted): void {
   if (typeof window === 'undefined') return
   try {
     window.localStorage.setItem(EXPLORE_STORAGE_KEY, JSON.stringify(session))
+    notifyExploreSessionChanged()
   } catch {
     /* ignore */
   }

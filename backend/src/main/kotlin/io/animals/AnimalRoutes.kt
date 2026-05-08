@@ -178,6 +178,19 @@ fun Route.animalRoutes(
                     }
             call.respond(HeartCountResponse(heartCount = newCount))
         }
+        post("/animals/{id}/unheart") {
+            val id = call.uuidPathParameter("id") ?: return@post
+            val newCount =
+                animalRepository.decrementHeartCount(id)
+                    ?: run {
+                        call.respondText(
+                            "Animal not found",
+                            status = HttpStatusCode.NotFound,
+                        )
+                        return@post
+                    }
+            call.respond(HeartCountResponse(heartCount = newCount))
+        }
     }
 }
 

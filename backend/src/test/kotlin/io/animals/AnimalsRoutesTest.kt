@@ -215,4 +215,47 @@ class AnimalsRoutesTest {
             assertEquals(HttpStatusCode.NotFound, res.status)
         }
     }
+
+    @Test
+    fun `POST unheart decrements count for published animal`() {
+        voluntailTest {
+            val sampleId = "b0000001-0001-4001-8001-000000000001"
+            client.post("/api/animals/$sampleId/heart")
+            client.post("/api/animals/$sampleId/heart")
+            val res = client.post("/api/animals/$sampleId/unheart")
+            assertEquals(HttpStatusCode.OK, res.status)
+            assertTrue(res.bodyAsText().contains("\"heartCount\":1"))
+
+            val res2 = client.post("/api/animals/$sampleId/unheart")
+            assertEquals(HttpStatusCode.OK, res2.status)
+            assertTrue(res2.bodyAsText().contains("\"heartCount\":0"))
+        }
+    }
+
+    @Test
+    fun `POST unheart when count is zero stays zero`() {
+        voluntailTest {
+            val sampleId = "b0000001-0001-4001-8001-000000000001"
+            val res = client.post("/api/animals/$sampleId/unheart")
+            assertEquals(HttpStatusCode.OK, res.status)
+            assertTrue(res.bodyAsText().contains("\"heartCount\":0"))
+        }
+    }
+
+    @Test
+    fun `POST unheart returns 404 for unpublished animal`() {
+        voluntailTest {
+            val unpublishedId = "b0000004-0004-4004-8004-000000000004"
+            val res = client.post("/api/animals/$unpublishedId/unheart")
+            assertEquals(HttpStatusCode.NotFound, res.status)
+        }
+    }
+
+    @Test
+    fun `POST unheart returns 404 for nonexistent animal`() {
+        voluntailTest {
+            val res = client.post("/api/animals/00000000-0000-0000-0000-000000000000/unheart")
+            assertEquals(HttpStatusCode.NotFound, res.status)
+        }
+    }
 }

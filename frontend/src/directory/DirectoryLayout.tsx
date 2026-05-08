@@ -1,5 +1,7 @@
-import { Suspense, lazy, useState, useCallback, type RefObject } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { Suspense, lazy, useMemo, useState, useCallback, useEffect, type RefObject } from 'react'
 import type { Animal } from '@/api/animals'
+import { fetchAnimals } from '@/api/animals'
 import type { Shelter } from '@/api/shelters'
 import { AnimalList } from '@/components/AnimalList'
 import { DiscoveryErrorBoundary } from '@/components/layout/DiscoveryErrorBoundary'
@@ -12,8 +14,13 @@ import { ShelterList } from '@/components/ShelterList'
 import { Button } from '@/components/ui/button'
 import type { DraftFlow } from '@/hooks/useShelterDiscoveryState'
 import type { SpeciesFilterValue } from '@/domain/species'
+import { animalsRowsForDirectoryList } from '@/directory/animalListSource'
 import { MapLoadingFallback } from '@/directory/MapLoadingFallback'
 import type { DirectoryTab } from '@/directory/types'
+import { EXPLORE_SESSION_CHANGED_EVENT, EXPLORE_STORAGE_KEY } from '@/explore/types'
+import { getShortlistIds } from '@/lib/exploreShortlist'
+import { getHeartedIds, HEARTS_STORAGE_KEY, subscribeHeartsChanged } from '@/lib/heartStorage'
+import { animalQueryKeys, type AnimalListQuery } from '@/lib/queryKeys'
 import { Dices } from 'lucide-react'
 
 /** Same as MapCenter from ShelterMap — duplicated here to avoid a static import of the map module next to a lazy() of it. */
@@ -141,6 +148,67 @@ export function DirectoryLayout({
   const suggestDraftLocationKnown = draftFlow === 'suggest' && Boolean(draftLocation)
   const [favoritesOnly, setFavoritesOnly] = useState(false)
   const handleFavoritesToggle = useCallback(() => setFavoritesOnly((v) => !v), [])
+  const [matchesOnly, setMatchesOnly] = useState(false)
+  const handleMatchesToggle = useCallback(() => setMatchesOnly((v) => !v), [])
+
+  useEffect(() => {
+    const syncFavoriteMode = (): void => {
+      setFavoritesOnly((fo) => (fo && getHeartedIds().size === 0 ? false : fo))
+    }
+    const syncMatchMode = (): void => {
+      setMatchesOnly((mo) => (mo && getShortlistIds().size === 0 ? false : mo))
+    }
+    const unheart = subscribeHeartsChanged(syncFavoriteMode)
+    const onExplore = (): void => {
+      syncMatchMode()
+    }
+    window.addEventListener(EXPLORE_SESSION_CHANGED_EVENT, onExplore)
+    const onStorage = (e: StorageEvent): void => {
+      if (e.key === HEARTS_STORAGE_KEY || e.key === EXPLORE_STORAGE_KEY) {
+        syncFavoriteMode()
+        syncMatchMode()
+      }
+    }
+    window.addEventListener('storage', onStorage)
+    return () => {
+      unheart()
+      window.removeEventListener(EXPLORE_SESSION_CHANGED_EVENT, onExplore)
+      window.removeEventListener('storage', onStorage)
+    }
+  }, [])
+
+  const unscopedListQuery = useMemo(
+    (): AnimalListQuery => ({
+      city: null,
+      shelterId: null,
+      species: null,
+    }),
+    [],
+  )
+
+  const favoritesOrMatchesOnly = favoritesOnly || matchesOnly
+  const needsGlobalAnimalList = favoritesOrMatchesOnly && directoryTab === 'animals'
+
+  const { data: unscopedAnimals, isPending: unscopedAnimalsPending } = useQuery({
+    queryKey: animalQueryKeys.list(unscopedListQuery),
+    queryFn: () => fetchAnimals(unscopedListQuery),
+    enabled: needsGlobalAnimalList,
+  })
+
+  const animalsForList = useMemo(
+    () =>
+      animalsRowsForDirectoryList({
+        favoritesOrMatchesOnly,
+        scopedAnimals: animals,
+        unscopedAnimals,
+        speciesFilter: animalSpeciesFilter,
+      }),
+    [favoritesOrMatchesOnly, animals, unscopedAnimals, animalSpeciesFilter],
+  )
+
+  const animalsListLoading = animalsLoading || (needsGlobalAnimalList && unscopedAnimalsPending)
+
+  const surprisePickSource = animalsForList ?? animals
 
   return (
     <DiscoveryErrorBoundary>
@@ -220,15 +288,16 @@ export function DirectoryLayout({
             >
               Animals
             </Button>
-            {directoryTab === 'animals' && (animals?.length ?? 0) > 1 ? (
+            {directoryTab === 'animals' && (surprisePickSource?.length ?? 0) > 1 ? (
               <Button
                 type="button"
                 size="sm"
                 variant="ghost"
                 className="ml-auto"
                 onClick={() => {
-                  if (!animals?.length) return
-                  const pick = animals[Math.floor(Math.random() * animals.length)]
+                  if (!surprisePickSource?.length) return
+                  const pick =
+                    surprisePickSource[Math.floor(Math.random() * surprisePickSource.length)]
                   onSelectAnimal(pick)
                 }}
               >
@@ -257,10 +326,10 @@ export function DirectoryLayout({
               />
             ) : (
               <AnimalList
-                animals={animals}
+                animals={animalsForList}
                 shelters={allShelters}
                 error={directoryError}
-                isPending={animalsLoading}
+                isPending={animalsListLoading}
                 selectedId={selectedAnimalId}
                 onSelectAnimal={onSelectAnimal}
                 cityFilter={animalCityFilter}
@@ -274,6 +343,8 @@ export function DirectoryLayout({
                 totalAnimalCount={totalAnimalCount}
                 favoritesOnly={favoritesOnly}
                 onFavoritesToggle={handleFavoritesToggle}
+                matchesOnly={matchesOnly}
+                onMatchesToggle={handleMatchesToggle}
               />
             )}
           </div>
