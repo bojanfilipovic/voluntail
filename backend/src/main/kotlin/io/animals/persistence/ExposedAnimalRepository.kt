@@ -156,6 +156,25 @@ class ExposedAnimalRepository(
                     ?.get(AnimalsTable.heartCount)
             }
         }
+
+    override suspend fun decrementHeartCount(id: UUID): Int? =
+        withContext(Dispatchers.IO) {
+            suspendTransaction(db = database, readOnly = false) {
+                val row =
+                    AnimalsTable
+                        .selectAll()
+                        .where { AnimalsTable.id eq id }
+                        .firstOrNull()
+                        ?: return@suspendTransaction null
+                if (!row[AnimalsTable.published]) return@suspendTransaction null
+                val current = row[AnimalsTable.heartCount]
+                val next = maxOf(0, current - 1)
+                AnimalsTable.update({ AnimalsTable.id eq id }) {
+                    it[heartCount] = next
+                }
+                next
+            }
+        }
 }
 
 private fun ResultRow.toAnimalResponse(): AnimalResponse {

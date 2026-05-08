@@ -65,4 +65,13 @@ class InMemoryAnimalRepository(
         rows[idx] = updated
         return updated.heartCount
     }
+
+    override suspend fun decrementHeartCount(id: UUID): Int? {
+        val idx = rows.indexOfFirst { it.id == id.toString() && it.published }
+        if (idx < 0) return null
+        val next = maxOf(0, rows[idx].heartCount - 1)
+        val updated = rows[idx].copy(heartCount = next)
+        rows[idx] = updated
+        return updated.heartCount
+    }
 }

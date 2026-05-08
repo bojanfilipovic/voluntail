@@ -34,6 +34,7 @@ export type AnimalCreatePayload = {
 const ANIMALS_URL = '/api/animals'
 const INVALID_JSON_ANIMALS = 'Invalid JSON from /api/animals'
 const INVALID_JSON_HEART = 'Invalid JSON from heart endpoint'
+const INVALID_JSON_UNHEART = 'Invalid JSON from unheart endpoint'
 
 function buildListUrl(filters: AnimalListQuery): string {
   const p = new URLSearchParams()
@@ -107,6 +108,15 @@ export async function heartAnimal(id: string): Promise<{ heartCount: number }> {
     `${ANIMALS_URL}/${encodeURIComponent(id)}/heart`,
     { method: 'POST' },
     INVALID_JSON_HEART,
+    animalHeartResponseSchema,
+  )
+}
+
+export async function unheartAnimal(id: string): Promise<{ heartCount: number }> {
+  return fetchJsonZod(
+    `${ANIMALS_URL}/${encodeURIComponent(id)}/unheart`,
+    { method: 'POST' },
+    INVALID_JSON_UNHEART,
     animalHeartResponseSchema,
   )
 }

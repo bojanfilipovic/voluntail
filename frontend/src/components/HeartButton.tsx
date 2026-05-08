@@ -1,7 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { Heart } from 'lucide-react'
 import { useState, useCallback, useEffect, useRef } from 'react'
-import { heartAnimal } from '@/api/animals'
+import { heartAnimal, unheartAnimal } from '@/api/animals'
 import { isHearted, addHeartedId, removeHeartedId, subscribeHeartsChanged } from '@/lib/heartStorage'
 import { animalQueryKeys } from '@/lib/queryKeys'
 import { cn } from '@/lib/utils'
@@ -14,7 +14,8 @@ type Props = {
 
 /**
  * `hearted` follows localStorage so list + detail modal never disagree (avoids double POST).
- * `addHeartedId` runs only after POST succeeds. Animals query is invalidated so `initialCount` stays in sync.
+ * `addHeartedId` / `removeHeartedId` run only after heart/unheart POST succeeds.
+ * Animals query is invalidated so list counts and header totals stay in sync.
  */
 export function HeartButton({ animalId, initialCount, className }: Props) {
   const queryClient = useQueryClient()
@@ -36,8 +37,19 @@ export function HeartButton({ animalId, initialCount, className }: Props) {
       if (busy || likeInFlightRef.current) return
 
       if (hearted) {
-        removeHeartedId(animalId)
-        // Server heart tally is unchanged (bookmark is local-only); keep showing `initialCount`.
+        likeInFlightRef.current = true
+        setBusy(true)
+        try {
+          const res = await unheartAnimal(animalId)
+          removeHeartedId(animalId)
+          setCount(res.heartCount)
+          void queryClient.invalidateQueries({ queryKey: animalQueryKeys.root })
+        } catch {
+          /* keep favorite + count unchanged */
+        } finally {
+          likeInFlightRef.current = false
+          setBusy(false)
+        }
         return
       }
 
