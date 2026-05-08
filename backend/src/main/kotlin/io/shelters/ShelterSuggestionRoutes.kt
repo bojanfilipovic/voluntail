@@ -1,7 +1,6 @@
 package io.shelters
 
 import io.ktor.http.HttpStatusCode
-import io.ktor.server.application.ApplicationCall
 import io.ktor.server.plugins.BadRequestException
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
@@ -9,6 +8,7 @@ import io.ktor.server.response.respondText
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
+import io.voluntail.respondInvalidJsonBody
 import kotlinx.serialization.SerializationException
 
 private const val SHELTER_SUGGESTIONS_FULL_MESSAGE =
@@ -24,10 +24,10 @@ fun Route.shelterSuggestionRoutes(
                 try {
                     call.receive<ShelterSuggestionCreateRequest>()
                 } catch (_: SerializationException) {
-                    invalidShelterSuggestionBody(call)
+                    call.respondInvalidJsonBody()
                     return@post
                 } catch (_: BadRequestException) {
-                    invalidShelterSuggestionBody(call)
+                    call.respondInvalidJsonBody()
                     return@post
                 }
 
@@ -60,11 +60,4 @@ fun Route.shelterSuggestionRoutes(
             }
         }
     }
-}
-
-private suspend fun invalidShelterSuggestionBody(call: ApplicationCall) {
-    call.respondText(
-        "Invalid JSON body",
-        status = HttpStatusCode.BadRequest,
-    )
 }

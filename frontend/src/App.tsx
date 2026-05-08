@@ -1,4 +1,5 @@
 import { Analytics } from '@vercel/analytics/react'
+import { SpeedInsights } from '@vercel/speed-insights/react'
 import { useQuery } from '@tanstack/react-query'
 import { lazy, Suspense, useCallback, useMemo, useState } from 'react'
 import { fetchAnimals } from '@/api/animals'
@@ -438,6 +439,7 @@ function App() {
         context={feedbackContext}
       />
       <Analytics />
+      <SpeedInsights />
     </div>
   )
 }

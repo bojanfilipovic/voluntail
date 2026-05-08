@@ -26,11 +26,10 @@ fun Application.configureRouting() {
         feedbackAvailable = repos.feedbackRepository != null,
     )
     routing {
-        get("/") {
-            call.respond(serviceInfo)
-        }
-        get("/health") {
-            call.respond(serviceInfo)
+        listOf("/", "/health").forEach { path ->
+            get(path) {
+                call.respond(serviceInfo)
+            }
         }
         shelterRoutes(repos.shelterRepository)
         animalRoutes(repos.shelterRepository, repos.animalRepository)
