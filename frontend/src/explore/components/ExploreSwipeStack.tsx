@@ -90,7 +90,7 @@ export function ExploreSwipeStack({
         else if (mx > SWIPE_THRESHOLD) { setRingPulse(true); triggerExit('right', onLike) }
       }
     },
-    { filterTaps: true },
+    { filterTaps: true, axis: 'x' },
   )
 
   const handlePass = () => {
@@ -114,12 +114,19 @@ export function ExploreSwipeStack({
         transform: `translateX(${exitTranslate}) rotate(${exitRotate})`,
         opacity: 0,
         transition: `transform ${EXIT_DURATION}ms ease-out, opacity ${EXIT_DURATION}ms ease-out`,
-        touchAction: 'none',
       }
     : {
         transform: `translateX(${dragX}px) rotate(${dragX * 0.04}deg)`,
-        touchAction: 'none',
       }
+
+  const metaLine = `${speciesLabel(current.species)}${current.city ? ` \u00b7 ${current.city}` : ''}${parseAnimalAge(current.description) ? ` \u00b7 ${parseAnimalAge(current.description)}` : ''}`
+
+  const mobileHeroOverlay = (
+    <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[8] bg-gradient-to-t from-black/85 via-black/50 to-transparent px-3 pt-10 pb-28 sm:hidden">
+      <p className="text-base font-semibold tracking-tight text-white drop-shadow-md">{current.name}</p>
+      <p className="mt-0.5 text-sm leading-snug text-white/90 drop-shadow-sm">{metaLine}</p>
+    </div>
+  )
 
   return (
     <div className="flex h-full min-h-0 w-full max-w-md flex-1 flex-col">
@@ -137,7 +144,7 @@ export function ExploreSwipeStack({
           Just a few left to discover
         </p>
       ) : null}
-      <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden pr-0.5">
+      <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden pr-0.5 pb-32 sm:pb-0">
         <div
           key={current.id}
           className={cn(
@@ -147,6 +154,7 @@ export function ExploreSwipeStack({
             busy && 'opacity-50',
             showHint && !exitDir && 'animate-swipe-hint motion-reduce:animate-none',
             ringPulse && 'animate-ring-pulse motion-reduce:animate-none',
+            exitDir ? 'touch-none' : 'touch-pan-y sm:touch-none',
           )}
           style={transformStyle}
           {...(busy || exitDir ? {} : bind())}
@@ -192,14 +200,20 @@ export function ExploreSwipeStack({
               variant="card"
               urls={effectiveAnimalImageUrls(current)}
               className="-mt-4 overflow-hidden rounded-t-xl"
+              cardHeroOverlay={mobileHeroOverlay}
             />
             <CardContent className="pt-3 pb-3">
-              <p className="text-base font-semibold">{current.name}</p>
-              <p className="text-muted-foreground text-sm">
-                {speciesLabel(current.species)}{current.city ? ` \u00b7 ${current.city}` : ''}{parseAnimalAge(current.description) ? ` \u00b7 ${parseAnimalAge(current.description)}` : ''}
-              </p>
+              <div className="hidden sm:block">
+                <p className="text-base font-semibold">{current.name}</p>
+                <p className="text-muted-foreground text-sm">{metaLine}</p>
+              </div>
               {current.description ? (
-                <p className="text-muted-foreground mt-1 line-clamp-2 text-xs leading-snug">
+                <p
+                  className={cn(
+                    'text-muted-foreground line-clamp-2 text-xs leading-snug',
+                    'mt-3 sm:mt-1',
+                  )}
+                >
                   {current.description}
                 </p>
               ) : null}
@@ -212,7 +226,11 @@ export function ExploreSwipeStack({
         list. Skip shows this card again after you see other animals in this round.
       </p>
       <div
-        className="bg-background/95 border-border/80 flex shrink-0 w-full max-w-md flex-col gap-2 border-t p-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] shadow-[0_-4px_12px_-4px_rgba(0,0,0,0.06)] sm:mt-0"
+        className={cn(
+          'border-border/80 z-40 flex w-full max-w-md flex-col gap-1.5 border-t bg-background/90 p-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] shadow-[0_-4px_12px_-4px_rgba(0,0,0,0.12)] backdrop-blur-md',
+          'max-sm:fixed max-sm:bottom-0 max-sm:left-1/2 max-sm:-translate-x-1/2',
+          'sm:relative sm:mt-0 sm:translate-x-0 sm:shrink-0 sm:bg-background/95 sm:backdrop-blur-none sm:shadow-[0_-4px_12px_-4px_rgba(0,0,0,0.06)]',
+        )}
         role="group"
         aria-labelledby={`${baseId}-hint`}
       >

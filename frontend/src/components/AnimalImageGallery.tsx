@@ -1,5 +1,6 @@
 import { cn } from '@/lib/utils'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
+import type { ReactNode } from 'react'
 import { useCallback, useState } from 'react'
 
 type Props = {
@@ -7,10 +8,12 @@ type Props = {
   /** Layout preset for container height */
   variant?: 'dialog' | 'card' | 'overlay'
   className?: string
+  /** Rendered inside the card hero frame (below nav chevrons). Explore swipe deck uses this for a mobile title gradient. */
+  cardHeroOverlay?: ReactNode
 }
 
 /** Remount when URLs change so slide index resets without an effect. */
-function AnimalImageGalleryInner({ urls, variant = 'dialog', className }: Props) {
+function AnimalImageGalleryInner({ urls, variant = 'dialog', className, cardHeroOverlay }: Props) {
   const [index, setIndex] = useState(0)
   const n = urls.length
   const safeIdx = n === 0 ? 0 : Math.min(index, n - 1)
@@ -108,6 +111,7 @@ function AnimalImageGalleryInner({ urls, variant = 'dialog', className }: Props)
                 </button>
               </>
             ) : null}
+            {cardHeroOverlay}
           </div>
         ) : (
           <div className="relative mx-auto w-full max-w-lg overflow-hidden rounded-xl bg-muted/60 shadow-sm ring-1 ring-border/60 sm:max-w-xl">
@@ -174,7 +178,7 @@ function AnimalImageGalleryInner({ urls, variant = 'dialog', className }: Props)
       {stageInner}
       <div
         className={cn(
-          'border-border flex max-w-full shrink-0 justify-center gap-2 overflow-x-auto border-t px-3 py-2.5',
+          'border-border flex max-w-full shrink-0 touch-pan-x justify-center gap-2 overflow-x-auto border-t px-3 py-2.5',
           variant === 'card' ? 'border-border/60 bg-muted/25' : 'bg-background/40',
         )}
         role="tablist"
