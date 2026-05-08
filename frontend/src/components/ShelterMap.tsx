@@ -16,10 +16,11 @@ import Map, {
 } from 'react-map-gl/mapbox'
 import type { Shelter } from '@/api/shelters'
 
+/** Default frame: Netherlands + Croatia pilot shelters (Amsterdam — Pula). */
 const NL_VIEW = {
-  longitude: 4.9041,
-  latitude: 52.3676,
-  zoom: 9,
+  longitude: 11.4,
+  latitude: 48.0,
+  zoom: 4.5,
 } as const
 
 export type MapCenter = { latitude: number; longitude: number }
