@@ -15,17 +15,17 @@ class TextArrayColumnType : ColumnType<List<String>>() {
             is java.sql.Array -> (value.array as Array<*>).map { it.toString() }
             is Array<*> -> value.map { it.toString() }
             is Collection<*> -> value.map { it.toString() }
-            else -> error(
-                "Column type mismatch: expected text[] but got ${value::class.simpleName}. " +
-                    "Run the latest migrations (species column changed from jsonb to text[]).",
-            )
+            else ->
+                error(
+                    "Column type mismatch: expected text[] but got ${value::class.simpleName}. " +
+                        "Run the latest migrations (species column changed from jsonb to text[]).",
+                )
         }
 
     override fun notNullValueToDB(value: List<String>): Any = value.toTypedArray()
 }
 
-fun Table.textArray(name: String): Column<List<String>> =
-    registerColumn(name, TextArrayColumnType())
+fun Table.textArray(name: String): Column<List<String>> = registerColumn(name, TextArrayColumnType())
 
 /** Emits `column @> ARRAY['element']::text[]` (array-contains). */
 class ArrayContainsOp(
@@ -42,5 +42,4 @@ class ArrayContainsOp(
     }
 }
 
-infix fun Column<List<String>>.arrayContains(element: String): Op<Boolean> =
-    ArrayContainsOp(this, element)
+infix fun Column<List<String>>.arrayContains(element: String): Op<Boolean> = ArrayContainsOp(this, element)

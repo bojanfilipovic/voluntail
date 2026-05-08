@@ -4,15 +4,15 @@ import io.feedback.SuggestionCreatedResponse
 import io.shelters.ShelterSuggestionInsert
 import io.shelters.ShelterSuggestionRepository
 import io.shelters.ShelterSuggestionStatus
-import java.time.OffsetDateTime
-import java.time.ZoneOffset
-import java.util.UUID
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.suspendTransaction
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
+import java.util.UUID
 
 class ExposedShelterSuggestionRepository(
     private val database: Database,

@@ -1,8 +1,8 @@
 package io.animals
 
 import io.shelters.ShelterSpecies
-import java.util.UUID
 import kotlinx.serialization.Serializable
+import java.util.UUID
 
 @Serializable
 data class AnimalCreateBody(

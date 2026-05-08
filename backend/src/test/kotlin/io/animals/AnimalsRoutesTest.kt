@@ -3,9 +3,9 @@ package io.animals
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.header
+import io.ktor.client.request.parameter
 import io.ktor.client.request.patch
 import io.ktor.client.request.post
-import io.ktor.client.request.parameter
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
@@ -22,7 +22,6 @@ import kotlin.test.assertTrue
  * HTTP smoke tests for `/api/animals` through the full app module (in-memory repo when DB unset).
  */
 class AnimalsRoutesTest {
-
     private val sampleShelterId = "a0000001-0001-4001-8001-000000000001"
 
     @Test
@@ -38,9 +37,10 @@ class AnimalsRoutesTest {
     fun `GET animals with CMS key includes unpublished`() {
         voluntailTest {
             val body =
-                client.get("/api/animals") {
-                    header("X-CMS-Key", TEST_CMS_KEY)
-                }.bodyAsText()
+                client
+                    .get("/api/animals") {
+                        header("X-CMS-Key", TEST_CMS_KEY)
+                    }.bodyAsText()
             assertTrue(body.contains("Draft pup"))
         }
     }
@@ -56,6 +56,23 @@ class AnimalsRoutesTest {
                     )
                 }.apply {
                     assertEquals(HttpStatusCode.Unauthorized, status)
+                }
+        }
+    }
+
+    @Test
+    fun `POST animal with wrong CMS key returns 401`() {
+        voluntailTest {
+            client
+                .post("/api/animals") {
+                    header("X-CMS-Key", "wrong-secret")
+                    contentType(ContentType.Application.Json)
+                    setBody(
+                        """{"shelterId":"$sampleShelterId","name":"X","species":"dog","status":"available"}""",
+                    )
+                }.apply {
+                    assertEquals(HttpStatusCode.Unauthorized, status)
+                    assertEquals("Invalid or missing X-CMS-Key header", bodyAsText())
                 }
         }
     }
@@ -101,13 +118,14 @@ class AnimalsRoutesTest {
 
             assertTrue(!client.get("/api/animals").bodyAsText().contains("Toggle Pub"))
 
-            client.patch("/api/animals/$id") {
-                header("X-CMS-Key", TEST_CMS_KEY)
-                contentType(ContentType.Application.Json)
-                setBody("""{"published":true}""")
-            }.apply {
-                assertEquals(HttpStatusCode.OK, status)
-            }
+            client
+                .patch("/api/animals/$id") {
+                    header("X-CMS-Key", TEST_CMS_KEY)
+                    contentType(ContentType.Application.Json)
+                    setBody("""{"published":true}""")
+                }.apply {
+                    assertEquals(HttpStatusCode.OK, status)
+                }
 
             assertTrue(client.get("/api/animals").bodyAsText().contains("Toggle Pub"))
 
@@ -121,11 +139,38 @@ class AnimalsRoutesTest {
     fun `GET animals filters by city query`() {
         voluntailTest {
             val body =
-                client.get("/api/animals") {
-                    parameter("city", "Amsterdam")
-                }.bodyAsText()
+                client
+                    .get("/api/animals") {
+                        parameter("city", "Amsterdam")
+                    }.bodyAsText()
             assertTrue(body.contains("Milo"))
             assertTrue(!body.contains("Rex"))
+        }
+    }
+
+    @Test
+    fun `GET animals with invalid shelterId query returns 400`() {
+        voluntailTest {
+            client
+                .get("/api/animals") {
+                    parameter("shelterId", "not-a-uuid")
+                }.apply {
+                    assertEquals(HttpStatusCode.BadRequest, status)
+                    assertEquals("Invalid shelterId query parameter", bodyAsText())
+                }
+        }
+    }
+
+    @Test
+    fun `GET animals with invalid species query returns 400`() {
+        voluntailTest {
+            client
+                .get("/api/animals") {
+                    parameter("species", "fish")
+                }.apply {
+                    assertEquals(HttpStatusCode.BadRequest, status)
+                    assertEquals("Invalid species query parameter", bodyAsText())
+                }
         }
     }
 

@@ -5,11 +5,9 @@ import java.util.UUID
 class InMemoryShelterRepository : ShelterRepository {
     private var rows = ShelterSamples.all.toMutableList()
 
-    override suspend fun getAll(): List<ShelterResponse> =
-        rows
+    override suspend fun getAll(): List<ShelterResponse> = rows
 
-    override suspend fun findById(id: UUID): ShelterResponse? =
-        rows.firstOrNull { it.id == id.toString() }
+    override suspend fun findById(id: UUID): ShelterResponse? = rows.firstOrNull { it.id == id.toString() }
 
     override suspend fun insert(request: ShelterCreateRequest): ShelterResponse {
         val id = UUID.randomUUID()
@@ -28,6 +26,5 @@ class InMemoryShelterRepository : ShelterRepository {
         return merged
     }
 
-    override suspend fun delete(id: UUID): Boolean =
-        rows.removeIf { it.id == id.toString() }
+    override suspend fun delete(id: UUID): Boolean = rows.removeIf { it.id == id.toString() }
 }

@@ -19,6 +19,8 @@ jobs:
           distribution: temurin
           java-version: "21"
           cache: gradle
+      - name: Kotlin lint
+        run: ./gradlew ktlintCheck
       - name: Test
         run: ./gradlew test
         env:

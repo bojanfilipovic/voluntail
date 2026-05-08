@@ -4,9 +4,6 @@ import io.animals.persistence.AnimalsTable
 import io.feedback.BadFeedbackContext
 import io.feedback.FeedbackRepository
 import io.feedback.SuggestionCreatedResponse
-import java.time.OffsetDateTime
-import java.time.ZoneOffset
-import java.util.UUID
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.jetbrains.exposed.v1.core.eq
@@ -15,6 +12,9 @@ import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.suspendTransaction
 import org.postgresql.util.PSQLException
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
+import java.util.UUID
 
 class ExposedFeedbackRepository(
     private val database: Database,

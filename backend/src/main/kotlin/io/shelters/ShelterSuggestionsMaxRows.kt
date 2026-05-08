@@ -9,8 +9,9 @@ private const val SHELTER_SUGGESTIONS_MAX_ROWS_FLOOR = 50
 private const val SHELTER_SUGGESTIONS_MAX_ROWS_CEILING = 100
 
 fun shelterSuggestionsMaxRows(): Int {
-    val raw = System.getenv("SHELTER_SUGGESTIONS_MAX_ROWS")?.trim()?.toIntOrNull()
-        ?: return SHELTER_SUGGESTIONS_MAX_ROWS_DEFAULT
+    val raw =
+        System.getenv("SHELTER_SUGGESTIONS_MAX_ROWS")?.trim()?.toIntOrNull()
+            ?: return SHELTER_SUGGESTIONS_MAX_ROWS_DEFAULT
     if (raw <= 0) return SHELTER_SUGGESTIONS_MAX_ROWS_DEFAULT
     return raw.coerceIn(SHELTER_SUGGESTIONS_MAX_ROWS_FLOOR, SHELTER_SUGGESTIONS_MAX_ROWS_CEILING)
 }

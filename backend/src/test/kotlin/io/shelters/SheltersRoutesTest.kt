@@ -22,7 +22,6 @@ import kotlin.test.assertTrue
  * CMS-gated mutations, species validation.
  */
 class SheltersRoutesTest {
-
     @Test
     fun `GET shelters returns OK`() {
         voluntailTest {
@@ -43,6 +42,23 @@ class SheltersRoutesTest {
                     )
                 }.apply {
                     assertEquals(HttpStatusCode.Unauthorized, status)
+                }
+        }
+    }
+
+    @Test
+    fun `POST shelter with wrong CMS key returns 401`() {
+        voluntailTest {
+            client
+                .post("/api/shelters") {
+                    header("X-CMS-Key", "wrong-secret")
+                    contentType(ContentType.Application.Json)
+                    setBody(
+                        """{"name":"X","description":"Y","latitude":1.0,"longitude":2.0,"species":[],"city":"Teststad"}""",
+                    )
+                }.apply {
+                    assertEquals(HttpStatusCode.Unauthorized, status)
+                    assertEquals("Invalid or missing X-CMS-Key header", bodyAsText())
                 }
         }
     }

@@ -51,7 +51,11 @@ private fun CORSConfig.applyCorsOriginsFromEnv() {
             allowHost("localhost:4173", schemes = listOf("http"))
         }
         else ->
-            raw.split(',').map { it.trim() }.filter { it.isNotEmpty() }.forEach(::applyOneCorsOrigin)
+            raw
+                .split(',')
+                .map { it.trim() }
+                .filter { it.isNotEmpty() }
+                .forEach(::applyOneCorsOrigin)
     }
 }
 

@@ -14,7 +14,6 @@ import kotlin.test.assertEquals
  * HTTP smoke tests for `/api/shelter-suggestions` (validation + 503 without DB in default test env).
  */
 class ShelterSuggestionsRoutesTest {
-
     @Test
     fun `POST shelter suggestion with empty name returns 400`() {
         voluntailTest {

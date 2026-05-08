@@ -8,8 +8,9 @@ private const val PEER_FEEDBACK_MAX_ROWS_DEFAULT = 1000
 private const val PEER_FEEDBACK_MAX_ROWS_CEILING = 1000
 
 fun peerFeedbackMaxRows(): Int {
-    val raw = System.getenv("PEER_FEEDBACK_MAX_ROWS")?.trim()?.toIntOrNull()
-        ?: return PEER_FEEDBACK_MAX_ROWS_DEFAULT
+    val raw =
+        System.getenv("PEER_FEEDBACK_MAX_ROWS")?.trim()?.toIntOrNull()
+            ?: return PEER_FEEDBACK_MAX_ROWS_DEFAULT
     if (raw <= 0) return PEER_FEEDBACK_MAX_ROWS_DEFAULT
     return raw.coerceAtMost(PEER_FEEDBACK_MAX_ROWS_CEILING)
 }

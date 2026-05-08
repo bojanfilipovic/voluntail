@@ -20,7 +20,17 @@ private val serviceInfo =
 
 fun Application.configureRouting() {
     val repos = createApplicationRepositories()
-    val persistence = if (System.getenv("DB_URL")?.trim().orEmpty().isNotEmpty()) "postgres" else "in-memory"
+    val persistence =
+        if (System
+                .getenv("DB_URL")
+                ?.trim()
+                .orEmpty()
+                .isNotEmpty()
+        ) {
+            "postgres"
+        } else {
+            "in-memory"
+        }
     logApplicationStartup(
         persistence = persistence,
         feedbackAvailable = repos.feedbackRepository != null,
