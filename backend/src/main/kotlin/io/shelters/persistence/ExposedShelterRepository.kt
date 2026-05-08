@@ -5,8 +5,8 @@ import io.shelters.ShelterRepository
 import io.shelters.ShelterResponse
 import io.shelters.ShelterSpecies
 import io.shelters.ShelterUpdateRequest
-import io.shelters.countryIsoFromLatLon
 import io.shelters.applyTo
+import io.shelters.countryIsoFromLatLon
 import io.shelters.toShelterResponse
 import io.shelters.trimmedNonBlank
 import kotlinx.coroutines.Dispatchers
