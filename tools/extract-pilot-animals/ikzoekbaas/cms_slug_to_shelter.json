@@ -1,0 +1,8 @@
+{
+  "_comment": "Overrides when CMS folder slug ≠ heuristic from public.shelters.name (see shelter_slug_from_seeds). Seeds supply most mappings via image_url + camelCase.",
+  "zwolsDierenasiel": "Zwols Dierenasiel",
+  "dierentehuisSHertogenbosch": "Dierentehuis 's-Hertogenbosch e.o.",
+  "stgHulpHerplaatsingHuisdieren": "Stichting Hulp Herplaatsing Huisdieren",
+  "dierentehuisTSchuthok": "Dierentehuis 't Schuthok",
+  "streekdierentehuisLouterBloemen": "Dierenzorgcentrum Louterbloemen"
+}
