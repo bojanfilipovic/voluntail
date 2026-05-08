@@ -4,6 +4,14 @@ import { Button } from '@/components/ui/button'
 import { speciesLabel, type SpeciesFilterValue } from '@/domain/species'
 import { cn } from '@/lib/utils'
 import { ExternalLink } from 'lucide-react'
+import { startTransition, useEffect, useState } from 'react'
+
+/** Show error / empty popup this long, then hide and enter cooldown. */
+const NOTICE_VISIBLE_MS = 10_000
+/** After hide, wait before the popup may appear again (same tab session). */
+const NOTICE_COOLDOWN_MS = 180_000
+
+type NoticePhase = 'idle' | 'showing' | 'cooldown'
 
 type Props = {
   shelters: Shelter[] | undefined
@@ -34,9 +42,47 @@ export function ShelterList({
   speciesFilters,
   onViewAnimals,
 }: Props) {
+  const [noticePhase, setNoticePhase] = useState<NoticePhase>('idle')
+
+  const wantsNotice =
+    Boolean(error) || (!error && !isPending && (shelters?.length ?? 0) === 0)
+
+  useEffect(() => {
+    if (!wantsNotice) {
+      startTransition(() => {
+        setNoticePhase('idle')
+      })
+      return
+    }
+    if (noticePhase !== 'idle') return
+    startTransition(() => {
+      setNoticePhase('showing')
+    })
+  }, [wantsNotice, noticePhase])
+
+  useEffect(() => {
+    if (noticePhase !== 'showing') return
+    const id = window.setTimeout(() => {
+      setNoticePhase('cooldown')
+    }, NOTICE_VISIBLE_MS)
+    return () => window.clearTimeout(id)
+  }, [noticePhase])
+
+  useEffect(() => {
+    if (noticePhase !== 'cooldown') return
+    const id = window.setTimeout(() => {
+      setNoticePhase('idle')
+    }, NOTICE_COOLDOWN_MS)
+    return () => window.clearTimeout(id)
+  }, [noticePhase])
+
+  const showErrorPopup = noticePhase === 'showing' && Boolean(error)
+  const showEmptyPopup =
+    noticePhase === 'showing' && !error && !isPending && !shelters?.length
+
   return (
     <section className="text-start" aria-label="Shelter list">
-      {error ? (
+      {showErrorPopup && error ? (
         <div
           className="border-destructive/40 bg-destructive/5 text-destructive mb-4 rounded-lg border px-3 py-2 text-sm leading-relaxed"
           role="alert"
@@ -54,9 +100,7 @@ export function ShelterList({
 
       {error ? null : isPending ? (
         <p className="text-muted-foreground text-sm">Loading shelters…</p>
-      ) : !shelters?.length ? (
-        <p className="text-muted-foreground py-8 text-center text-sm">No shelters found.</p>
-      ) : (
+      ) : shelters && shelters.length > 0 ? (
         <ul className="list-none space-y-3 p-0">
           {shelters.map((s) => (
             <li key={s.id}>
@@ -125,7 +169,9 @@ export function ShelterList({
             </li>
           ))}
         </ul>
-      )}
+      ) : showEmptyPopup ? (
+        <p className="text-muted-foreground py-8 text-center text-sm">No shelters found.</p>
+      ) : null}
     </section>
   )
 }
