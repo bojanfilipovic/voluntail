@@ -144,11 +144,16 @@ export const ShelterMap = forwardRef<ShelterMapHandle, Props>(
 
     const pointsRef = useRef(points)
     const boundsKeyRef = useRef(boundsKey)
+    const isDarkRef = useRef(isDark)
 
     useEffect(() => {
       pointsRef.current = points
       boundsKeyRef.current = boundsKey
     }, [points, boundsKey])
+
+    useEffect(() => {
+      isDarkRef.current = isDark
+    }, [isDark])
 
     const [mapReady, setMapReady] = useState(false)
     const [emptyViewportHint, setEmptyViewportHint] = useState(false)
@@ -235,6 +240,13 @@ export const ShelterMap = forwardRef<ShelterMapHandle, Props>(
       ro.observe(el)
       return () => ro.disconnect()
     }, [token, resizeMap])
+
+    /** Recolor default pin when theme toggles (`style.load` also runs, but this keeps rasters in sync). */
+    useEffect(() => {
+      const map = mapRef.current?.getMap()
+      if (!map || !mapReady || !token) return
+      void ensureShelterPinImages(map, isDark).catch(() => {})
+    }, [isDark, mapReady, token])
 
     const runFitBounds = useCallback(
       (duration: number) => {
@@ -430,16 +442,21 @@ export const ShelterMap = forwardRef<ShelterMapHandle, Props>(
       fitAllShelters: handleFitAllClick,
     }), [handleFitAllClick])
 
-    /** Subtle wash — iterate tone later; no outline (boundaries come from the basemap). */
+    /**
+     * Country wash — same paint for every ISO in `countryFillFilter`.
+     * Opacity must be high enough that underlying dark-v11 land tones (they differ by region)
+     * do not make e.g. NL vs HR read as different “highlight colors”.
+     */
     const countryFillPaint = useMemo(
       () =>
         ({
           'fill-color': isDark ? '#94a3b8' : '#64748b',
-          'fill-opacity': isDark ? 0.11 : 0.062,
+          'fill-opacity': isDark ? 0.22 : 0.09,
         }) as const,
       [isDark],
     )
 
+    /** SVG teardrops registered via `ensureShelterPinImages` — same look as pre–country-highlight map. */
     const unclusteredSymbolLayout = useMemo(
       () =>
         ({
@@ -500,11 +517,17 @@ export const ShelterMap = forwardRef<ShelterMapHandle, Props>(
             interactiveLayerIds={interactiveLayerIds}
             onLoad={(e) => {
               const map = e.target
+              const syncPins = () => {
+                void ensureShelterPinImages(map, isDarkRef.current).catch(() => {
+                  /* pins missing until refresh if registration fails */
+                })
+              }
+              map.on('style.load', syncPins)
               void (async () => {
                 try {
-                  await ensureShelterPinImages(map)
+                  await ensureShelterPinImages(map, isDarkRef.current)
                 } catch {
-                  /* symbol icons missing until refresh if registration fails */
+                  /* initial registration failed */
                 }
                 setMapReady(true)
                 resizeMap()

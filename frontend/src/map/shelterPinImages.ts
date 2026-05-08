@@ -1,13 +1,12 @@
 import type { Map as MapboxMap } from 'mapbox-gl'
 
-/** IDs registered on the Mapbox map for symbol-layer shelter pins (solid teardrop / “map pin” silhouette). */
+/** IDs registered on the Mapbox map for symbol-layer shelter pins (solid teardrop silhouette). */
 export const SHELTER_PIN_IMAGE_IDS = {
   default: 'voluntail-pin',
   selected: 'voluntail-pin-selected',
   animal: 'voluntail-pin-animal',
 } as const
 
-/** Classic location-pin outline (one closed path); tip at bottom center for `icon-anchor: bottom`. */
 function svgPinDataUrl(fill: string, stroke: string): string {
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="72" height="92" viewBox="0 0 72 92">
   <path
@@ -30,18 +29,33 @@ function loadImage(src: string): Promise<HTMLImageElement> {
   })
 }
 
-/** Register raster pin images once per map instance (symbol layer references these IDs). */
-export async function ensureShelterPinImages(map: MapboxMap): Promise<void> {
+/**
+ * Register teardrop rasters. Call again on `style.load` and when `isDark` changes — custom images
+ * are cleared on style swap; default pin colors follow the basemap (light vs dark).
+ */
+export async function ensureShelterPinImages(
+  map: MapboxMap,
+  isDark: boolean,
+): Promise<void> {
   if (typeof document === 'undefined') return
-  if (map.hasImage(SHELTER_PIN_IMAGE_IDS.default)) return
+
+  const defaultFill = isDark ? '#ffffff' : '#171717'
+  const defaultStroke = isDark ? '#171717' : '#ffffff'
 
   const specs = [
-    [SHELTER_PIN_IMAGE_IDS.default, '#57534e', '#fafaf9'],
+    [SHELTER_PIN_IMAGE_IDS.default, defaultFill, defaultStroke],
     [SHELTER_PIN_IMAGE_IDS.selected, '#c2410c', '#ffffff'],
     [SHELTER_PIN_IMAGE_IDS.animal, '#059669', '#ffffff'],
   ] as const
 
   for (const [id, fill, stroke] of specs) {
+    if (map.hasImage(id)) {
+      try {
+        map.removeImage(id)
+      } catch {
+        /* still referenced during rare style transitions */
+      }
+    }
     const img = await loadImage(svgPinDataUrl(fill, stroke))
     map.addImage(id, img, { pixelRatio: 2 })
   }
