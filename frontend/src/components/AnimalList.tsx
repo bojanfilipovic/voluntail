@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import type { Animal } from '@/api/animals'
 import type { Shelter } from '@/api/shelters'
 import { SpeciesFilterBar, type SpeciesFilterRow } from '@/components/SpeciesFilterBar'
@@ -8,7 +8,7 @@ import { speciesLabel, type SpeciesFilterValue } from '@/domain/species'
 import type { AnimalStatus } from '@/schemas/animals'
 import { effectiveAnimalImageUrls } from '@/domain/animalGallery'
 import { cn } from '@/lib/utils'
-import { getHeartedIds } from '@/lib/heartStorage'
+import { getHeartedIds, subscribeHeartsChanged } from '@/lib/heartStorage'
 import { getShortlistIds } from '@/lib/exploreShortlist'
 import { Heart, Sparkles } from 'lucide-react'
 
@@ -50,6 +50,8 @@ type Props = {
   totalAnimalCount: number | undefined
   favoritesOnly: boolean
   onFavoritesToggle: () => void
+  matchesOnly: boolean
+  onMatchesToggle: () => void
 }
 
 export function AnimalList({
@@ -70,7 +72,12 @@ export function AnimalList({
   totalAnimalCount,
   favoritesOnly,
   onFavoritesToggle,
+  matchesOnly,
+  onMatchesToggle,
 }: Props) {
+  const [, setHeartRevision] = useState(0)
+  useEffect(() => subscribeHeartsChanged(() => setHeartRevision((n) => n + 1)), [])
+
   const shelterNameById = new Map(
     (shelters ?? []).map((s) => [s.id, s.name] as const),
   )
@@ -78,8 +85,6 @@ export function AnimalList({
   const shortlistIds = getShortlistIds()
   const favCount = heartedIds.size
   const matchCount = shortlistIds.size
-  const [matchesOnly, setMatchesOnly] = useState(false)
-  const handleMatchesToggle = useCallback(() => setMatchesOnly((v) => !v), [])
   const displayAnimals = favoritesOnly
     ? (animals ?? []).filter((a) => heartedIds.has(a.id))
     : matchesOnly
@@ -124,7 +129,7 @@ export function AnimalList({
           {matchCount > 0 ? (
             <button
               type="button"
-              onClick={handleMatchesToggle}
+              onClick={onMatchesToggle}
               className={cn(
                 'inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors',
                 matchesOnly
