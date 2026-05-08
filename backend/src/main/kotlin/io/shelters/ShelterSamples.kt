@@ -16,6 +16,7 @@ object ShelterSamples {
                 latitude = 52.3629026,
                 longitude = 4.7845807,
                 species = listOf(ShelterSpecies.dog, ShelterSpecies.cat, ShelterSpecies.rabbit),
+                countryCode = countryIsoFromLatLon(52.3629026, 4.7845807),
                 signupUrl = "https://doa-dierenasiel.nl/over-doa/vacatures/",
                 imageUrl = "https://doa-dierenasiel.nl/wp-content/uploads/2022/08/logo-125.svg",
                 donationUrl = "https://doa-dierenasiel.nl/doneer/",
@@ -29,6 +30,7 @@ object ShelterSamples {
                         "Gelegen tussen Haarlem en Amsterdam.",
                 latitude = 52.3794501,
                 longitude = 4.7541101,
+                countryCode = countryIsoFromLatLon(52.3794501, 4.7541101),
                 species =
                     listOf(
                         ShelterSpecies.reptile,
@@ -48,6 +50,7 @@ object ShelterSamples {
                     "Regionale Opvang Zwerfdieren Eindhoven: opvang voor de regio Eindhoven en omliggende gemeenten.",
                 latitude = 51.4343223,
                 longitude = 5.5136765,
+                countryCode = countryIsoFromLatLon(51.4343223, 5.5136765),
                 species =
                     listOf(
                         ShelterSpecies.dog,
@@ -67,6 +70,7 @@ object ShelterSamples {
                     "Onafhankelijk dierenasiel in Utrecht voor honden, katten en kleine huisdieren; op afspraak.",
                 latitude = 52.0693076,
                 longitude = 5.1468573,
+                countryCode = countryIsoFromLatLon(52.0693076, 5.1468573),
                 species = listOf(ShelterSpecies.dog, ShelterSpecies.cat, ShelterSpecies.rabbit),
                 signupUrl = "https://www.dierenasielutrecht.nl/vrijwilligerswerk/",
                 imageUrl = "https://picsum.photos/seed/voluntail-utrecht/800/450",
@@ -80,6 +84,7 @@ object ShelterSamples {
                     "Dierenbeschermingscentrum Noord-Nederland te Groningen voor opvang en herplaatsing uit de regio.",
                 latitude = 53.2010673,
                 longitude = 6.63028,
+                countryCode = countryIsoFromLatLon(53.2010673, 6.63028),
                 species = listOf(ShelterSpecies.dog, ShelterSpecies.cat, ShelterSpecies.rabbit),
                 signupUrl =
                     "https://www.dierenbescherming.nl/dierenasiel/dierenbeschermingscentrum-noord-nederland/contact",

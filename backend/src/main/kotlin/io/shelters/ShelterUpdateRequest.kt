@@ -28,32 +28,35 @@ fun ShelterUpdateRequest.isNoOp(): Boolean =
         city == null
 
 /** Applies this patch onto [current]; omitted fields (`null`) keep existing values. */
-fun ShelterUpdateRequest.applyTo(current: ShelterResponse): ShelterResponse =
-    current.copy(
-        name = name?.trim()?.takeIf { it.isNotEmpty() } ?: current.name,
-        description =
-            description?.trim()?.takeIf { it.isNotEmpty() } ?: current.description,
-        latitude = latitude ?: current.latitude,
-        longitude = longitude ?: current.longitude,
-        species = species ?: current.species,
-        signupUrl =
-            when (signupUrl) {
-                null -> current.signupUrl
-                else -> signupUrl.trim().takeIf { it.isNotEmpty() }
-            },
-        imageUrl =
-            when (imageUrl) {
-                null -> current.imageUrl
-                else -> imageUrl.trim().takeIf { it.isNotEmpty() }
-            },
-        donationUrl =
-            when (donationUrl) {
-                null -> current.donationUrl
-                else -> donationUrl.trim().takeIf { it.isNotEmpty() }
-            },
-        city =
-            when (city) {
-                null -> current.city
-                else -> city.trim()
-            },
-    )
+fun ShelterUpdateRequest.applyTo(current: ShelterResponse): ShelterResponse {
+    val merged =
+        current.copy(
+            name = name?.trim()?.takeIf { it.isNotEmpty() } ?: current.name,
+            description =
+                description?.trim()?.takeIf { it.isNotEmpty() } ?: current.description,
+            latitude = latitude ?: current.latitude,
+            longitude = longitude ?: current.longitude,
+            species = species ?: current.species,
+            signupUrl =
+                when (signupUrl) {
+                    null -> current.signupUrl
+                    else -> signupUrl.trim().takeIf { it.isNotEmpty() }
+                },
+            imageUrl =
+                when (imageUrl) {
+                    null -> current.imageUrl
+                    else -> imageUrl.trim().takeIf { it.isNotEmpty() }
+                },
+            donationUrl =
+                when (donationUrl) {
+                    null -> current.donationUrl
+                    else -> donationUrl.trim().takeIf { it.isNotEmpty() }
+                },
+            city =
+                when (city) {
+                    null -> current.city
+                    else -> city.trim()
+                },
+        )
+    return merged.copy(countryCode = countryIsoFromLatLon(merged.latitude, merged.longitude))
+}

@@ -108,7 +108,7 @@ values
         6.2669949,
         '{dog,cat,rabbit,rodent}'::text[],
         'https://www.dierencentrumachterhoek.nl/over-ons/vrijwilligers',
-        'https://www.dierencentrumachterhoek.nl/Content/images/og.jpg',
+        'https://www.dierencentrumachterhoek.nl/Content/images/logo-oud.png',
         'https://www.dier.nu/beneficianten/stg-dierencentrum-achterhoek/',
         'Ruurlo'
     ),
@@ -208,7 +208,7 @@ values
         4.5242129,
         '{dog,cat}'::text[],
         'http://w.dierentehuiszoetermeer.nl/contactinfo.html',
-        'https://dierentehuiszoetermeer.nl/wp-content/uploads/2024/03/Logo-transparant-1-edited.png',
+        'http://w.dierentehuiszoetermeer.nl/images/DTZ.jpg',
         'https://dierentehuiszoetermeer.nl/doneren/',
         'Zoetermeer'
     ),

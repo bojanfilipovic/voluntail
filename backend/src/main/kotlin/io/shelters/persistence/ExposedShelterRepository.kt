@@ -6,6 +6,7 @@ import io.shelters.ShelterResponse
 import io.shelters.ShelterSpecies
 import io.shelters.ShelterUpdateRequest
 import io.shelters.applyTo
+import io.shelters.countryIsoFromLatLon
 import io.shelters.toShelterResponse
 import io.shelters.trimmedNonBlank
 import kotlinx.coroutines.Dispatchers
@@ -110,13 +111,16 @@ private fun ResultRow.toShelterResponse(): ShelterResponse {
         speciesStrings.mapNotNull { name ->
             ShelterSpecies.entries.find { it.name == name }
         }
+    val lat = this[SheltersTable.latitude]
+    val lon = this[SheltersTable.longitude]
     return ShelterResponse(
         id = this[SheltersTable.id].toString(),
         name = this[SheltersTable.name],
         description = this[SheltersTable.description],
-        latitude = this[SheltersTable.latitude],
-        longitude = this[SheltersTable.longitude],
+        latitude = lat,
+        longitude = lon,
         species = speciesList,
+        countryCode = countryIsoFromLatLon(lat, lon),
         signupUrl = this[SheltersTable.signupUrl],
         imageUrl = this[SheltersTable.imageUrl],
         donationUrl = this[SheltersTable.donationUrl],
