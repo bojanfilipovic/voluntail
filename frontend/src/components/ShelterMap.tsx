@@ -675,6 +675,15 @@ export const ShelterMap = forwardRef<ShelterMapHandle, Props>(
               <span className="text-muted-foreground">
                 No shelters in this map area — zoom out, use country chips, or suggest one we&apos;re missing.
               </span>
+              <Button
+                type="button"
+                size="sm"
+                variant="secondary"
+                className="shrink-0 self-center sm:self-auto"
+                onClick={handleFitAllClick}
+              >
+                Show all
+              </Button>
               <Button type="button" size="sm" variant="default" className="shrink-0 self-center sm:self-auto" onClick={onSuggestShelter}>
                 Suggest a shelter
               </Button>

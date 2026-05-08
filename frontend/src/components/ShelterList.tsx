@@ -1,6 +1,7 @@
 import type { Shelter } from '@/api/shelters'
 import { SpeciesFilterBar, type SpeciesFilterRow } from '@/components/SpeciesFilterBar'
 import { Button } from '@/components/ui/button'
+import { listWebsiteHref } from '@/domain/listWebsiteHref'
 import { speciesLabel, type SpeciesFilterValue } from '@/domain/species'
 import { cn } from '@/lib/utils'
 import { ExternalLink } from 'lucide-react'
@@ -142,7 +143,7 @@ export function ShelterList({
                     <span className="mt-1.5 flex flex-wrap items-center gap-2">
                       {s.signupUrl ? (
                         <a
-                          href={new URL(s.signupUrl).origin}
+                          href={listWebsiteHref(s.signupUrl)}
                           onClick={(e) => e.stopPropagation()}
                           rel="noreferrer noopener"
                           target="_blank"
