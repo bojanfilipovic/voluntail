@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button'
 import { speciesLabel, type SpeciesFilterValue } from '@/domain/species'
 import { cn } from '@/lib/utils'
 import { ExternalLink } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { startTransition, useEffect, useState } from 'react'
 
 /** Show error / empty popup this long, then hide and enter cooldown. */
 const NOTICE_VISIBLE_MS = 10_000
@@ -49,11 +49,15 @@ export function ShelterList({
 
   useEffect(() => {
     if (!wantsNotice) {
-      setNoticePhase('idle')
+      startTransition(() => {
+        setNoticePhase('idle')
+      })
       return
     }
     if (noticePhase !== 'idle') return
-    setNoticePhase('showing')
+    startTransition(() => {
+      setNoticePhase('showing')
+    })
   }, [wantsNotice, noticePhase])
 
   useEffect(() => {
