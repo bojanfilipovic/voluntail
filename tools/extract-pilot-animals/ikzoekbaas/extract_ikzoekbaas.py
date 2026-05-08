@@ -57,7 +57,10 @@ from shelter_slug_from_seeds import (
     default_seed_sql_paths,
     merge_slug_maps,
 )
-from shared import DEFAULT_MIGRATIONS_DIR, MAX_IMAGE_URLS, RawAnimal, generate_migration
+from shared import DEFAULT_MIGRATIONS_DIR, RawAnimal, generate_migration
+
+# Cap for this source only (shared.MAX_IMAGE_URLS is for other extractors).
+IKZOEKBAAS_MAX_IMAGE_URLS = 10
 
 BASE = "https://ikzoekbaas.dierenbescherming.nl"
 DEFAULT_USER_AGENT = (
@@ -82,10 +85,6 @@ IGNORE_CMS_SLUGS = frozenset(
 
 CMS_ASSET_SLUG_RE = re.compile(
     r"https://cms\.dierenbescherming\.nl/assets/([^/]+)/",
-    re.I,
-)
-CMS_FULL_URL_RE = re.compile(
-    r"https://cms\.dierenbescherming\.nl/[^\s\"'<>]+",
     re.I,
 )
 _DUTCH_POSTCODE_CITY = re.compile(
@@ -212,32 +211,43 @@ def _normalize_img_url(page_url: str, raw: str) -> str:
     return u
 
 
+def _is_raster_image_url(u: str) -> bool:
+    path = urlparse(u).path.lower()
+    return path.endswith((".jpg", ".jpeg", ".png", ".webp", ".gif"))
+
+
 def _collect_image_urls(
     soup: BeautifulSoup,
     page_url: str,
-    raw_html: str,
     *,
     shelter_cms_slug: str,
 ) -> list[str]:
-    """Collect cms.dierenbescherming.nl image URLs for this animal only.
+    """Collect cms URLs from DOM image carriers only (meta + img/source). Same shelter folder.
 
-    Full-page scraping pulls in unrelated CMS assets (related listings, promos). Restrict to the
-    shelter asset folder we already resolved via HTML counts — ``…/assets/<slug>/…``.
+    Does **not** regex-scan the full HTML for ``https://cms…`` (that pulled unrelated assets).
+
+    Drops non-images (e.g. ``.docx``), ``_882x1004`` header transforms, and ``…/Algemeen/…`` when
+    the hero (``og:image``, else first candidate) is not under ``Algemeen``.
     """
     folder_marker = f"/assets/{shelter_cms_slug}/"
-    seen: list[str] = []
+    candidates: list[str] = []
+    seen: set[str] = set()
 
-    def add(u: str) -> None:
-        u = _normalize_img_url(page_url, u)
+    def consider(raw: str) -> None:
+        u = _normalize_img_url(page_url, raw)
         if not u or "cms.dierenbescherming.nl" not in u.lower():
             return
+        u = u.replace("&amp;", "&")
         low = u.lower()
         if "/admin/" in low or "/assets/common/" in low:
             return
         if folder_marker not in u:
             return
+        if not _is_raster_image_url(u):
+            return
         if u not in seen:
-            seen.append(u)
+            seen.add(u)
+            candidates.append(u)
 
     for sel in (
         ("meta", {"property": "og:image"}),
@@ -245,24 +255,57 @@ def _collect_image_urls(
     ):
         tag = soup.find(sel[0], sel[1])
         if tag and tag.get("content"):
-            add(tag["content"])
+            consider(tag["content"])
 
     for tag in soup.find_all(["img", "source"]):
         for attr in ("src", "data-src", "data-lazy-src"):
             val = tag.get(attr) or ""
             if val:
-                add(val)
+                consider(val)
         srcset = tag.get("srcset") or ""
         if srcset:
             for part in srcset.split(","):
                 piece = part.strip().split()[0] if part.strip() else ""
                 if piece:
-                    add(piece)
+                    consider(piece)
 
-    for m in CMS_FULL_URL_RE.finditer(raw_html):
-        add(m.group(0))
+    if not candidates:
+        return []
 
-    return seen[:MAX_IMAGE_URLS]
+    hero: str | None = None
+    for sel in (
+        ("meta", {"property": "og:image"}),
+        ("meta", {"name": "twitter:image"}),
+    ):
+        tag = soup.find(sel[0], sel[1])
+        if not tag or not tag.get("content"):
+            continue
+        u = _normalize_img_url(page_url, tag["content"]).replace("&amp;", "&")
+        low = u.lower()
+        if (
+            u
+            and "cms.dierenbescherming.nl" in low
+            and folder_marker in u
+            and "/admin/" not in low
+            and "/assets/common/" not in low
+            and _is_raster_image_url(u)
+        ):
+            hero = u
+            break
+    if hero is None:
+        hero = candidates[0]
+
+    hero_alg = "/algemeen/" in hero.lower()
+    out: list[str] = []
+    for u in candidates:
+        low = u.lower()
+        if "_882x1004" in low:
+            continue
+        if "/algemeen/" in low and not hero_alg:
+            continue
+        out.append(u)
+
+    return out[:IKZOEKBAAS_MAX_IMAGE_URLS]
 
 
 def _parse_detail(
@@ -303,7 +346,7 @@ def _parse_detail(
 
     species = _species_from_detail_url(url, description)
     city = _city_from_html(html)
-    images = _collect_image_urls(soup, url, html, shelter_cms_slug=slug)
+    images = _collect_image_urls(soup, url, shelter_cms_slug=slug)
 
     animal = RawAnimal(
         source="ikzoekbaas",
