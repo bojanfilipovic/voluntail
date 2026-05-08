@@ -1,7 +1,9 @@
+import { useQueryClient } from '@tanstack/react-query'
 import { Heart } from 'lucide-react'
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import { heartAnimal } from '@/api/animals'
-import { isHearted, addHeartedId, removeHeartedId } from '@/lib/heartStorage'
+import { isHearted, addHeartedId, removeHeartedId, subscribeHeartsChanged } from '@/lib/heartStorage'
+import { animalQueryKeys } from '@/lib/queryKeys'
 import { cn } from '@/lib/utils'
 
 type Props = {
@@ -10,34 +12,50 @@ type Props = {
   className?: string
 }
 
+/**
+ * `hearted` follows localStorage so list + detail modal never disagree (avoids double POST).
+ * `addHeartedId` runs only after POST succeeds. Animals query is invalidated so `initialCount` stays in sync.
+ */
 export function HeartButton({ animalId, initialCount, className }: Props) {
-  const [hearted, setHearted] = useState(() => isHearted(animalId))
+  const queryClient = useQueryClient()
+  const [, storageTick] = useState(0)
+  useEffect(() => subscribeHeartsChanged(() => storageTick((n) => n + 1)), [])
+
+  const hearted = isHearted(animalId)
   const [count, setCount] = useState(initialCount)
   const [busy, setBusy] = useState(false)
+  const likeInFlightRef = useRef(false)
+
+  useEffect(() => {
+    setCount(initialCount)
+  }, [initialCount])
 
   const handleClick = useCallback(
     async (e: React.MouseEvent) => {
       e.stopPropagation()
-      if (busy) return
+      if (busy || likeInFlightRef.current) return
+
       if (hearted) {
         removeHeartedId(animalId)
-        setHearted(false)
+        // Server heart tally is unchanged (bookmark is local-only); keep showing `initialCount`.
         return
       }
+
+      likeInFlightRef.current = true
       setBusy(true)
-      setHearted(true)
-      setCount((c) => c + 1)
-      addHeartedId(animalId)
       try {
         const res = await heartAnimal(animalId)
+        addHeartedId(animalId)
         setCount(res.heartCount)
+        void queryClient.invalidateQueries({ queryKey: animalQueryKeys.root })
       } catch {
-        // Optimistic update already applied; keep the local state
+        // No local favorite added; count unchanged from server perspective
       } finally {
+        likeInFlightRef.current = false
         setBusy(false)
       }
     },
-    [animalId, hearted, busy],
+    [animalId, hearted, busy, queryClient],
   )
 
   return (

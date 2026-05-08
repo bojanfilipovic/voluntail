@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { Suspense, lazy, useMemo, useState, useCallback, type RefObject } from 'react'
+import { Suspense, lazy, useMemo, useState, useCallback, useEffect, type RefObject } from 'react'
 import type { Animal } from '@/api/animals'
 import { fetchAnimals } from '@/api/animals'
 import type { Shelter } from '@/api/shelters'
@@ -17,6 +17,9 @@ import type { SpeciesFilterValue } from '@/domain/species'
 import { animalsRowsForDirectoryList } from '@/directory/animalListSource'
 import { MapLoadingFallback } from '@/directory/MapLoadingFallback'
 import type { DirectoryTab } from '@/directory/types'
+import { EXPLORE_SESSION_CHANGED_EVENT, EXPLORE_STORAGE_KEY } from '@/explore/types'
+import { getShortlistIds } from '@/lib/exploreShortlist'
+import { getHeartedIds, HEARTS_STORAGE_KEY, subscribeHeartsChanged } from '@/lib/heartStorage'
 import { animalQueryKeys, type AnimalListQuery } from '@/lib/queryKeys'
 import { Dices } from 'lucide-react'
 
@@ -147,6 +150,32 @@ export function DirectoryLayout({
   const handleFavoritesToggle = useCallback(() => setFavoritesOnly((v) => !v), [])
   const [matchesOnly, setMatchesOnly] = useState(false)
   const handleMatchesToggle = useCallback(() => setMatchesOnly((v) => !v), [])
+
+  useEffect(() => {
+    const syncFavoriteMode = (): void => {
+      setFavoritesOnly((fo) => (fo && getHeartedIds().size === 0 ? false : fo))
+    }
+    const syncMatchMode = (): void => {
+      setMatchesOnly((mo) => (mo && getShortlistIds().size === 0 ? false : mo))
+    }
+    const unheart = subscribeHeartsChanged(syncFavoriteMode)
+    const onExplore = (): void => {
+      syncMatchMode()
+    }
+    window.addEventListener(EXPLORE_SESSION_CHANGED_EVENT, onExplore)
+    const onStorage = (e: StorageEvent): void => {
+      if (e.key === HEARTS_STORAGE_KEY || e.key === EXPLORE_STORAGE_KEY) {
+        syncFavoriteMode()
+        syncMatchMode()
+      }
+    }
+    window.addEventListener('storage', onStorage)
+    return () => {
+      unheart()
+      window.removeEventListener(EXPLORE_SESSION_CHANGED_EVENT, onExplore)
+      window.removeEventListener('storage', onStorage)
+    }
+  }, [])
 
   const unscopedListQuery = useMemo(
     (): AnimalListQuery => ({

@@ -1,4 +1,6 @@
-const STORAGE_KEY = 'voluntail.hearts.v1'
+export const HEARTS_STORAGE_KEY = 'voluntail.hearts.v1' as const
+
+const STORAGE_KEY = HEARTS_STORAGE_KEY
 
 /** Same-tab notification when hearts change (localStorage does not trigger React). */
 export const HEARTS_CHANGED_EVENT = 'voluntail-hearts-changed'
@@ -92,6 +94,7 @@ export function addHeartedId(id: string): void {
   if (!ids.includes(trimmed)) {
     ids.push(trimmed)
     writeIds(ids)
+    notifyHeartsChanged()
   }
 }
 

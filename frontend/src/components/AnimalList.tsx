@@ -109,9 +109,9 @@ export function AnimalList({
         totalCount={totalAnimalCount}
       />
 
-      {favCount > 0 || matchCount > 0 ? (
+      {favCount > 0 || matchCount > 0 || favoritesOnly || matchesOnly ? (
         <div className="mb-3 flex flex-wrap gap-2">
-          {favCount > 0 ? (
+          {favCount > 0 || favoritesOnly ? (
             <button
               type="button"
               onClick={onFavoritesToggle}
@@ -126,7 +126,7 @@ export function AnimalList({
               My favorites ({favCount})
             </button>
           ) : null}
-          {matchCount > 0 ? (
+          {matchCount > 0 || matchesOnly ? (
             <button
               type="button"
               onClick={onMatchesToggle}
