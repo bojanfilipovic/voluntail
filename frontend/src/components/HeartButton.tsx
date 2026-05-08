@@ -1,7 +1,7 @@
 import { Heart } from 'lucide-react'
 import { useState, useCallback } from 'react'
 import { heartAnimal } from '@/api/animals'
-import { isHearted, addHeartedId } from '@/lib/heartStorage'
+import { isHearted, addHeartedId, removeHeartedId } from '@/lib/heartStorage'
 import { cn } from '@/lib/utils'
 
 type Props = {
@@ -18,7 +18,12 @@ export function HeartButton({ animalId, initialCount, className }: Props) {
   const handleClick = useCallback(
     async (e: React.MouseEvent) => {
       e.stopPropagation()
-      if (hearted || busy) return
+      if (busy) return
+      if (hearted) {
+        removeHeartedId(animalId)
+        setHearted(false)
+        return
+      }
       setBusy(true)
       setHearted(true)
       setCount((c) => c + 1)
@@ -39,8 +44,8 @@ export function HeartButton({ animalId, initialCount, className }: Props) {
     <button
       type="button"
       onClick={handleClick}
-      disabled={hearted}
-      aria-label={hearted ? `Liked (${count})` : `Like this animal (${count})`}
+      disabled={busy}
+      aria-label={hearted ? 'Remove from favorites' : `Like this animal (${count})`}
       className={cn(
         'inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium transition-colors',
         hearted

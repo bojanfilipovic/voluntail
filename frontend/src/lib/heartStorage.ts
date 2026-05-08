@@ -92,7 +92,6 @@ export function addHeartedId(id: string): void {
   if (!ids.includes(trimmed)) {
     ids.push(trimmed)
     writeIds(ids)
-    notifyHeartsChanged()
   }
 }
 
