@@ -2,6 +2,7 @@ import {
   animalHeartResponseSchema,
   animalSchema,
   animalSpeciesFacetsResponseSchema,
+  animalsListSchema,
   pagedAnimalsResponseSchema,
   type Animal,
   type AnimalPatchPayload,
@@ -120,7 +121,28 @@ export async function fetchAllAnimalsPages(
   return out
 }
 
-/** Explore: paged public load with shuffle seed (caller may merge pages). */
+/** Explore: single public response (server aggregates pages, same shuffle as paged API). */
+export async function fetchExploreDeckAnimals(
+  filters: AnimalListQuery,
+  shuffleSeed: string,
+): Promise<Animal[]> {
+  const p = new URLSearchParams()
+  if (filters.city?.trim()) p.set('city', filters.city.trim())
+  if (filters.shelterId?.trim()) p.set('shelterId', filters.shelterId.trim())
+  if (filters.species) p.set('species', filters.species)
+  p.set('shuffleSeed', shuffleSeed.trim())
+  const q = p.toString()
+  const url = `${ANIMALS_URL}/explore-deck?${q}`
+  return fetchJsonZod(
+    url,
+    { headers: {} },
+    INVALID_JSON_ANIMALS,
+    animalsListSchema,
+    'publicRead',
+  )
+}
+
+/** @deprecated Prefer fetchExploreDeckAnimals (one round-trip). */
 export async function fetchAllAnimalsPublicForExplore(
   filters: AnimalListQuery,
   shuffleSeed: string,

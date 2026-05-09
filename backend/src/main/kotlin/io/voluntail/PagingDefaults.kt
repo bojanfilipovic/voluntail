@@ -6,6 +6,9 @@ const val DEFAULT_PAGE_LIMIT = 50
 /** Hard cap per request (abuse / memory guard). */
 const val MAX_PAGE_LIMIT = 200
 
+/** Safety cap for explore-deck aggregation (many internal pages). */
+const val EXPLORE_DECK_MAX_ROWS = 10_000
+
 /** Max length for explore shuffle seed query param. */
 const val MAX_SHUFFLE_SEED_LENGTH = 128
 

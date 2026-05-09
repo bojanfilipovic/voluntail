@@ -31,6 +31,7 @@ import { isOtherSpecies, type SpeciesFilterValue } from '@/domain/species'
 import { DirectoryLayout } from '@/directory/DirectoryLayout'
 import type { DirectoryTab } from '@/directory/types'
 import { useTheme } from '@/hooks/useTheme'
+import { catalogQueryOptions } from '@/lib/catalogQueryOptions'
 import { animalQueryKeys, directoryQueryKeys, shelterQueryKeys } from '@/lib/queryKeys'
 
 const ExploreViewLazy = lazy(async () => {
@@ -80,11 +81,13 @@ function App() {
   const { data: shelterRows, error, isPending } = useQuery({
     queryKey: shelterQueryKeys.mapMarkers,
     queryFn: fetchShelterMapMarkers,
+    ...catalogQueryOptions,
   })
 
   const { data: statsData } = useQuery({
     queryKey: directoryQueryKeys.stats,
     queryFn: fetchDirectoryStats,
+    ...catalogQueryOptions,
   })
 
   const facetFilters = useMemo(
@@ -95,6 +98,7 @@ function App() {
   const { data: facetCounts } = useQuery({
     queryKey: animalQueryKeys.facets(facetFilters),
     queryFn: () => fetchAnimalSpeciesFacets(facetFilters),
+    ...catalogQueryOptions,
   })
 
   const animalInf = useInfiniteQuery({
@@ -110,6 +114,7 @@ function App() {
       const next = last.offset + last.items.length
       return next < last.total ? next : undefined
     },
+    ...catalogQueryOptions,
   })
 
   const animalsFlat = useMemo(

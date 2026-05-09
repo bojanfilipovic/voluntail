@@ -1,7 +1,8 @@
 import { useQuery } from '@tanstack/react-query'
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import type { Animal } from '@/api/animals'
-import { fetchAllAnimalsPublicForExplore } from '@/api/animals'
+import { fetchExploreDeckAnimals } from '@/api/animals'
+import { catalogQueryOptions } from '@/lib/catalogQueryOptions'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { toQueryError } from '@/lib/queryError'
@@ -65,7 +66,8 @@ export function ExploreView({ onBack, onOpenAnimal }: Props) {
     error: animalsError,
   } = useQuery({
     queryKey: animalQueryKeys.explore(listQuery, session.deckShuffleSeed),
-    queryFn: () => fetchAllAnimalsPublicForExplore(listQuery, session.deckShuffleSeed),
+    queryFn: () => fetchExploreDeckAnimals(listQuery, session.deckShuffleSeed),
+    ...catalogQueryOptions,
   })
 
   const publishedAnimals = useMemo(() => (animals ?? []).filter((a) => a.published), [animals])

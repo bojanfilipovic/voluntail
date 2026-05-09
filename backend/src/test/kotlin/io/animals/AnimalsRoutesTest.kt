@@ -308,4 +308,30 @@ class AnimalsRoutesTest {
             assertEquals(a, b)
         }
     }
+
+    @Test
+    fun `GET animals explore-deck returns JSON array with published animals`() {
+        voluntailTest {
+            val body =
+                client
+                    .get("/api/animals/explore-deck") {
+                        parameter("shuffleSeed", "deck-test-seed")
+                    }.bodyAsText()
+            assertTrue(body.trimStart().startsWith("["))
+            assertTrue(body.contains("Milo"))
+        }
+    }
+
+    @Test
+    fun `GET animals explore-deck with CMS key returns 400`() {
+        voluntailTest {
+            client
+                .get("/api/animals/explore-deck") {
+                    header("X-CMS-Key", TEST_CMS_KEY)
+                    parameter("shuffleSeed", "x")
+                }.apply {
+                    assertEquals(HttpStatusCode.BadRequest, status)
+                }
+        }
+    }
 }
