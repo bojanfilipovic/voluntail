@@ -18,10 +18,29 @@ data class AnimalListFilters(
 )
 
 interface AnimalRepository {
-    suspend fun list(
+    suspend fun listPage(
         filters: AnimalListFilters,
         visibility: AnimalListVisibility,
-    ): List<AnimalResponse>
+        limit: Int,
+        offset: Int,
+        shuffleSeed: String?,
+    ): AnimalListPageResponse
+
+    suspend fun count(
+        filters: AnimalListFilters,
+        visibility: AnimalListVisibility,
+    ): Int
+
+    suspend fun sumHeartCount(
+        filters: AnimalListFilters,
+        visibility: AnimalListVisibility,
+    ): Long
+
+    /** Counts per species for rows matching [filters] (species field ignored for grouping). */
+    suspend fun speciesFacetCounts(
+        filters: AnimalListFilters,
+        visibility: AnimalListVisibility,
+    ): Map<String, Int>
 
     suspend fun findById(id: UUID): AnimalResponse?
 

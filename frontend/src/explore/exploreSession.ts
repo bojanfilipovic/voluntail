@@ -41,6 +41,14 @@ function parseStringArray(raw: unknown): string[] {
   return raw.filter((x): x is string => typeof x === 'string')
 }
 
+export function makeShuffleSeed(): string {
+  try {
+    return crypto.randomUUID()
+  } catch {
+    return `${Date.now()}-${Math.random().toString(36).slice(2)}`
+  }
+}
+
 export function defaultExploreSession(): ExplorePersisted {
   return {
     v: 1,
@@ -51,6 +59,7 @@ export function defaultExploreSession(): ExplorePersisted {
     shortlistIds: [],
     passedIds: [],
     deckEntered: false,
+    deckShuffleSeed: makeShuffleSeed(),
     yesNotMatchIds: [],
   }
 }
@@ -63,11 +72,16 @@ export function loadExploreSession(): ExplorePersisted {
     return defaultExploreSession()
   }
   let base = defaultExploreSession()
+  let migrateDeckSeed = false
   try {
     const raw = window.localStorage.getItem(EXPLORE_STORAGE_KEY)
     if (raw) {
       const o = JSON.parse(raw) as Record<string, unknown>
       if (o && typeof o === 'object') {
+        const seedRaw = o.deckShuffleSeed
+        const seedFromStorage =
+          typeof seedRaw === 'string' && seedRaw.trim() ? seedRaw.trim() : ''
+        if (!seedFromStorage) migrateDeckSeed = true
         base = {
           v: 1,
           displayName: typeof o.displayName === 'string' ? o.displayName : base.displayName,
@@ -77,6 +91,7 @@ export function loadExploreSession(): ExplorePersisted {
           shortlistIds: parseStringArray(o.shortlistIds),
           passedIds: parseStringArray(o.passedIds),
           deckEntered: o.deckEntered === true,
+          deckShuffleSeed: seedFromStorage || makeShuffleSeed(),
           yesNotMatchIds: parseStringArray(o.yesNotMatchIds),
         }
       }
@@ -84,12 +99,17 @@ export function loadExploreSession(): ExplorePersisted {
   } catch {
     base = defaultExploreSession()
   }
+  let shouldPersist = false
   if (!base.displayName.trim()) {
     base = { ...base, displayName: pickFunnyDisplayName() }
+    shouldPersist = true
+  }
+  if (migrateDeckSeed) shouldPersist = true
+  if (shouldPersist) {
     try {
-      window.localStorage.setItem(EXPLORE_STORAGE_KEY, JSON.stringify(base))
+      saveExploreSession(base)
     } catch {
-      /* ignore quota */
+      /* ignore */
     }
   }
   return base

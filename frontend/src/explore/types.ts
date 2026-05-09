@@ -27,6 +27,8 @@ export type ExplorePersisted = {
   passedIds: string[]
   /** After "Start swiping", show the deck (not pre-deck) on return visits. */
   deckEntered: boolean
+  /** Server-side shuffle order for public animal listing (Explore deck base order). */
+  deckShuffleSeed: string
   /**
    * "Yes" with no match roll: excluded from the deck until new session / reset
    * as implemented (we clear on full reset to refill the game).

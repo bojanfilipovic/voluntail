@@ -67,11 +67,11 @@ function DirectoryIntro({
 }
 
 function CommunityStatsStrip({ stats }: { stats?: CommunityStats }) {
-  if (!stats?.shelters) return null
+  if (stats == null || stats.shelters === undefined) return null
   const parts: string[] = []
-  if (stats.shelters) parts.push(`${stats.shelters} shelters`)
-  if (stats.animals) parts.push(`${stats.animals} animals`)
-  if (stats.hearts) parts.push(`${stats.hearts.toLocaleString()} hearts given`)
+  parts.push(`${stats.shelters} shelters`)
+  parts.push(`${stats.animals ?? 0} animals`)
+  parts.push(`${(stats.hearts ?? 0).toLocaleString()} hearts given`)
   return (
     <p className="text-muted-foreground/70 text-xs">{parts.join(' · ')}</p>
   )

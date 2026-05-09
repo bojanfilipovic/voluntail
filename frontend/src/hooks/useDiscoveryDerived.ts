@@ -2,20 +2,36 @@ import { useMemo } from 'react'
 import type { Animal } from '@/api/animals'
 import type { Shelter } from '@/api/shelters'
 import type { SpeciesFilterValue } from '@/domain/species'
-import { buildSpeciesFilterRows, countSpecies, filterBySpecies } from '@/domain/speciesFilter'
+import {
+  buildSpeciesFilterRows,
+  countSpecies,
+  facetCountsToSpeciesRecord,
+  filterBySpecies,
+} from '@/domain/speciesFilter'
 import type { DirectoryTab } from '@/directory/types'
 import { toQueryError } from '@/lib/queryError'
+
+export type DirectoryStatsStrip = {
+  shelters: number
+  animals: number
+  hearts: number
+}
 
 export function useDiscoveryDerived(params: {
   directoryTab: DirectoryTab
   speciesFilter: SpeciesFilterValue | null
   animalSpeciesFilter: SpeciesFilterValue | null
+  /** Full shelter set for map + list (map-markers). */
   shelterRows: Shelter[] | undefined
   animalRows: Animal[] | undefined
   shelterQueryError: unknown
   animalsQueryError: unknown
   shelterCmsError: string | null
   animalCmsError: string | null
+  /** From GET /api/directory-stats — replaces counting loaded rows. */
+  directoryStats: DirectoryStatsStrip | undefined
+  /** From GET /api/animals/facets for current city/shelter scope. */
+  animalSpeciesFacetCounts: Record<string, number> | undefined
 }) {
   const {
     directoryTab,
@@ -27,6 +43,8 @@ export function useDiscoveryDerived(params: {
     animalsQueryError,
     shelterCmsError,
     animalCmsError,
+    directoryStats,
+    animalSpeciesFacetCounts,
   } = params
 
   const queryError = useMemo(
@@ -94,22 +112,24 @@ export function useDiscoveryDerived(params: {
     [animalRows, animalSpeciesFilter],
   )
 
-  const animalSpeciesFilters = useMemo(
-    () =>
-      buildSpeciesFilterRows(
-        countSpecies(animalRows ?? [], (a) => a.species),
-      ),
-    [animalRows],
-  )
+  const animalSpeciesFilters = useMemo(() => {
+    if (animalSpeciesFacetCounts) {
+      return buildSpeciesFilterRows(facetCountsToSpeciesRecord(animalSpeciesFacetCounts))
+    }
+    return buildSpeciesFilterRows(
+      countSpecies(animalRows ?? [], (a) => a.species),
+    )
+  }, [animalSpeciesFacetCounts, animalRows])
 
-  const communityStats = useMemo(
-    () => ({
-      shelters: shelterRows?.length,
-      animals: animalRows?.length,
-      hearts: animalRows?.reduce((s, a) => s + a.heartCount, 0),
-    }),
-    [shelterRows, animalRows],
-  )
+  const communityStats = useMemo((): DirectoryStatsStrip | undefined => {
+    if (directoryStats) return directoryStats
+    if (shelterRows === undefined || animalRows === undefined) return undefined
+    return {
+      shelters: shelterRows.length,
+      animals: animalRows.length,
+      hearts: animalRows.reduce((s, a) => s + a.heartCount, 0),
+    }
+  }, [directoryStats, shelterRows, animalRows])
 
   return {
     directoryAlert,

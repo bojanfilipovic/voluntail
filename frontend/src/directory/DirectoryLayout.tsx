@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { Suspense, lazy, useMemo, useState, useCallback, useEffect, type RefObject } from 'react'
 import type { Animal } from '@/api/animals'
-import { fetchAnimals } from '@/api/animals'
+import { fetchAllAnimalsPages } from '@/api/animals'
 import type { Shelter } from '@/api/shelters'
 import { AnimalList } from '@/components/AnimalList'
 import { DiscoveryErrorBoundary } from '@/components/layout/DiscoveryErrorBoundary'
@@ -90,6 +90,9 @@ export type DirectoryLayoutProps = {
   totalAnimalCount: number | undefined
   onViewAnimals: (shelterId: string) => void
   isDark?: boolean
+  onLoadMoreAnimals?: () => void
+  animalsHasNextPage?: boolean
+  animalsFetchingNextPage?: boolean
 }
 
 export function DirectoryLayout({
@@ -146,6 +149,9 @@ export function DirectoryLayout({
   totalAnimalCount,
   onViewAnimals,
   isDark = false,
+  onLoadMoreAnimals,
+  animalsHasNextPage,
+  animalsFetchingNextPage,
 }: DirectoryLayoutProps) {
   const cmsDraftLocationKnown = draftFlow === 'cms' && Boolean(draftLocation)
   const suggestDraftLocationKnown = draftFlow === 'suggest' && Boolean(draftLocation)
@@ -193,8 +199,8 @@ export function DirectoryLayout({
   const needsGlobalAnimalList = favoritesOrMatchesOnly && directoryTab === 'animals'
 
   const { data: unscopedAnimals, isPending: unscopedAnimalsPending } = useQuery({
-    queryKey: animalQueryKeys.list(unscopedListQuery),
-    queryFn: () => fetchAnimals(unscopedListQuery),
+    queryKey: animalQueryKeys.allPages(unscopedListQuery, cmsConfigured),
+    queryFn: () => fetchAllAnimalsPages(unscopedListQuery, { cms: cmsConfigured }),
     enabled: needsGlobalAnimalList,
   })
 
@@ -349,6 +355,9 @@ export function DirectoryLayout({
                 onFavoritesToggle={handleFavoritesToggle}
                 matchesOnly={matchesOnly}
                 onMatchesToggle={handleMatchesToggle}
+                onLoadMore={onLoadMoreAnimals}
+                hasNextPage={animalsHasNextPage}
+                isFetchingNextPage={animalsFetchingNextPage}
               />
             )}
           </div>

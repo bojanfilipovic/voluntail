@@ -28,9 +28,25 @@ export const animalSchema = z.object({
   heartCount: z.number(),
 })
 
+export type Animal = z.infer<typeof animalSchema>
+
 export const animalsListSchema = z.array(animalSchema)
 
-export type Animal = z.infer<typeof animalSchema>
+/** Paginated GET /api/animals */
+export const pagedAnimalsResponseSchema = z.object({
+  items: z.array(animalSchema),
+  total: z.number(),
+  limit: z.number(),
+  offset: z.number(),
+})
+
+export type PagedAnimalsResponse = z.infer<typeof pagedAnimalsResponseSchema>
+
+export const animalSpeciesFacetsResponseSchema = z.object({
+  counts: z.record(z.string(), z.number()),
+})
+
+export type AnimalSpeciesFacetsResponse = z.infer<typeof animalSpeciesFacetsResponseSchema>
 
 export const animalPatchPayloadSchema = z.object({
   shelterId: z.string().optional(),

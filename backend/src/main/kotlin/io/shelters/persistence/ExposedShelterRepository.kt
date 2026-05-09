@@ -1,6 +1,7 @@
 package io.shelters.persistence
 
 import io.shelters.ShelterCreateRequest
+import io.shelters.ShelterListPageResponse
 import io.shelters.ShelterRepository
 import io.shelters.ShelterResponse
 import io.shelters.ShelterSpecies
@@ -27,7 +28,37 @@ import kotlin.uuid.ExperimentalUuidApi
 class ExposedShelterRepository(
     private val database: Database,
 ) : ShelterRepository {
-    override suspend fun getAll(): List<ShelterResponse> =
+    override suspend fun count(): Int =
+        withContext(Dispatchers.IO) {
+            suspendTransaction(db = database, readOnly = true) {
+                SheltersTable.selectAll().count().toInt()
+            }
+        }
+
+    override suspend fun listPage(
+        limit: Int,
+        offset: Int,
+    ): ShelterListPageResponse =
+        withContext(Dispatchers.IO) {
+            suspendTransaction(db = database, readOnly = true) {
+                val total = SheltersTable.selectAll().count()
+                val items =
+                    SheltersTable
+                        .selectAll()
+                        .orderBy(SheltersTable.name, SortOrder.ASC)
+                        .limit(limit)
+                        .offset(offset.toLong())
+                        .map { row -> row.toShelterResponse() }
+                ShelterListPageResponse(
+                    items = items,
+                    total = total.toInt(),
+                    limit = limit,
+                    offset = offset,
+                )
+            }
+        }
+
+    override suspend fun listAllForMap(): List<ShelterResponse> =
         withContext(Dispatchers.IO) {
             suspendTransaction(db = database, readOnly = true) {
                 SheltersTable

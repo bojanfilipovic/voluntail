@@ -52,6 +52,9 @@ type Props = {
   onFavoritesToggle: () => void
   matchesOnly: boolean
   onMatchesToggle: () => void
+  onLoadMore?: () => void
+  hasNextPage?: boolean
+  isFetchingNextPage?: boolean
 }
 
 export function AnimalList({
@@ -74,6 +77,9 @@ export function AnimalList({
   onFavoritesToggle,
   matchesOnly,
   onMatchesToggle,
+  onLoadMore,
+  hasNextPage,
+  isFetchingNextPage,
 }: Props) {
   const [, setHeartRevision] = useState(0)
   useEffect(() => subscribeHeartsChanged(() => setHeartRevision((n) => n + 1)), [])
@@ -160,7 +166,8 @@ export function AnimalList({
           {favoritesOnly ? 'No favorites yet.' : matchesOnly ? 'No matches yet.' : 'No animals found.'}
         </p>
       ) : (
-        <ul className="list-none space-y-3 p-0">
+        <>
+          <ul className="list-none space-y-3 p-0">
           {displayAnimals.map((a) => {
             const thumbUrl = effectiveAnimalImageUrls(a)[0]
             return (
@@ -229,6 +236,19 @@ export function AnimalList({
             )
           })}
         </ul>
+          {!favoritesOnly && !matchesOnly && hasNextPage ? (
+            <div className="mt-4 flex justify-center">
+              <button
+                type="button"
+                className="border-input bg-background text-foreground hover:bg-muted/80 inline-flex h-9 items-center justify-center rounded-md border px-4 text-sm font-medium shadow-sm transition-colors disabled:pointer-events-none disabled:opacity-50"
+                disabled={isFetchingNextPage}
+                onClick={() => onLoadMore?.()}
+              >
+                {isFetchingNextPage ? 'Loading…' : 'Load more'}
+              </button>
+            </div>
+          ) : null}
+        </>
       )}
     </section>
   )

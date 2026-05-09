@@ -1,7 +1,8 @@
 import {
   animalHeartResponseSchema,
   animalSchema,
-  animalsListSchema,
+  animalSpeciesFacetsResponseSchema,
+  pagedAnimalsResponseSchema,
   type Animal,
   type AnimalPatchPayload,
 } from '@/schemas/animals'
@@ -36,33 +37,116 @@ const INVALID_JSON_ANIMALS = 'Invalid JSON from /api/animals'
 const INVALID_JSON_HEART = 'Invalid JSON from heart endpoint'
 const INVALID_JSON_UNHEART = 'Invalid JSON from unheart endpoint'
 
-function buildListUrl(filters: AnimalListQuery): string {
+export const ANIMAL_PAGE_SIZE = 50
+
+export type AnimalPageParams = {
+  limit?: number
+  offset?: number
+  shuffleSeed?: string | null
+}
+
+function buildListUrl(
+  filters: AnimalListQuery,
+  page: AnimalPageParams,
+): string {
   const p = new URLSearchParams()
   if (filters.city?.trim()) p.set('city', filters.city.trim())
   if (filters.shelterId?.trim()) p.set('shelterId', filters.shelterId.trim())
   if (filters.species) p.set('species', filters.species)
+  const limit = page.limit ?? ANIMAL_PAGE_SIZE
+  const offset = page.offset ?? 0
+  p.set('limit', String(limit))
+  p.set('offset', String(offset))
+  const seed = page.shuffleSeed?.trim()
+  if (seed) p.set('shuffleSeed', seed)
   const q = p.toString()
   return q ? `${ANIMALS_URL}?${q}` : ANIMALS_URL
 }
 
-/** Public list only: never send CMS key (no unpublished rows from the server). */
-export async function fetchAnimalsPublic(filters: AnimalListQuery): Promise<Animal[]> {
+function buildFacetsUrl(filters: Pick<AnimalListQuery, 'city' | 'shelterId'>): string {
+  const p = new URLSearchParams()
+  if (filters.city?.trim()) p.set('city', filters.city.trim())
+  if (filters.shelterId?.trim()) p.set('shelterId', filters.shelterId.trim())
+  const q = p.toString()
+  return q ? `${ANIMALS_URL}/facets?${q}` : `${ANIMALS_URL}/facets`
+}
+
+/** Public list page: never send CMS key. */
+export async function fetchAnimalsPublicPage(
+  filters: AnimalListQuery,
+  page: AnimalPageParams = {},
+) {
   return fetchJsonZod(
-    buildListUrl(filters),
+    buildListUrl(filters, page),
     { headers: {} },
     INVALID_JSON_ANIMALS,
-    animalsListSchema,
+    pagedAnimalsResponseSchema,
     'publicRead',
   )
 }
 
 /** CMS key when set widens listing to unpublished rows (server-side). */
-export async function fetchAnimals(filters: AnimalListQuery): Promise<Animal[]> {
+export async function fetchAnimalsPage(
+  filters: AnimalListQuery,
+  page: AnimalPageParams = {},
+) {
   return fetchJsonZod(
-    buildListUrl(filters),
+    buildListUrl(filters, page),
     { headers: { ...buildCmsHeaders() } },
     INVALID_JSON_ANIMALS,
-    animalsListSchema,
+    pagedAnimalsResponseSchema,
+    'publicRead',
+  )
+}
+
+const MAX_ANIMAL_PAGES = 500
+
+/** Load all pages for the given filters (directory unscoped / CMS tools). Honors total from API. */
+export async function fetchAllAnimalsPages(
+  filters: AnimalListQuery,
+  opts: { cms: boolean; shuffleSeed?: string | null },
+): Promise<Animal[]> {
+  const limit = ANIMAL_PAGE_SIZE
+  let offset = 0
+  const out: Animal[] = []
+  for (let i = 0; i < MAX_ANIMAL_PAGES; i++) {
+    const page = opts.cms
+      ? await fetchAnimalsPage(filters, { limit, offset, shuffleSeed: opts.shuffleSeed })
+      : await fetchAnimalsPublicPage(filters, { limit, offset, shuffleSeed: opts.shuffleSeed })
+    out.push(...page.items)
+    if (page.total === 0 || out.length >= page.total || page.items.length === 0) break
+    offset += page.items.length
+  }
+  return out
+}
+
+/** Explore: paged public load with shuffle seed (caller may merge pages). */
+export async function fetchAllAnimalsPublicForExplore(
+  filters: AnimalListQuery,
+  shuffleSeed: string,
+): Promise<Animal[]> {
+  return fetchAllAnimalsPages(filters, { cms: false, shuffleSeed })
+}
+
+export async function fetchAnimalSpeciesFacets(
+  filters: Pick<AnimalListQuery, 'city' | 'shelterId'>,
+): Promise<Record<string, number>> {
+  const res = await fetchJsonZod(
+    buildFacetsUrl(filters),
+    { headers: { ...buildCmsHeaders() } },
+    INVALID_JSON_ANIMALS,
+    animalSpeciesFacetsResponseSchema,
+    'publicRead',
+  )
+  return res.counts
+}
+
+export async function fetchAnimalById(id: string): Promise<Animal> {
+  return fetchJsonZod(
+    `${ANIMALS_URL}/${encodeURIComponent(id)}`,
+    { headers: { ...buildCmsHeaders() } },
+    INVALID_JSON_ANIMALS,
+    animalSchema,
     'publicRead',
   )
 }

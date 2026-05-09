@@ -2,6 +2,7 @@ package io.animals.persistence
 
 import io.animals.AnimalCreateRequest
 import io.animals.AnimalListFilters
+import io.animals.AnimalListPageResponse
 import io.animals.AnimalListVisibility
 import io.animals.AnimalRepository
 import io.animals.AnimalResponse
@@ -13,15 +14,17 @@ import io.shelters.ShelterSpecies
 import io.shelters.persistence.SheltersTable
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.jetbrains.exposed.v1.core.Count
 import org.jetbrains.exposed.v1.core.Op
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.SortOrder
+import org.jetbrains.exposed.v1.core.Sum
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
-import org.jetbrains.exposed.v1.core.plus
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.suspendTransaction
 import org.jetbrains.exposed.v1.jdbc.update
@@ -30,34 +33,128 @@ import java.util.UUID
 class ExposedAnimalRepository(
     private val database: Database,
 ) : AnimalRepository {
-    override suspend fun list(
+    private fun filterOps(
         filters: AnimalListFilters,
         visibility: AnimalListVisibility,
-    ): List<AnimalResponse> =
+    ): List<Op<Boolean>> {
+        val parts = mutableListOf<Op<Boolean>>()
+        if (visibility == AnimalListVisibility.Public) {
+            parts.add(AnimalsTable.published eq true)
+        }
+        filters.shelterId?.let { parts.add(AnimalsTable.shelterId eq it) }
+        filters.species?.let { parts.add(AnimalsTable.species eq it.name) }
+        filters.city?.trim()?.takeIf { it.isNotEmpty() }?.let { c ->
+            parts.add(CityEqualsIgnoreCaseOp(AnimalsTable.city, c))
+        }
+        return parts
+    }
+
+    private fun baseQueryWhere(
+        filters: AnimalListFilters,
+        visibility: AnimalListVisibility,
+    ): Op<Boolean>? {
+        val parts = filterOps(filters, visibility)
+        return when {
+            parts.isEmpty() -> null
+            parts.size == 1 -> parts.single()
+            else -> parts.reduce { a, b -> a and b }
+        }
+    }
+
+    override suspend fun listPage(
+        filters: AnimalListFilters,
+        visibility: AnimalListVisibility,
+        limit: Int,
+        offset: Int,
+        shuffleSeed: String?,
+    ): AnimalListPageResponse =
         withContext(Dispatchers.IO) {
             suspendTransaction(db = database, readOnly = true) {
-                val parts = mutableListOf<Op<Boolean>>()
-                if (visibility == AnimalListVisibility.Public) {
-                    parts.add(AnimalsTable.published eq true)
-                }
-                filters.shelterId?.let { parts.add(AnimalsTable.shelterId eq it) }
-                filters.species?.let { parts.add(AnimalsTable.species eq it.name) }
-                val baseQuery =
-                    when {
-                        parts.isEmpty() -> AnimalsTable.selectAll()
-                        parts.size == 1 ->
-                            AnimalsTable.selectAll().where { parts.single() }
-                        else ->
-                            AnimalsTable.selectAll().where {
-                                parts.reduce { a, b -> a and b }
-                            }
+                val whereExpr = baseQueryWhere(filters, visibility)
+                val total =
+                    when (whereExpr) {
+                        null -> AnimalsTable.selectAll().count()
+                        else -> AnimalsTable.selectAll().where { whereExpr }.count()
+                    }.toInt()
+
+                val q =
+                    when (whereExpr) {
+                        null -> AnimalsTable.selectAll()
+                        else -> AnimalsTable.selectAll().where { whereExpr }
                     }
-                val cityNeedle = filters.city?.trim()?.takeIf { it.isNotEmpty() }
-                baseQuery
-                    .orderBy(AnimalsTable.name, SortOrder.ASC)
-                    .map { it.toAnimalResponse() }
-                    .filter { a ->
-                        cityNeedle == null || a.city.equals(cityNeedle, ignoreCase = true)
+                val seed = shuffleSeed?.trim()?.takeIf { it.isNotEmpty() }
+                val ordered =
+                    if (seed != null && visibility == AnimalListVisibility.Public) {
+                        val md5Expr = Md5SeedConcatAnimalIdExpr(seed, AnimalsTable.id)
+                        q.orderBy(md5Expr, SortOrder.ASC).orderBy(AnimalsTable.name, SortOrder.ASC)
+                    } else {
+                        q.orderBy(AnimalsTable.name, SortOrder.ASC)
+                    }
+                val items =
+                    ordered
+                        .limit(limit)
+                        .offset(offset.toLong())
+                        .map { it.toAnimalResponse() }
+                AnimalListPageResponse(
+                    items = items,
+                    total = total,
+                    limit = limit,
+                    offset = offset,
+                )
+            }
+        }
+
+    override suspend fun count(
+        filters: AnimalListFilters,
+        visibility: AnimalListVisibility,
+    ): Int =
+        withContext(Dispatchers.IO) {
+            suspendTransaction(db = database, readOnly = true) {
+                val whereExpr = baseQueryWhere(filters, visibility)
+                when (whereExpr) {
+                    null -> AnimalsTable.selectAll().count()
+                    else -> AnimalsTable.selectAll().where { whereExpr }.count()
+                }.toInt()
+            }
+        }
+
+    override suspend fun sumHeartCount(
+        filters: AnimalListFilters,
+        visibility: AnimalListVisibility,
+    ): Long =
+        withContext(Dispatchers.IO) {
+            suspendTransaction(db = database, readOnly = true) {
+                val whereExpr = baseQueryWhere(filters, visibility)
+                val sumExpr = Sum(AnimalsTable.heartCount, AnimalsTable.heartCount.columnType)
+                val base = AnimalsTable.select(sumExpr)
+                val row =
+                    when (whereExpr) {
+                        null -> base.firstOrNull()
+                        else -> base.where { whereExpr }.firstOrNull()
+                    }
+                (row?.get(sumExpr) as Number?)?.toLong() ?: 0L
+            }
+        }
+
+    override suspend fun speciesFacetCounts(
+        filters: AnimalListFilters,
+        visibility: AnimalListVisibility,
+    ): Map<String, Int> =
+        withContext(Dispatchers.IO) {
+            suspendTransaction(db = database, readOnly = true) {
+                val facetFilters = filters.copy(species = null)
+                val whereExpr = baseQueryWhere(facetFilters, visibility)
+                val cnt = Count(AnimalsTable.id, false)
+                val base = AnimalsTable.select(AnimalsTable.species, cnt)
+                val q =
+                    when (whereExpr) {
+                        null -> base
+                        else -> base.where { whereExpr }
+                    }
+                q
+                    .groupBy(AnimalsTable.species)
+                    .associate { row ->
+                        row[AnimalsTable.species] to row[cnt].toInt()
                     }
             }
         }
@@ -144,16 +241,17 @@ class ExposedAnimalRepository(
     override suspend fun incrementHeartCount(id: UUID): Int? =
         withContext(Dispatchers.IO) {
             suspendTransaction(db = database, readOnly = false) {
-                val updated =
-                    AnimalsTable.update({ (AnimalsTable.id eq id) and (AnimalsTable.published eq true) }) {
-                        it[heartCount] = heartCount + 1
-                    }
-                if (updated == 0) return@suspendTransaction null
-                AnimalsTable
-                    .selectAll()
-                    .where { AnimalsTable.id eq id }
-                    .firstOrNull()
-                    ?.get(AnimalsTable.heartCount)
+                val row =
+                    AnimalsTable
+                        .selectAll()
+                        .where { (AnimalsTable.id eq id) and (AnimalsTable.published eq true) }
+                        .firstOrNull()
+                        ?: return@suspendTransaction null
+                val next = row[AnimalsTable.heartCount] + 1
+                AnimalsTable.update({ (AnimalsTable.id eq id) and (AnimalsTable.published eq true) }) {
+                    it[AnimalsTable.heartCount] = next
+                }
+                next
             }
         }
 

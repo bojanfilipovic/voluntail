@@ -11,7 +11,7 @@ import {
   useCmsCrudMutations,
   type CmsCrudMutationsResult,
 } from '@/hooks/useCmsCrudMutations'
-import { animalQueryKeys } from '@/lib/queryKeys'
+import { animalQueryKeys, directoryQueryKeys } from '@/lib/queryKeys'
 
 export type AnimalMutationsApi = CmsCrudMutationsResult<
   Animal,
@@ -21,6 +21,7 @@ export type AnimalMutationsApi = CmsCrudMutationsResult<
 
 async function invalidateAnimalLists(queryClient: QueryClient): Promise<void> {
   await queryClient.invalidateQueries({ queryKey: animalQueryKeys.root })
+  await queryClient.invalidateQueries({ queryKey: directoryQueryKeys.stats })
 }
 
 export function useAnimalMutations(): AnimalMutationsApi {
