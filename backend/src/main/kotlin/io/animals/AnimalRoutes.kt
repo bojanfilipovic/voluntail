@@ -1,7 +1,9 @@
 package io.animals
 
+import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.request.receive
+import io.ktor.server.request.uri
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.Route
@@ -13,12 +15,17 @@ import io.ktor.server.routing.route
 import io.shelters.ShelterRepository
 import io.shelters.ShelterSpecies
 import io.voluntail.AnimalSpeciesFacetsResponse
+import io.voluntail.EXPLORE_DECK_MAX_ROWS
 import io.voluntail.INVALID_LIMIT_OFFSET_MESSAGE
+import io.voluntail.MAX_PAGE_LIMIT
 import io.voluntail.MAX_SHUFFLE_SEED_LENGTH
+import io.voluntail.PublicApiResponseCache
 import io.voluntail.ensureCmsAuthorized
 import io.voluntail.isCmsAuthorized
 import io.voluntail.parseLimitOffset
 import io.voluntail.uuidPathParameter
+import io.voluntail.voluntailJson
+import kotlinx.serialization.builtins.ListSerializer
 import java.util.UUID
 
 fun Route.animalRoutes(
@@ -38,7 +45,77 @@ fun Route.animalRoutes(
                 }
             val facetFilters = filters.copy(species = null)
             val counts = animalRepository.speciesFacetCounts(facetFilters, visibility)
-            call.respond(AnimalSpeciesFacetsResponse(counts = counts))
+            val response = AnimalSpeciesFacetsResponse(counts = counts)
+            if (visibility == AnimalListVisibility.Public && PublicApiResponseCache.enabled()) {
+                val cacheKey = PublicApiResponseCache.cacheKey("facets", call.request.uri)
+                PublicApiResponseCache.get(cacheKey)?.let { body ->
+                    call.respondText(body, ContentType.Application.Json)
+                    return@get
+                }
+                val json = voluntailJson.encodeToString(AnimalSpeciesFacetsResponse.serializer(), response)
+                PublicApiResponseCache.put(cacheKey, json)
+                call.respondText(json, ContentType.Application.Json)
+            } else {
+                call.respond(response)
+            }
+        }
+        get("/animals/explore-deck") {
+            if (call.isCmsAuthorized()) {
+                call.respondText(
+                    "Explore deck is public-only",
+                    status = HttpStatusCode.BadRequest,
+                )
+                return@get
+            }
+            val filters =
+                call.parseAnimalListFilters()
+                    ?: return@get
+            val shuffleRaw =
+                call.request.queryParameters["shuffleSeed"]
+                    ?.trim()
+                    .orEmpty()
+            if (shuffleRaw.length > MAX_SHUFFLE_SEED_LENGTH) {
+                call.respondText(
+                    "Invalid shuffleSeed query parameter",
+                    status = HttpStatusCode.BadRequest,
+                )
+                return@get
+            }
+            val shuffleSeed = shuffleRaw.takeIf { it.isNotEmpty() }
+            if (PublicApiResponseCache.enabled()) {
+                val cacheKey = PublicApiResponseCache.cacheKey("explore-deck", call.request.uri)
+                PublicApiResponseCache.get(cacheKey)?.let { body ->
+                    call.respondText(body, ContentType.Application.Json)
+                    return@get
+                }
+            }
+            val items = mutableListOf<AnimalResponse>()
+            var offset = 0
+            while (items.size < EXPLORE_DECK_MAX_ROWS) {
+                val page =
+                    animalRepository.listPage(
+                        filters = filters,
+                        visibility = AnimalListVisibility.Public,
+                        limit = MAX_PAGE_LIMIT,
+                        offset = offset,
+                        shuffleSeed = shuffleSeed,
+                    )
+                items.addAll(page.items)
+                if (page.items.isEmpty() || items.size >= page.total) break
+                offset += page.items.size
+            }
+            val json =
+                voluntailJson.encodeToString(
+                    ListSerializer(AnimalResponse.serializer()),
+                    items,
+                )
+            if (PublicApiResponseCache.enabled()) {
+                PublicApiResponseCache.put(
+                    PublicApiResponseCache.cacheKey("explore-deck", call.request.uri),
+                    json,
+                )
+            }
+            call.respondText(json, ContentType.Application.Json)
         }
         get("/animals/{id}") {
             val id = call.uuidPathParameter("id") ?: return@get
@@ -99,7 +176,18 @@ fun Route.animalRoutes(
                     offset = paging.offset,
                     shuffleSeed = effectiveShuffle,
                 )
-            call.respond(page)
+            if (visibility == AnimalListVisibility.Public && PublicApiResponseCache.enabled()) {
+                val cacheKey = PublicApiResponseCache.cacheKey("animals", call.request.uri)
+                PublicApiResponseCache.get(cacheKey)?.let { body ->
+                    call.respondText(body, ContentType.Application.Json)
+                    return@get
+                }
+                val json = voluntailJson.encodeToString(AnimalListPageResponse.serializer(), page)
+                PublicApiResponseCache.put(cacheKey, json)
+                call.respondText(json, ContentType.Application.Json)
+            } else {
+                call.respond(page)
+            }
         }
         post("/animals") {
             if (!call.ensureCmsAuthorized()) return@post
@@ -140,6 +228,7 @@ fun Route.animalRoutes(
                 return@post
             }
             val created = animalRepository.insert(request)
+            PublicApiResponseCache.clear()
             call.respond(HttpStatusCode.Created, created)
         }
         patch("/animals/{id}") {
@@ -185,6 +274,7 @@ fun Route.animalRoutes(
                         )
                         return@patch
                     }
+            PublicApiResponseCache.clear()
             call.respond(updated)
         }
         delete("/animals/{id}") {
@@ -198,6 +288,7 @@ fun Route.animalRoutes(
                 )
                 return@delete
             }
+            PublicApiResponseCache.clear()
             call.respond(HttpStatusCode.NoContent)
         }
         post("/animals/{id}/heart") {
@@ -211,6 +302,7 @@ fun Route.animalRoutes(
                         )
                         return@post
                     }
+            PublicApiResponseCache.clear()
             call.respond(HeartCountResponse(heartCount = newCount))
         }
         post("/animals/{id}/unheart") {
@@ -224,6 +316,7 @@ fun Route.animalRoutes(
                         )
                         return@post
                     }
+            PublicApiResponseCache.clear()
             call.respond(HeartCountResponse(heartCount = newCount))
         }
     }

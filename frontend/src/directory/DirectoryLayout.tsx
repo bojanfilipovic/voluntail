@@ -21,6 +21,7 @@ import { EXPLORE_SESSION_CHANGED_EVENT, EXPLORE_STORAGE_KEY } from '@/explore/ty
 import { getShortlistIds } from '@/lib/exploreShortlist'
 import { getHeartedIds, HEARTS_STORAGE_KEY, subscribeHeartsChanged } from '@/lib/heartStorage'
 import { animalQueryKeys, type AnimalListQuery } from '@/lib/queryKeys'
+import { catalogQueryOptions } from '@/lib/catalogQueryOptions'
 import { Dices } from 'lucide-react'
 
 /** Same as MapCenter from ShelterMap — duplicated here to avoid a static import of the map module next to a lazy() of it. */
@@ -202,6 +203,7 @@ export function DirectoryLayout({
     queryKey: animalQueryKeys.allPages(unscopedListQuery, cmsConfigured),
     queryFn: () => fetchAllAnimalsPages(unscopedListQuery, { cms: cmsConfigured }),
     enabled: needsGlobalAnimalList,
+    ...catalogQueryOptions,
   })
 
   const animalsForList = useMemo(

@@ -2,8 +2,8 @@ import { useQueryClient } from '@tanstack/react-query'
 import { Heart } from 'lucide-react'
 import { useState, useCallback, useEffect, useRef } from 'react'
 import { heartAnimal, unheartAnimal } from '@/api/animals'
+import { bumpDirectoryHeartSum, patchAnimalHeartCountInQueryCache } from '@/lib/patchAnimalHeartInQueryCache'
 import { isHearted, addHeartedId, removeHeartedId, subscribeHeartsChanged } from '@/lib/heartStorage'
-import { animalQueryKeys, directoryQueryKeys } from '@/lib/queryKeys'
 import { cn } from '@/lib/utils'
 
 type Props = {
@@ -15,7 +15,7 @@ type Props = {
 /**
  * `hearted` follows localStorage so list + detail modal never disagree (avoids double POST).
  * `addHeartedId` / `removeHeartedId` run only after heart/unheart POST succeeds.
- * Animals query is invalidated so list counts and header totals stay in sync.
+ * Cached animal lists are patched in-place (no broad invalidation); directory heart sum is adjusted.
  */
 export function HeartButton({ animalId, initialCount, className }: Props) {
   const queryClient = useQueryClient()
@@ -43,8 +43,8 @@ export function HeartButton({ animalId, initialCount, className }: Props) {
           const res = await unheartAnimal(animalId)
           removeHeartedId(animalId)
           setCount(res.heartCount)
-          void queryClient.invalidateQueries({ queryKey: animalQueryKeys.root })
-          void queryClient.invalidateQueries({ queryKey: directoryQueryKeys.stats })
+          patchAnimalHeartCountInQueryCache(queryClient, animalId, res.heartCount)
+          bumpDirectoryHeartSum(queryClient, -1)
         } catch {
           /* keep favorite + count unchanged */
         } finally {
@@ -60,8 +60,8 @@ export function HeartButton({ animalId, initialCount, className }: Props) {
         const res = await heartAnimal(animalId)
         addHeartedId(animalId)
         setCount(res.heartCount)
-        void queryClient.invalidateQueries({ queryKey: animalQueryKeys.root })
-        void queryClient.invalidateQueries({ queryKey: directoryQueryKeys.stats })
+        patchAnimalHeartCountInQueryCache(queryClient, animalId, res.heartCount)
+        bumpDirectoryHeartSum(queryClient, 1)
       } catch {
         // No local favorite added; count unchanged from server perspective
       } finally {

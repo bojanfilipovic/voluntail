@@ -2,6 +2,7 @@ package io.voluntail.test
 
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
+import io.voluntail.PublicApiResponseCache
 import io.voluntail.module
 
 /**
@@ -10,10 +11,12 @@ import io.voluntail.module
  * valid (same as [testApplication]'s receiver).
  */
 fun voluntailTest(block: suspend ApplicationTestBuilder.() -> Unit) {
+    PublicApiResponseCache.clear()
     testApplication {
         application {
             module()
         }
         block()
     }
+    PublicApiResponseCache.clear()
 }

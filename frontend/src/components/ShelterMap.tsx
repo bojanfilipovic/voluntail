@@ -52,15 +52,15 @@ const MAPBOX_COUNTRIES_TILESET = 'mapbox://mapbox.country-boundaries-v1'
 const COUNTRY_VECTOR_SOURCE = 'voluntail-country-boundaries'
 const LAYER_COUNTRY_FILL = 'voluntail-country-fill-layer'
 
-const CLUSTER_INTERACTIVE = [
-  LAYER_CLUSTERS,
-  LAYER_CLUSTER_COUNT,
-  LAYER_UNCLUSTERED,
-] as const
-
 function countryLayerIds(hasCountries: boolean): string[] {
   if (!hasCountries) return []
   return [LAYER_COUNTRY_FILL]
+}
+
+function shelterLayersPresentOnMap(map: MapboxMap): string[] {
+  return [LAYER_CLUSTERS, LAYER_CLUSTER_COUNT, LAYER_UNCLUSTERED].filter((id) =>
+    Boolean(map.getLayer(id)),
+  )
 }
 
 /** Whether any shelter cluster/unclustered symbol is visible (aligned with rendered pins, not raw lng/lat contains). */
@@ -70,8 +70,10 @@ function shelterPinsVisibleInViewport(map: MapboxMap): boolean {
     [0, 0],
     [canvas.width, canvas.height],
   ]
+  const layers = shelterLayersPresentOnMap(map)
+  if (layers.length === 0) return true
   try {
-    const feats = map.queryRenderedFeatures(box, { layers: [...CLUSTER_INTERACTIVE] })
+    const feats = map.queryRenderedFeatures(box, { layers })
     return feats.length > 0
   } catch {
     /* Style/layers not ready — avoid false “empty area” banner */
@@ -156,6 +158,8 @@ export const ShelterMap = forwardRef<ShelterMapHandle, Props>(
     }, [isDark])
 
     const [mapReady, setMapReady] = useState(false)
+    /** Unclustered symbol layer needs images; Mapbox warns if layers render before addImage completes. */
+    const [shelterPinSpritesReady, setShelterPinSpritesReady] = useState(false)
     const [emptyViewportHint, setEmptyViewportHint] = useState(false)
 
     const lastFittedBoundsKeyRef = useRef<string | null>(null)
@@ -208,8 +212,13 @@ export const ShelterMap = forwardRef<ShelterMapHandle, Props>(
 
     /** Shelter layers first so pointer/hover logic prefers pins over country tint. */
     const interactiveLayerIds = useMemo(
-      () => [...CLUSTER_INTERACTIVE, ...countryLayerIds(showCountryLayers)],
-      [showCountryLayers],
+      () => [
+        LAYER_CLUSTERS,
+        LAYER_CLUSTER_COUNT,
+        ...(shelterPinSpritesReady ? [LAYER_UNCLUSTERED] : []),
+        ...countryLayerIds(showCountryLayers),
+      ],
+      [shelterPinSpritesReady, showCountryLayers],
     )
 
     /**
@@ -245,7 +254,15 @@ export const ShelterMap = forwardRef<ShelterMapHandle, Props>(
     useEffect(() => {
       const map = mapRef.current?.getMap()
       if (!map || !mapReady || !token) return
-      void ensureShelterPinImages(map, isDark).catch(() => {})
+      void (async () => {
+        setShelterPinSpritesReady(false)
+        try {
+          await ensureShelterPinImages(map, isDark)
+          setShelterPinSpritesReady(true)
+        } catch {
+          setShelterPinSpritesReady(false)
+        }
+      })()
     }, [isDark, mapReady, token])
 
     const runFitBounds = useCallback(
@@ -313,7 +330,7 @@ export const ShelterMap = forwardRef<ShelterMapHandle, Props>(
         map.off('zoomend', update)
         clearTimeout(timeoutId)
       }
-    }, [mapReady, points])
+    }, [mapReady, points, shelterPinSpritesReady])
 
     const handleMapClick = useCallback(
       (e: MapMouseEvent) => {
@@ -331,9 +348,11 @@ export const ShelterMap = forwardRef<ShelterMapHandle, Props>(
          * Query shelter layers first — country fill can sit above GeoJSON in hit-tests at some zooms,
          * which was swallowing pin clicks when all layers were queried together.
          */
-        const shelterHits = map.queryRenderedFeatures(e.point, {
-          layers: [...CLUSTER_INTERACTIVE],
-        })
+        const shelterLayers = shelterLayersPresentOnMap(map)
+        const shelterHits =
+          shelterLayers.length > 0
+            ? map.queryRenderedFeatures(e.point, { layers: shelterLayers })
+            : []
         const top = shelterHits[0]
 
         if (top) {
@@ -517,18 +536,31 @@ export const ShelterMap = forwardRef<ShelterMapHandle, Props>(
             interactiveLayerIds={interactiveLayerIds}
             onLoad={(e) => {
               const map = e.target
-              const syncPins = () => {
-                void ensureShelterPinImages(map, isDarkRef.current).catch(() => {
-                  /* pins missing until refresh if registration fails */
-                })
-              }
-              map.on('style.load', syncPins)
-              void (async () => {
+              const registerPins = async () => {
+                setShelterPinSpritesReady(false)
                 try {
                   await ensureShelterPinImages(map, isDarkRef.current)
+                  setShelterPinSpritesReady(true)
                 } catch {
-                  /* initial registration failed */
+                  setShelterPinSpritesReady(false)
                 }
+              }
+              const syncPins = () => {
+                void registerPins()
+              }
+              map.on('style.load', syncPins)
+              map.on('styleimagemissing', (ev) => {
+                const id = ev.id
+                if (
+                  id === SHELTER_PIN_IMAGE_IDS.default ||
+                  id === SHELTER_PIN_IMAGE_IDS.selected ||
+                  id === SHELTER_PIN_IMAGE_IDS.animal
+                ) {
+                  void registerPins()
+                }
+              })
+              void (async () => {
+                await registerPins()
                 setMapReady(true)
                 resizeMap()
                 requestAnimationFrame(() => resizeMap())
@@ -590,12 +622,14 @@ export const ShelterMap = forwardRef<ShelterMapHandle, Props>(
                   'text-color': '#ffffff',
                 }}
               />
-              <Layer
-                id={LAYER_UNCLUSTERED}
-                type="symbol"
-                filter={['!', ['has', 'point_count']]}
-                layout={unclusteredSymbolLayout}
-              />
+              {shelterPinSpritesReady ? (
+                <Layer
+                  id={LAYER_UNCLUSTERED}
+                  type="symbol"
+                  filter={['!', ['has', 'point_count']]}
+                  layout={unclusteredSymbolLayout}
+                />
+              ) : null}
             </Source>
 
             {draftLocation &&

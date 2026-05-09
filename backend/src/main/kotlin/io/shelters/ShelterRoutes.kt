@@ -11,6 +11,7 @@ import io.ktor.server.routing.patch
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 import io.voluntail.INVALID_LIMIT_OFFSET_MESSAGE
+import io.voluntail.PublicApiResponseCache
 import io.voluntail.ensureCmsAuthorized
 import io.voluntail.parseLimitOffset
 import io.voluntail.uuidPathParameter
@@ -49,6 +50,7 @@ fun Route.shelterRoutes(repository: ShelterRepository) {
                 return@post
             }
             val created = repository.insert(request)
+            PublicApiResponseCache.clear()
             call.respond(HttpStatusCode.Created, created)
         }
         patch("/shelters/{id}") {
@@ -84,6 +86,7 @@ fun Route.shelterRoutes(repository: ShelterRepository) {
                         )
                         return@patch
                     }
+            PublicApiResponseCache.clear()
             call.respond(updated)
         }
         delete("/shelters/{id}") {
@@ -94,6 +97,7 @@ fun Route.shelterRoutes(repository: ShelterRepository) {
                 call.respondText("Shelter not found", status = HttpStatusCode.NotFound)
                 return@delete
             }
+            PublicApiResponseCache.clear()
             call.respond(HttpStatusCode.NoContent)
         }
     }
