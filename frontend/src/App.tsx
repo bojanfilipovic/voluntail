@@ -1,10 +1,16 @@
 import { Analytics } from '@vercel/analytics/react'
 import { SpeedInsights } from '@vercel/speed-insights/react'
-import { useQuery } from '@tanstack/react-query'
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import { lazy, Suspense, useCallback, useMemo, useState } from 'react'
-import { fetchAnimals } from '@/api/animals'
+import {
+  ANIMAL_PAGE_SIZE,
+  fetchAnimalSpeciesFacets,
+  fetchAnimalsPage,
+  fetchAnimalsPublicPage,
+} from '@/api/animals'
 import type { Animal } from '@/api/animals'
-import { fetchShelters, type Shelter } from '@/api/shelters'
+import { fetchDirectoryStats } from '@/api/directoryStats'
+import { fetchShelterMapMarkers, type Shelter } from '@/api/shelters'
 import { AddAnimalDialog } from '@/components/AddAnimalDialog'
 import { AddShelterDialog } from '@/components/AddShelterDialog'
 import { AnimalDetailDialog } from '@/components/AnimalDetailDialog'
@@ -25,7 +31,7 @@ import { isOtherSpecies, type SpeciesFilterValue } from '@/domain/species'
 import { DirectoryLayout } from '@/directory/DirectoryLayout'
 import type { DirectoryTab } from '@/directory/types'
 import { useTheme } from '@/hooks/useTheme'
-import { animalQueryKeys, shelterQueryKeys } from '@/lib/queryKeys'
+import { animalQueryKeys, directoryQueryKeys, shelterQueryKeys } from '@/lib/queryKeys'
 
 const ExploreViewLazy = lazy(async () => {
   const mod = await import('@/explore/ExploreView')
@@ -69,19 +75,58 @@ function App() {
     [animalCityFilter, animalShelterFilter],
   )
 
-  const { data, error, isPending } = useQuery({
-    queryKey: shelterQueryKeys.all,
-    queryFn: fetchShelters,
+  const cmsConfigured = Boolean(import.meta.env.VITE_CMS_API_KEY?.trim())
+
+  const { data: shelterRows, error, isPending } = useQuery({
+    queryKey: shelterQueryKeys.mapMarkers,
+    queryFn: fetchShelterMapMarkers,
   })
 
-  const {
-    data: animals,
-    error: animalsError,
-    isPending: animalsPending,
-  } = useQuery({
-    queryKey: animalQueryKeys.list(animalListQuery),
-    queryFn: () => fetchAnimals(animalListQuery),
+  const { data: statsData } = useQuery({
+    queryKey: directoryQueryKeys.stats,
+    queryFn: fetchDirectoryStats,
   })
+
+  const facetFilters = useMemo(
+    () => ({ city: animalCityFilter, shelterId: animalShelterFilter }),
+    [animalCityFilter, animalShelterFilter],
+  )
+
+  const { data: facetCounts } = useQuery({
+    queryKey: animalQueryKeys.facets(facetFilters),
+    queryFn: () => fetchAnimalSpeciesFacets(facetFilters),
+  })
+
+  const animalInf = useInfiniteQuery({
+    queryKey: animalQueryKeys.listInfinite(animalListQuery),
+    initialPageParam: 0,
+    queryFn: async ({ pageParam }) => {
+      const offset = pageParam as number
+      return cmsConfigured
+        ? fetchAnimalsPage(animalListQuery, { limit: ANIMAL_PAGE_SIZE, offset })
+        : fetchAnimalsPublicPage(animalListQuery, { limit: ANIMAL_PAGE_SIZE, offset })
+    },
+    getNextPageParam: (last) => {
+      const next = last.offset + last.items.length
+      return next < last.total ? next : undefined
+    },
+  })
+
+  const animalsFlat = useMemo(
+    () => animalInf.data?.pages.flatMap((p) => p.items),
+    [animalInf.data],
+  )
+
+  const animalsTotal = animalInf.data?.pages[0]?.total
+
+  const directoryStatsStrip = useMemo(() => {
+    if (!statsData) return undefined
+    return {
+      shelters: statsData.shelterCount,
+      animals: statsData.animalCount,
+      hearts: statsData.heartCountSum,
+    }
+  }, [statsData])
 
   const {
     directoryAlert,
@@ -96,12 +141,14 @@ function App() {
     directoryTab,
     speciesFilter,
     animalSpeciesFilter,
-    shelterRows: data,
-    animalRows: animals,
+    shelterRows,
+    animalRows: animalsFlat,
     shelterQueryError: error,
-    animalsQueryError: animalsError,
+    animalsQueryError: animalInf.error,
     shelterCmsError: mutations.cmsError,
     animalCmsError: animalMutations.cmsError,
+    directoryStats: directoryStatsStrip,
+    animalSpeciesFacetCounts: facetCounts,
   })
 
   const {
@@ -132,7 +179,7 @@ function App() {
     handleSuggestSubmitted,
     handleCreateShelter,
     handleRemovePin,
-  } = useShelterDiscoveryState(data, mutations)
+  } = useShelterDiscoveryState(shelterRows, mutations)
 
   const clearSelectionAndMapHighlight = useCallback(() => {
     clearSelection()
@@ -169,32 +216,30 @@ function App() {
     [handleListSelect],
   )
 
-  const cmsConfigured = Boolean(import.meta.env.VITE_CMS_API_KEY?.trim())
-
   /** Single source for animal detail modal: avoids open=true with animal=null (empty overlay). */
   const animalForDetailModal =
     animalDetailOpen && selectedAnimal ? selectedAnimal : null
 
   const selectedAnimalShelter = useMemo(() => {
-    if (!animalForDetailModal || !data) return null
-    return data.find((s) => s.id === animalForDetailModal.shelterId) ?? null
-  }, [animalForDetailModal, data])
+    if (!animalForDetailModal || !shelterRows) return null
+    return shelterRows.find((s) => s.id === animalForDetailModal.shelterId) ?? null
+  }, [animalForDetailModal, shelterRows])
 
   const handleSelectAnimal = useCallback(
     (animal: Animal) => {
       clearSelection()
       setMapShelterHighlightId(animal.shelterId)
-      const sh = data?.find((s) => s.id === animal.shelterId)
+      const sh = shelterRows?.find((s) => s.id === animal.shelterId)
       if (sh) {
         mapRef.current?.flyToShelter(sh)
       }
       setSelectedAnimal(animal)
       setAnimalDetailOpen(true)
     },
-    [data, clearSelection, mapRef],
+    [shelterRows, clearSelection, mapRef],
   )
 
-  useAnimalDeepLink(animals, handleSelectAnimal)
+  useAnimalDeepLink(animalsFlat, handleSelectAnimal)
 
   const handleCloseAnimalDetail = useCallback(() => {
     setAnimalDetailOpen(false)
@@ -313,20 +358,20 @@ function App() {
             directoryTab={directoryTab}
             onDirectoryTab={setDirectoryTab}
             cmsConfigured={cmsConfigured}
-            canAddAnimal={Boolean(data?.length)}
+            canAddAnimal={Boolean(shelterRows?.length)}
             onAddAnimalClick={() => setAddAnimalOpen(true)}
             addAnimalCmsBusy={animalMutations.cmsBusy}
             filteredShelters={filteredShelters}
             directoryError={directoryAlert}
             sheltersLoading={isPending}
-            shelterTotal={data?.length}
+            shelterTotal={statsData?.shelterCount ?? shelterRows?.length}
             onSelectShelterFromList={handleListSelectClearingHighlight}
             speciesFilter={speciesFilter}
             onShelterSpeciesFilter={handleShelterSpeciesFilter}
             speciesFilters={speciesFilters}
             animals={filteredAnimals}
-            allShelters={data}
-            animalsLoading={animalsPending}
+            allShelters={shelterRows}
+            animalsLoading={animalInf.isPending}
             onSelectAnimal={handleSelectAnimal}
             selectedAnimalId={selectedAnimal?.id ?? null}
             animalCityFilter={animalCityFilter}
@@ -337,7 +382,10 @@ function App() {
             onAnimalSpeciesFilter={setAnimalSpeciesFilter}
             shelterCityOptions={shelterCityOptions}
             animalSpeciesFilters={animalSpeciesFilters}
-            totalAnimalCount={filteredAnimals?.length}
+            totalAnimalCount={animalsTotal}
+            onLoadMoreAnimals={() => void animalInf.fetchNextPage()}
+            animalsHasNextPage={animalInf.hasNextPage}
+            animalsFetchingNextPage={animalInf.isFetchingNextPage}
             onViewAnimals={(shelterId) => {
               setAnimalShelterFilter(shelterId)
               setDirectoryTab('animals')
@@ -415,7 +463,7 @@ function App() {
       />
       <EditAnimalDialog
         animal={selectedAnimal}
-        shelters={data ?? []}
+        shelters={shelterRows ?? []}
         open={animalEditOpen && Boolean(selectedAnimal)}
         onClose={() => setAnimalEditOpen(false)}
         onSubmit={async (id, body) => {
@@ -426,7 +474,7 @@ function App() {
       />
       <AddAnimalDialog
         open={addAnimalOpen}
-        shelters={data ?? []}
+        shelters={shelterRows ?? []}
         onClose={() => setAddAnimalOpen(false)}
         onSubmit={(payload) => animalMutations.createMutation.mutateAsync(payload)}
         isSubmitting={animalMutations.createMutation.isPending}

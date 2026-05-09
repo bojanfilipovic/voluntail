@@ -20,9 +20,19 @@ export const shelterSchema = z.object({
   city: z.string(),
 })
 
-export const sheltersListSchema = z.array(shelterSchema)
-
 export type Shelter = z.infer<typeof shelterSchema>
+
+export const pagedSheltersResponseSchema = z.object({
+  items: z.array(shelterSchema),
+  total: z.number(),
+  limit: z.number(),
+  offset: z.number(),
+})
+
+export type PagedSheltersResponse = z.infer<typeof pagedSheltersResponseSchema>
+
+/** GET /api/shelters/map-markers — full rows, same shape as list items. */
+export const sheltersListSchema = z.array(shelterSchema)
 
 /** PATCH /api/shelters/:id — only send fields that should change (omit unknown keys). */
 export const shelterPatchPayloadSchema = z.object({

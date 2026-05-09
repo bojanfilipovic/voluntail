@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import type { Animal } from '@/api/animals'
-import { fetchAnimalsPublic } from '@/api/animals'
+import { fetchAllAnimalsPublicForExplore } from '@/api/animals'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { toQueryError } from '@/lib/queryError'
@@ -15,7 +15,7 @@ import { ExploreSwipeStack } from '@/explore/components/ExploreSwipeStack'
 import { ExploreToolbar } from '@/explore/components/ExploreToolbar'
 import { MatchMomentOverlay } from '@/explore/components/MatchMomentOverlay'
 import { rollMatchMoment, rollRareMatch } from '@/explore/matchMomentConfig'
-import { shuffleIdsInPlace } from '@/explore/shuffleIds'
+import { makeShuffleSeed } from '@/explore/exploreSession'
 import { useExploreSessionState } from '@/explore/useExploreSessionState'
 import { cn } from '@/lib/utils'
 
@@ -64,8 +64,8 @@ export function ExploreView({ onBack, onOpenAnimal }: Props) {
     isPending: animalsLoading,
     error: animalsError,
   } = useQuery({
-    queryKey: animalQueryKeys.explore(listQuery),
-    queryFn: () => fetchAnimalsPublic(listQuery),
+    queryKey: animalQueryKeys.explore(listQuery, session.deckShuffleSeed),
+    queryFn: () => fetchAllAnimalsPublicForExplore(listQuery, session.deckShuffleSeed),
   })
 
   const publishedAnimals = useMemo(() => (animals ?? []).filter((a) => a.published), [animals])
@@ -89,7 +89,7 @@ export function ExploreView({ onBack, onOpenAnimal }: Props) {
       passedIds: passed,
       sessionYesNotMatchIds: s.yesNotMatchIds,
     })
-    const next = shuffleIdsInPlace(base.map((a) => a.id))
+    const next = base.map((a) => a.id)
     queueMicrotask(() => {
       setDeckOrder(next)
     })
@@ -143,7 +143,11 @@ export function ExploreView({ onBack, onOpenAnimal }: Props) {
   }, [matchAnimal])
 
   const startDeck = () => {
-    patch((s) => ({ ...s, deckEntered: true }))
+    patch((s) => ({
+      ...s,
+      deckEntered: true,
+      deckShuffleSeed: makeShuffleSeed(),
+    }))
     setShuffleKey((k) => k + 1)
   }
 
@@ -182,7 +186,12 @@ export function ExploreView({ onBack, onOpenAnimal }: Props) {
 
   /** Reshuffle: clear passed + no-match stash, keep matches, rebuild deck. */
   const applyReshuffle = () => {
-    patch((s) => ({ ...s, passedIds: [], yesNotMatchIds: [] }))
+    patch((s) => ({
+      ...s,
+      passedIds: [],
+      yesNotMatchIds: [],
+      deckShuffleSeed: makeShuffleSeed(),
+    }))
     setSessionPassed(new Set())
     setMatchAnimal(null)
     setLowKeySaveName(null)
@@ -192,7 +201,13 @@ export function ExploreView({ onBack, onOpenAnimal }: Props) {
 
   /** Start over: clear everything, rebuild deck. */
   const applyStartOver = () => {
-    patch((s) => ({ ...s, passedIds: [], yesNotMatchIds: [], shortlistIds: [] }))
+    patch((s) => ({
+      ...s,
+      passedIds: [],
+      yesNotMatchIds: [],
+      shortlistIds: [],
+      deckShuffleSeed: makeShuffleSeed(),
+    }))
     setSessionPassed(new Set())
     setMatchAnimal(null)
     setLowKeySaveName(null)

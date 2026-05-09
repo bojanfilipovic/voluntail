@@ -10,13 +10,27 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.patch
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
+import io.voluntail.INVALID_LIMIT_OFFSET_MESSAGE
 import io.voluntail.ensureCmsAuthorized
+import io.voluntail.parseLimitOffset
 import io.voluntail.uuidPathParameter
 
 fun Route.shelterRoutes(repository: ShelterRepository) {
     route("/api") {
+        get("/shelters/map-markers") {
+            call.respond(repository.listAllForMap())
+        }
         get("/shelters") {
-            call.respond(repository.getAll())
+            val paging =
+                parseLimitOffset(
+                    call.request.queryParameters["limit"],
+                    call.request.queryParameters["offset"],
+                )
+                    ?: run {
+                        call.respondText(INVALID_LIMIT_OFFSET_MESSAGE, status = HttpStatusCode.BadRequest)
+                        return@get
+                    }
+            call.respond(repository.listPage(paging.limit, paging.offset))
         }
         post("/shelters") {
             if (!call.ensureCmsAuthorized()) return@post

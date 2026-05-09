@@ -12,8 +12,12 @@ import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 import io.shelters.ShelterRepository
 import io.shelters.ShelterSpecies
+import io.voluntail.AnimalSpeciesFacetsResponse
+import io.voluntail.INVALID_LIMIT_OFFSET_MESSAGE
+import io.voluntail.MAX_SHUFFLE_SEED_LENGTH
 import io.voluntail.ensureCmsAuthorized
 import io.voluntail.isCmsAuthorized
+import io.voluntail.parseLimitOffset
 import io.voluntail.uuidPathParameter
 import java.util.UUID
 
@@ -22,49 +26,80 @@ fun Route.animalRoutes(
     animalRepository: AnimalRepository,
 ) {
     route("/api") {
-        get("/animals") {
-            val shelterIdRaw = call.request.queryParameters["shelterId"]
-            val shelterUuid =
-                shelterIdRaw?.trim()?.takeIf { it.isNotEmpty() }?.let { raw ->
-                    try {
-                        UUID.fromString(raw)
-                    } catch (_: IllegalArgumentException) {
-                        call.respondText(
-                            "Invalid shelterId query parameter",
-                            status = HttpStatusCode.BadRequest,
-                        )
-                        return@get
-                    }
-                }
-            val speciesRaw = call.request.queryParameters["species"]
-            val speciesEnum =
-                speciesRaw?.trim()?.takeIf { it.isNotEmpty() }?.let { raw ->
-                    ShelterSpecies.entries.find { it.name == raw }
-                        ?: run {
-                            call.respondText(
-                                "Invalid species query parameter",
-                                status = HttpStatusCode.BadRequest,
-                            )
-                            return@get
-                        }
-                }
-            val cityFilter =
-                call.request.queryParameters["city"]
-                    ?.trim()
-                    ?.takeIf { it.isNotEmpty() }
+        get("/animals/facets") {
+            val filters =
+                call.parseAnimalListFilters()
+                    ?: return@get
             val visibility =
                 if (call.isCmsAuthorized()) {
                     AnimalListVisibility.Cms
                 } else {
                     AnimalListVisibility.Public
                 }
+            val facetFilters = filters.copy(species = null)
+            val counts = animalRepository.speciesFacetCounts(facetFilters, visibility)
+            call.respond(AnimalSpeciesFacetsResponse(counts = counts))
+        }
+        get("/animals/{id}") {
+            val id = call.uuidPathParameter("id") ?: return@get
+            val row =
+                animalRepository.findById(id)
+                    ?: run {
+                        call.respondText("Animal not found", status = HttpStatusCode.NotFound)
+                        return@get
+                    }
+            if (!call.isCmsAuthorized() && !row.published) {
+                call.respondText("Animal not found", status = HttpStatusCode.NotFound)
+                return@get
+            }
+            call.respond(row)
+        }
+        get("/animals") {
             val filters =
-                AnimalListFilters(
-                    city = cityFilter,
-                    shelterId = shelterUuid,
-                    species = speciesEnum,
+                call.parseAnimalListFilters()
+                    ?: return@get
+            val paging =
+                parseLimitOffset(
+                    call.request.queryParameters["limit"],
+                    call.request.queryParameters["offset"],
                 )
-            call.respond(animalRepository.list(filters, visibility))
+                    ?: run {
+                        call.respondText(INVALID_LIMIT_OFFSET_MESSAGE, status = HttpStatusCode.BadRequest)
+                        return@get
+                    }
+            val shuffleRaw =
+                call.request.queryParameters["shuffleSeed"]
+                    ?.trim()
+                    .orEmpty()
+            if (shuffleRaw.length > MAX_SHUFFLE_SEED_LENGTH) {
+                call.respondText(
+                    "Invalid shuffleSeed query parameter",
+                    status = HttpStatusCode.BadRequest,
+                )
+                return@get
+            }
+            val shuffleSeed = shuffleRaw.takeIf { it.isNotEmpty() }
+            val visibility =
+                if (call.isCmsAuthorized()) {
+                    AnimalListVisibility.Cms
+                } else {
+                    AnimalListVisibility.Public
+                }
+            val effectiveShuffle =
+                if (visibility == AnimalListVisibility.Cms) {
+                    null
+                } else {
+                    shuffleSeed
+                }
+            val page =
+                animalRepository.listPage(
+                    filters = filters,
+                    visibility = visibility,
+                    limit = paging.limit,
+                    offset = paging.offset,
+                    shuffleSeed = effectiveShuffle,
+                )
+            call.respond(page)
         }
         post("/animals") {
             if (!call.ensureCmsAuthorized()) return@post
@@ -192,6 +227,46 @@ fun Route.animalRoutes(
             call.respond(HeartCountResponse(heartCount = newCount))
         }
     }
+}
+
+/**
+ * Parses shared list query params. On validation error responds with 400 and returns null.
+ */
+private suspend fun io.ktor.server.application.ApplicationCall.parseAnimalListFilters(): AnimalListFilters? {
+    val shelterIdRaw = request.queryParameters["shelterId"]
+    val shelterUuid =
+        shelterIdRaw?.trim()?.takeIf { it.isNotEmpty() }?.let { raw ->
+            try {
+                UUID.fromString(raw)
+            } catch (_: IllegalArgumentException) {
+                respondText(
+                    "Invalid shelterId query parameter",
+                    status = HttpStatusCode.BadRequest,
+                )
+                return null
+            }
+        }
+    val speciesRaw = request.queryParameters["species"]
+    val speciesEnum =
+        speciesRaw?.trim()?.takeIf { it.isNotEmpty() }?.let { raw ->
+            ShelterSpecies.entries.find { it.name == raw }
+                ?: run {
+                    respondText(
+                        "Invalid species query parameter",
+                        status = HttpStatusCode.BadRequest,
+                    )
+                    return null
+                }
+        }
+    val cityFilter =
+        request.queryParameters["city"]
+            ?.trim()
+            ?.takeIf { it.isNotEmpty() }
+    return AnimalListFilters(
+        city = cityFilter,
+        shelterId = shelterUuid,
+        species = speciesEnum,
+    )
 }
 
 @kotlinx.serialization.Serializable

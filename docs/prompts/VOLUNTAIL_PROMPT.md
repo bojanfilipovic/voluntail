@@ -27,9 +27,13 @@ voluntail/
 
 ## Runtime & API (do not hallucinate; extend when the code changes)
 
-- GET /api/shelters — public.
+- GET /api/shelters — public; paged JSON: query `limit`, `offset`; response includes `items`, `total`, `offset` (as implemented).
+- GET /api/shelters/map-markers — public; full `ShelterResponse[]` for map + directory (pilot-scale list).
 - POST /api/shelters, DELETE /api/shelters/{id} — CMS only.
-- GET /api/animals — public; query: `shelterId`, `city`, `species` (as implemented). With `X-CMS-Key`, list may include unpublished (CMS view).
+- GET /api/animals — public; paged JSON: query `shelterId`, `city`, `species`, `limit`, `offset`, optional `shuffleSeed` (deterministic order for Explore; CMS requests ignore seed). With `X-CMS-Key`, list may include unpublished (CMS view).
+- GET /api/animals/facets — species counts for the current `city` / `shelterId` scope (JSON `counts`).
+- GET /api/animals/{id} — public read single row (404 if missing).
+- GET /api/directory-stats — aggregate counts (`shelterCount`, `animalCount`, `heartCountSum`).
 - POST /api/animals, PATCH /api/animals/{id}, DELETE /api/animals/{id} — CMS only.
 - POST /api/suggestions — public if `DB_URL` is set; otherwise 503. JSON: `message`, optional `contact`, optional `shelterId` / `animalId` (UUIDs, triage). Rate limit in pilot via row cap (`PEER_FEEDBACK_MAX_ROWS`; see backend).
 - POST /api/shelter-suggestions — public if `DB_URL` is set; otherwise 503. JSON: required `name`, `latitude`, `longitude`; optional `description`, `city`, `speciesNote`, `signupUrl`, `imageUrl`, `donationUrl`, `contact`. Response same shape as suggestions (`id`, `createdAt`). Rate limit via `SHELTER_SUGGESTIONS_MAX_ROWS` (see backend).

@@ -11,7 +11,7 @@ import {
   useCmsCrudMutations,
   type CmsCrudMutationsResult,
 } from '@/hooks/useCmsCrudMutations'
-import { shelterQueryKeys } from '@/lib/queryKeys'
+import { directoryQueryKeys, shelterQueryKeys } from '@/lib/queryKeys'
 
 export type ShelterMutationsApi = CmsCrudMutationsResult<
   Shelter,
@@ -20,7 +20,8 @@ export type ShelterMutationsApi = CmsCrudMutationsResult<
 >
 
 async function invalidateSheltersList(queryClient: QueryClient): Promise<void> {
-  await queryClient.invalidateQueries({ queryKey: shelterQueryKeys.all })
+  await queryClient.invalidateQueries({ queryKey: shelterQueryKeys.root })
+  await queryClient.invalidateQueries({ queryKey: directoryQueryKeys.stats })
 }
 
 export function useShelterMutations(): ShelterMutationsApi {

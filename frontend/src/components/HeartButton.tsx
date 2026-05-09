@@ -3,7 +3,7 @@ import { Heart } from 'lucide-react'
 import { useState, useCallback, useEffect, useRef } from 'react'
 import { heartAnimal, unheartAnimal } from '@/api/animals'
 import { isHearted, addHeartedId, removeHeartedId, subscribeHeartsChanged } from '@/lib/heartStorage'
-import { animalQueryKeys } from '@/lib/queryKeys'
+import { animalQueryKeys, directoryQueryKeys } from '@/lib/queryKeys'
 import { cn } from '@/lib/utils'
 
 type Props = {
@@ -44,6 +44,7 @@ export function HeartButton({ animalId, initialCount, className }: Props) {
           removeHeartedId(animalId)
           setCount(res.heartCount)
           void queryClient.invalidateQueries({ queryKey: animalQueryKeys.root })
+          void queryClient.invalidateQueries({ queryKey: directoryQueryKeys.stats })
         } catch {
           /* keep favorite + count unchanged */
         } finally {
@@ -60,6 +61,7 @@ export function HeartButton({ animalId, initialCount, className }: Props) {
         addHeartedId(animalId)
         setCount(res.heartCount)
         void queryClient.invalidateQueries({ queryKey: animalQueryKeys.root })
+        void queryClient.invalidateQueries({ queryKey: directoryQueryKeys.stats })
       } catch {
         // No local favorite added; count unchanged from server perspective
       } finally {

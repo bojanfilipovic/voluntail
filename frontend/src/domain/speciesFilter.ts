@@ -32,6 +32,19 @@ export function filterBySpecies<T>(
   })
 }
 
+/** Merge API facet keys into a full per-species count map (missing → 0). */
+export function facetCountsToSpeciesRecord(
+  counts: Record<string, number>,
+): Record<ShelterSpecies, number> {
+  const out = Object.fromEntries(
+    SPECIES_VALUES.map((sp) => [sp, 0]),
+  ) as Record<ShelterSpecies, number>
+  for (const sp of SPECIES_VALUES) {
+    out[sp] = counts[sp] ?? 0
+  }
+  return out
+}
+
 /** Count species occurrences across items. */
 export function countSpecies<T>(
   items: T[],

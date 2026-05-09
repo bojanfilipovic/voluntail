@@ -43,6 +43,7 @@ fun Application.configureRouting() {
         }
         shelterRoutes(repos.shelterRepository)
         animalRoutes(repos.shelterRepository, repos.animalRepository)
+        directoryRoutes(repos.shelterRepository, repos.animalRepository)
         feedbackRoutes(repos.feedbackRepository, peerFeedbackMaxRows())
         shelterSuggestionRoutes(repos.shelterSuggestionRepository, shelterSuggestionsMaxRows())
     }

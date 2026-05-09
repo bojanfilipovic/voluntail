@@ -3,6 +3,7 @@ package io.shelters
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.header
+import io.ktor.client.request.parameter
 import io.ktor.client.request.patch
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
@@ -28,6 +29,44 @@ class SheltersRoutesTest {
             client.get("/api/shelters").apply {
                 assertEquals(HttpStatusCode.OK, status)
             }
+        }
+    }
+
+    @Test
+    fun `GET shelters returns paged envelope`() {
+        voluntailTest {
+            val body = client.get("/api/shelters").bodyAsText()
+            assertTrue(body.contains("\"items\""))
+            assertTrue(body.contains("\"total\""))
+            assertTrue(body.contains("\"offset\""))
+        }
+    }
+
+    @Test
+    fun `GET shelters map-markers returns JSON array`() {
+        voluntailTest {
+            val body = client.get("/api/shelters/map-markers").bodyAsText()
+            assertTrue(body.trimStart().startsWith("["))
+        }
+    }
+
+    @Test
+    fun `GET shelters respects limit and offset`() {
+        voluntailTest {
+            val page0 =
+                client
+                    .get("/api/shelters") {
+                        parameter("limit", 1)
+                        parameter("offset", 0)
+                    }.bodyAsText()
+            val page1 =
+                client
+                    .get("/api/shelters") {
+                        parameter("limit", 1)
+                        parameter("offset", 1)
+                    }.bodyAsText()
+            assertTrue(page0.contains("\"offset\":0"))
+            assertTrue(page1.contains("\"offset\":1"))
         }
     }
 

@@ -258,4 +258,54 @@ class AnimalsRoutesTest {
             assertEquals(HttpStatusCode.NotFound, res.status)
         }
     }
+
+    @Test
+    fun `GET animals returns paged envelope with items total offset`() {
+        voluntailTest {
+            val body = client.get("/api/animals").bodyAsText()
+            assertTrue(body.contains("\"items\""))
+            assertTrue(body.contains("\"total\""))
+            assertTrue(body.contains("\"offset\""))
+        }
+    }
+
+    @Test
+    fun `GET animal by id returns published row`() {
+        voluntailTest {
+            val sampleId = "b0000001-0001-4001-8001-000000000001"
+            val res = client.get("/api/animals/$sampleId")
+            assertEquals(HttpStatusCode.OK, res.status)
+            assertTrue(res.bodyAsText().contains("Milo"))
+        }
+    }
+
+    @Test
+    fun `GET animals facets returns counts`() {
+        voluntailTest {
+            val body = client.get("/api/animals/facets").bodyAsText()
+            assertTrue(body.contains("\"counts\""))
+        }
+    }
+
+    @Test
+    fun `GET animals with same shuffleSeed returns identical ordering`() {
+        voluntailTest {
+            val seed = "voluntail-test-shuffle"
+            val a =
+                client
+                    .get("/api/animals") {
+                        parameter("shuffleSeed", seed)
+                        parameter("limit", 50)
+                        parameter("offset", 0)
+                    }.bodyAsText()
+            val b =
+                client
+                    .get("/api/animals") {
+                        parameter("shuffleSeed", seed)
+                        parameter("limit", 50)
+                        parameter("offset", 0)
+                    }.bodyAsText()
+            assertEquals(a, b)
+        }
+    }
 }
