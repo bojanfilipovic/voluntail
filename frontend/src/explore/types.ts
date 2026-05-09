@@ -9,7 +9,7 @@ export const EXPLORE_INTENTS = [
 ] as const
 export type ExploreIntent = (typeof EXPLORE_INTENTS)[number]
 
-export const EXPLORE_STORAGE_KEY = 'voluntail.explore.v1' as const
+export const EXPLORE_STORAGE_KEY = 'voluntail.explore.v2' as const
 
 /** Same-tab notification when explore session (e.g. shortlist) is written — `storage` events omit same-tab writes. */
 export const EXPLORE_SESSION_CHANGED_EVENT = 'voluntail-explore-session-changed' as const
