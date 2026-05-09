@@ -1,4 +1,4 @@
-export const HEARTS_STORAGE_KEY = 'voluntail.hearts.v1' as const
+export const HEARTS_STORAGE_KEY = 'voluntail.hearts.v2' as const
 
 const STORAGE_KEY = HEARTS_STORAGE_KEY
 
