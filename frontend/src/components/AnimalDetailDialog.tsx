@@ -17,7 +17,7 @@ import { parseAnimalAge } from '@/domain/animalAge'
 import { speciesLabel } from '@/domain/species'
 import { cn } from '@/lib/utils'
 import { ChevronDown, ExternalLink, Share2, XIcon } from 'lucide-react'
-import { useCallback, useEffect, useState, useSyncExternalStore } from 'react'
+import { useCallback, useState, useSyncExternalStore } from 'react'
 
 function useSmUp(): boolean {
   return useSyncExternalStore(
@@ -109,10 +109,11 @@ type Props = {
   onShelterClick: () => void
 }
 
-export function AnimalDetailDialog({
+type BodyProps = Omit<Props, 'animal' | 'onClose'> & { animal: Animal }
+
+function AnimalDetailDialogBody({
   animal,
   shelter,
-  onClose,
   onEdit,
   cmsConfigured,
   onPublishToggle,
@@ -121,20 +122,14 @@ export function AnimalDetailDialog({
   deleteBusy,
   onShareFeedback,
   onShelterClick,
-}: Props) {
+}: BodyProps) {
   const showCms = cmsConfigured
   const isSmUp = useSmUp()
   const [shelterDetailsOpen, setShelterDetailsOpen] = useState(false)
   const [mobileDetailsOpen, setMobileDetailsOpen] = useState(false)
   const [copied, setCopied] = useState(false)
 
-  useEffect(() => {
-    setShelterDetailsOpen(false)
-    setMobileDetailsOpen(false)
-  }, [animal?.id])
-
   const handleShare = useCallback(async () => {
-    if (!animal) return
     const url = new URL(window.location.origin)
     url.searchParams.set('animal', animal.id)
     const shareUrl = url.toString()
@@ -153,22 +148,14 @@ export function AnimalDetailDialog({
   const shelterPanelInScroll = isSmUp && showShelterPanel
   /** Mobile: shelter panel lives in the main scroll region when Details is expanded (not footer) so the dialog keeps one scroll surface. */
   const shelterPanelMobileInBody = !isSmUp && mobileDetailsOpen && showShelterPanel
-  const descriptionTrimmed = animal?.description?.trim() ?? ''
-  const mobileHasExpandable = Boolean(descriptionTrimmed || shelter || animal?.externalUrl)
+  const descriptionTrimmed = animal.description.trim()
+  const mobileHasExpandable = Boolean(descriptionTrimmed || shelter || animal.externalUrl)
   /** Published animal with nothing to put in the mobile strip when collapsed → skip vertical padding above footer. */
-  const mobileBodyEmpty = Boolean(animal?.published && !mobileDetailsOpen && !mobileHasExpandable)
+  const mobileBodyEmpty = Boolean(animal.published && !mobileDetailsOpen && !mobileHasExpandable)
 
   return (
-    <Dialog open={Boolean(animal)} onOpenChange={(next) => !next && onClose()}>
-      <DialogContent
-        className={cn(
-          'flex max-h-[min(92dvh,calc(100dvh-2rem))] max-w-lg flex-col overflow-hidden gap-0 p-0 sm:max-w-lg',
-        )}
-        showCloseButton={false}
-      >
-        {animal ? (
-          <>
-            <AnimalImageGallery
+    <>
+      <AnimalImageGallery
               variant="card"
               urls={effectiveAnimalImageUrls(animal)}
               className="shrink-0 overflow-hidden rounded-t-xl"
@@ -420,7 +407,45 @@ export function AnimalDetailDialog({
               ) : null}
               </DialogFooterStack>
             </div>
-          </>
+    </>
+  )
+}
+
+export function AnimalDetailDialog({
+  animal,
+  shelter,
+  onClose,
+  onEdit,
+  cmsConfigured,
+  onPublishToggle,
+  onDelete,
+  publishBusy,
+  deleteBusy,
+  onShareFeedback,
+  onShelterClick,
+}: Props) {
+  return (
+    <Dialog open={Boolean(animal)} onOpenChange={(next) => !next && onClose()}>
+      <DialogContent
+        className={cn(
+          'flex max-h-[min(92dvh,calc(100dvh-2rem))] max-w-lg flex-col overflow-hidden gap-0 p-0 sm:max-w-lg',
+        )}
+        showCloseButton={false}
+      >
+        {animal ? (
+          <AnimalDetailDialogBody
+            key={animal.id}
+            animal={animal}
+            shelter={shelter}
+            onEdit={onEdit}
+            cmsConfigured={cmsConfigured}
+            onPublishToggle={onPublishToggle}
+            onDelete={onDelete}
+            publishBusy={publishBusy}
+            deleteBusy={deleteBusy}
+            onShareFeedback={onShareFeedback}
+            onShelterClick={onShelterClick}
+          />
         ) : null}
       </DialogContent>
     </Dialog>
