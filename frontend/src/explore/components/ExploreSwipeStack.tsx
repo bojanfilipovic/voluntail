@@ -9,7 +9,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { parseAnimalAge } from '@/domain/animalAge'
 import { speciesLabel } from '@/domain/species'
 import { cn } from '@/lib/utils'
-import { Heart, SkipForward, X } from 'lucide-react'
+import { Dice5, Heart, X } from 'lucide-react'
 
 const SWIPE_THRESHOLD = 100
 const EXIT_DURATION = 280
@@ -224,8 +224,8 @@ export function ExploreSwipeStack({
         </div>
       </div>
       <p id={`${baseId}-hint`} className="sr-only">
-        Swipe the card, or use Not for me, Skip, or Yes. A rolled match adds the animal to your matches
-        list. Skip shows this card again after you see other animals in this round.
+        Swipe the card, or use Not for me, Later, or Yes. A rolled match adds the animal to your matches
+        list. Later shows this card again after you see other animals in this round.
       </p>
       <div
         className={cn(
@@ -256,7 +256,7 @@ export function ExploreSwipeStack({
             disabled={busy || !!exitDir}
             aria-label="Decide later; this animal is shown again after the others in this round"
           >
-            <SkipForward aria-hidden className="size-4" />
+            <Dice5 aria-hidden className="size-4" />
           </Button>
           <Button
             type="button"
@@ -270,7 +270,7 @@ export function ExploreSwipeStack({
           </Button>
         </div>
         <p className="text-muted-foreground text-center text-[0.7rem] leading-tight sm:text-xs">
-          Skip = see again later. Not a no.
+          Later = see again this round. Not a no.
         </p>
       </div>
     </div>

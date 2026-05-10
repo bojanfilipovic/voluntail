@@ -319,7 +319,7 @@ export function DirectoryLayout({
             ) : null}
           </div>
           <div
-            className="flex min-h-0 flex-1 flex-col overflow-y-auto p-4"
+            className="flex min-h-0 flex-1 flex-col overflow-y-auto p-2 sm:p-4"
             role="region"
             aria-label="Shelter and animal directory list"
           >

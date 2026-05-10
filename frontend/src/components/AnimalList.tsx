@@ -4,7 +4,7 @@ import type { Shelter } from '@/api/shelters'
 import { SpeciesFilterBar, type SpeciesFilterRow } from '@/components/SpeciesFilterBar'
 import { HeartButton } from '@/components/HeartButton'
 import { parseAnimalAge } from '@/domain/animalAge'
-import { speciesLabel, type SpeciesFilterValue } from '@/domain/species'
+import { type SpeciesFilterValue } from '@/domain/species'
 import type { AnimalStatus } from '@/schemas/animals'
 import { effectiveAnimalImageUrls } from '@/domain/animalGallery'
 import { cn } from '@/lib/utils'
@@ -29,6 +29,12 @@ function statusLabel(s: AnimalStatus): string {
     default:
       return s
   }
+}
+
+/** Shown in list meta only when it adds information (pilot is mostly "available"). */
+function listStatusExtra(status: AnimalStatus): string | null {
+  if (status === 'available') return null
+  return statusLabel(status)
 }
 
 type Props = {
@@ -84,9 +90,6 @@ export function AnimalList({
   const [, setHeartRevision] = useState(0)
   useEffect(() => subscribeHeartsChanged(() => setHeartRevision((n) => n + 1)), [])
 
-  const shelterNameById = new Map(
-    (shelters ?? []).map((s) => [s.id, s.name] as const),
-  )
   const heartedIds = getHeartedIds()
   const shortlistIds = getShortlistIds()
   const favCount = heartedIds.size
@@ -167,7 +170,7 @@ export function AnimalList({
         </p>
       ) : (
         <>
-          <ul className="list-none space-y-3 p-0">
+          <ul className="list-none space-y-1 p-0 sm:space-y-3">
           {displayAnimals.map((a) => {
             const thumbUrl = effectiveAnimalImageUrls(a)[0]
             return (
@@ -176,16 +179,17 @@ export function AnimalList({
                 role="button"
                 tabIndex={0}
                 className={cn(
-                  'hover:bg-muted/80 w-full cursor-pointer rounded-lg border border-transparent p-2 text-start transition-colors',
+                  'hover:bg-muted/80 w-full cursor-pointer rounded-lg border border-transparent text-start transition-colors',
+                  'max-sm:p-1 sm:p-2',
                   a.id === selectedId &&
                     'border-primary/50 bg-primary/10 ring-primary/30 ring-1',
                 )}
                 onClick={() => onSelectAnimal(a)}
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelectAnimal(a) } }}
               >
-                <span className="grid grid-cols-[4.5rem_1fr] items-start gap-3">
+                <span className="grid grid-cols-[3.5rem_1fr] items-center gap-2 sm:grid-cols-[4.5rem_1fr] sm:items-start sm:gap-3">
                   {thumbUrl ? (
-                    <span className="border-border bg-muted h-[4.5rem] w-[4.5rem] shrink-0 overflow-hidden rounded-md border">
+                    <span className="border-border bg-muted h-14 w-14 shrink-0 overflow-hidden rounded-md border sm:h-[4.5rem] sm:w-[4.5rem]">
                       <img
                         src={thumbUrl}
                         alt=""
@@ -195,39 +199,52 @@ export function AnimalList({
                     </span>
                   ) : (
                     <span
-                      className="border-border h-[4.5rem] w-[4.5rem] shrink-0 rounded-md border bg-gradient-to-br from-muted to-muted/60"
+                      className="border-border h-14 w-14 shrink-0 rounded-md border bg-gradient-to-br from-muted to-muted/60 sm:h-[4.5rem] sm:w-[4.5rem]"
                       aria-hidden
                     />
                   )}
-                  <span className="flex min-w-0 flex-col gap-0.5">
-                    <span className="text-foreground flex items-center gap-1.5 font-medium leading-snug">
-                      {a.name}
-                      {isNew(a.createdAt) ? (
-                        <span className="rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
-                          New
-                        </span>
-                      ) : null}
-                      {shortlistIds.has(a.id) ? (
-                        <span className="inline-flex items-center gap-0.5 rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">
-                          <Sparkles className="size-2.5" aria-hidden />
-                          Match
-                        </span>
-                      ) : null}
+                  <span className="flex min-w-0 flex-1 gap-2 max-sm:flex-row max-sm:items-center sm:flex-col sm:gap-0.5">
+                    <span className="min-w-0 flex flex-1 flex-col gap-0 max-sm:gap-0 sm:gap-0.5">
+                      <span className="text-foreground flex flex-wrap items-center gap-x-1.5 gap-y-0.5 font-medium leading-snug">
+                        <span className="min-w-0">{a.name}</span>
+                        {isNew(a.createdAt) ? (
+                          <span className="rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
+                            New
+                          </span>
+                        ) : null}
+                        {shortlistIds.has(a.id) ? (
+                          <span className="inline-flex items-center gap-0.5 rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">
+                            <Sparkles className="size-2.5" aria-hidden />
+                            Match
+                          </span>
+                        ) : null}
+                        {a.city ? (
+                          <span className="text-muted-foreground font-normal whitespace-nowrap text-xs">
+                            · {a.city}
+                          </span>
+                        ) : null}
+                      </span>
+                      {(() => {
+                        const age = parseAnimalAge(a.description)
+                        const status = listStatusExtra(a.status)
+                        const parts = [age, status].filter(Boolean) as string[]
+                        return parts.length > 0 ? (
+                          <span className="text-muted-foreground text-[11px] leading-tight sm:text-xs">
+                            {parts.join(' · ')}
+                          </span>
+                        ) : null
+                      })()}
+                      <span className="text-foreground/90 line-clamp-1 text-[13px] leading-snug max-sm:mt-0.5 sm:line-clamp-2 sm:text-sm">
+                        {a.description}
+                      </span>
+                      <span className="flex flex-wrap items-center gap-2">
+                        {!a.published ? (
+                          <span className="text-destructive text-xs font-medium">Unpublished</span>
+                        ) : null}
+                      </span>
                     </span>
-                    <span className="text-muted-foreground text-xs">
-                      {speciesLabel(a.species)} · {statusLabel(a.status)} · {a.city}{parseAnimalAge(a.description) ? ` · ${parseAnimalAge(a.description)}` : ''}
-                    </span>
-                    <span className="text-muted-foreground text-xs">
-                      {shelterNameById.get(a.shelterId) ?? 'Shelter'}
-                    </span>
-                    <span className="text-foreground/90 line-clamp-2 text-sm leading-snug">
-                      {a.description}
-                    </span>
-                    <span className="flex items-center gap-2">
-                      {!a.published ? (
-                        <span className="text-destructive text-xs font-medium">Unpublished</span>
-                      ) : null}
-                      <HeartButton animalId={a.id} initialCount={a.heartCount} />
+                    <span className="flex w-auto shrink-0 flex-row items-center justify-center self-center max-sm:min-w-[2.75rem] sm:w-full sm:flex-col sm:items-start sm:justify-start sm:self-start sm:pt-0">
+                      <HeartButton animalId={a.id} initialCount={a.heartCount} compact />
                     </span>
                   </span>
                 </span>
