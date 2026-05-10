@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { CommunityStatsStrip } from '@/components/layout/CommunityStatsStrip'
+import type { CommunityStats } from '@/components/layout/CommunityStatsStrip'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -9,12 +11,6 @@ import { MessageSquare, ArrowLeft, Compass, Moon, Sun, Monitor, Info } from 'luc
 import type { ThemeValue } from '@/lib/theme'
 
 type AppView = 'directory' | 'explore'
-
-type CommunityStats = {
-  shelters?: number
-  animals?: number
-  hearts?: number
-}
 
 type Props = {
   onShareFeedback: () => void
@@ -53,7 +49,7 @@ function DirectoryIntro({
           Share Feedback
         </button>
         {' '}
-        so I can learn what works and what you&apos;d like me to add to this. Love, B 🫶
+        so I can learn what works and what you&apos;d like me to add to this. Love, Bojan 🫶
       </p>
     )
   }
@@ -61,19 +57,8 @@ function DirectoryIntro({
   return (
     <p className={bodyClass}>
       Please use Share Feedback so I can learn what works and what you&apos;d like me to add to
-      this. Love, B 🫶
+      this. Love, Bojan 🫶
     </p>
-  )
-}
-
-function CommunityStatsStrip({ stats }: { stats?: CommunityStats }) {
-  if (stats == null || stats.shelters === undefined) return null
-  const parts: string[] = []
-  parts.push(`${stats.shelters} shelters`)
-  parts.push(`${stats.animals ?? 0} animals`)
-  parts.push(`${(stats.hearts ?? 0).toLocaleString()} hearts given`)
-  return (
-    <p className="text-muted-foreground/70 text-xs">{parts.join(' · ')}</p>
   )
 }
 
@@ -131,11 +116,7 @@ export function DiscoveryHeader({ onShareFeedback, appView, onGoExplore, onGoDir
             <ShareFeedbackButton onShareFeedback={onShareFeedback} />
           </div>
         </div>
-        {appView === 'directory' ? (
-          <CommunityStatsStrip stats={stats} />
-        ) : (
-          <ExploreIntro hasMatches={hasMatches} />
-        )}
+        {appView === 'directory' ? null : <ExploreIntro hasMatches={hasMatches} />}
         <div className="w-full">
           {appView === 'directory' ? (
             <Button
@@ -200,6 +181,11 @@ export function DiscoveryHeader({ onShareFeedback, appView, onGoExplore, onGoDir
                 onShareFeedback()
               }}
             />
+            {stats != null && stats.shelters !== undefined ? (
+              <div className="border-border/60 mt-4 border-t pt-4">
+                <CommunityStatsStrip stats={stats} />
+              </div>
+            ) : null}
           </DialogContent>
         </Dialog>
       ) : null}

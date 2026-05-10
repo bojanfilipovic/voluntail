@@ -95,7 +95,7 @@ export function AnimalDetailDialog({
               urls={effectiveAnimalImageUrls(animal)}
               className="shrink-0 overflow-hidden rounded-t-xl"
             />
-            <DialogHeader className="border-b shrink-0 px-4 pt-4 pb-2">
+            <DialogHeader className="border-b shrink-0 px-3 pt-4 pb-2 sm:px-4">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0 flex-1 space-y-1">
                   <div className="flex items-center gap-2">
@@ -121,8 +121,8 @@ export function AnimalDetailDialog({
                 </DialogClose>
               </div>
             </DialogHeader>
-            <div className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain px-4 py-3 text-sm leading-relaxed [-webkit-overflow-scrolling:touch]">
-              <p className="text-foreground/95 whitespace-pre-wrap">{animal.description}</p>
+            <div className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain px-3 py-3 text-sm leading-relaxed [-webkit-overflow-scrolling:touch] max-sm:text-[15px] max-sm:leading-relaxed sm:px-4">
+              <p className="text-foreground/95 whitespace-pre-wrap break-words">{animal.description}</p>
               {!animal.published ? (
                 <p className="text-destructive text-sm font-medium">
                   Unpublished — only visible with CMS key in the API.
@@ -172,9 +172,12 @@ export function AnimalDetailDialog({
                 </div>
               ) : null}
             </div>
-            <DialogFooterStack className="shrink-0">
+            <DialogFooterStack className="shrink-0 px-3 sm:px-4">
               <div
-                className="flex min-w-0 flex-wrap items-center gap-2"
+                className={cn(
+                  'flex min-w-0 flex-wrap items-center gap-2',
+                  'max-sm:flex-col max-sm:items-stretch',
+                )}
                 role="group"
                 aria-label="Animal actions"
               >
@@ -186,6 +189,7 @@ export function AnimalDetailDialog({
                     className={cn(
                       buttonVariants({ variant: 'default', size: 'sm' }),
                       'bg-emerald-600 text-white hover:bg-emerald-700',
+                      'inline-flex max-sm:w-full max-sm:justify-center',
                     )}
                   >
                     More info
@@ -196,6 +200,7 @@ export function AnimalDetailDialog({
                     type="button"
                     variant="outline"
                     size="sm"
+                    className="max-sm:w-full"
                     aria-expanded={shelterDetailsOpen}
                     aria-controls="animal-dialog-shelter-details"
                     onClick={() => setShelterDetailsOpen((open) => !open)}
@@ -203,16 +208,18 @@ export function AnimalDetailDialog({
                     {shelterDetailsOpen ? 'Hide shelter details' : 'Shelter details'}
                   </Button>
                 ) : null}
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon-sm"
-                  onClick={handleShare}
-                  aria-label={copied ? 'Link copied!' : 'Share animal link'}
-                  title={copied ? 'Link copied!' : 'Share'}
-                >
-                  <Share2 className="size-3.5" aria-hidden />
-                </Button>
+                <div className="flex max-sm:w-full max-sm:justify-end">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon-sm"
+                    onClick={handleShare}
+                    aria-label={copied ? 'Link copied!' : 'Share animal link'}
+                    title={copied ? 'Link copied!' : 'Share'}
+                  >
+                    <Share2 className="size-3.5" aria-hidden />
+                  </Button>
+                </div>
               </div>
               <ShareFeedbackRow onClick={onShareFeedback} />
               {showCms ? (

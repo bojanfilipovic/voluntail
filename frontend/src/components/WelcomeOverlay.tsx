@@ -6,6 +6,8 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog'
+import { CommunityStatsStrip } from '@/components/layout/CommunityStatsStrip'
+import type { CommunityStats } from '@/components/layout/CommunityStatsStrip'
 import { Button } from '@/components/ui/button'
 import { Compass, MapPin, MessageSquare } from 'lucide-react'
 
@@ -25,7 +27,11 @@ function markWelcomed() {
   } catch { /* noop */ }
 }
 
-export function WelcomeOverlay() {
+type Props = {
+  stats?: CommunityStats
+}
+
+export function WelcomeOverlay({ stats }: Props) {
   const [open, setOpen] = useState(() => !hasBeenWelcomed())
 
   if (!open) return null
@@ -58,6 +64,11 @@ export function WelcomeOverlay() {
             <span>Share feedback anytime — this is a pilot and your input shapes what comes next</span>
           </li>
         </ul>
+        {stats != null && stats.shelters !== undefined ? (
+          <div className="border-border/60 border-t pt-3">
+            <CommunityStatsStrip stats={stats} />
+          </div>
+        ) : null}
         <div className="flex flex-col gap-2 pt-2 sm:flex-row sm:justify-end">
           <Button onClick={handleDismiss}>
             Go
