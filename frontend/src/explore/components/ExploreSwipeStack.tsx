@@ -9,7 +9,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { parseAnimalAge } from '@/domain/animalAge'
 import { speciesLabel } from '@/domain/species'
 import { cn } from '@/lib/utils'
-import { Heart, SkipForward, X } from 'lucide-react'
+import { Dice5, Heart, X } from 'lucide-react'
 
 const SWIPE_THRESHOLD = 100
 const EXIT_DURATION = 280
@@ -224,8 +224,8 @@ export function ExploreSwipeStack({
         </div>
       </div>
       <p id={`${baseId}-hint`} className="sr-only">
-        Swipe the card, or use Not for me, Skip, or Yes. A rolled match adds the animal to your matches
-        list. Skip shows this card again after you see other animals in this round.
+        Swipe the card, or use Not for me, Later, or Yes. A rolled match adds the animal to your matches
+        list. Later shows this card again after you see other animals in this round.
       </p>
       <div
         className={cn(
@@ -236,7 +236,7 @@ export function ExploreSwipeStack({
         role="group"
         aria-labelledby={`${baseId}-hint`}
       >
-        <div className="flex w-full justify-center gap-1.5 sm:gap-2">
+        <div className="flex w-full max-sm:gap-2 justify-center sm:gap-2">
           <Button
             type="button"
             variant="outline"
@@ -251,13 +251,12 @@ export function ExploreSwipeStack({
           <Button
             type="button"
             variant="secondary"
-            size="default"
-            className="min-w-0 flex-1 h-10 sm:h-9 rounded-full text-foreground transition active:scale-[0.95] motion-reduce:transition-none sm:min-w-[3.5rem] sm:flex-initial"
+            className="h-11 w-11 shrink-0 rounded-full p-0 text-foreground transition active:scale-[0.95] motion-reduce:transition-none sm:h-9 sm:min-w-[3.5rem] sm:w-auto sm:gap-1.5 sm:px-3"
             onClick={onSkip}
             disabled={busy || !!exitDir}
             aria-label="Decide later; this animal is shown again after the others in this round"
           >
-            <SkipForward aria-hidden className="size-4" />
+            <Dice5 aria-hidden className="size-4" />
           </Button>
           <Button
             type="button"
@@ -271,7 +270,7 @@ export function ExploreSwipeStack({
           </Button>
         </div>
         <p className="text-muted-foreground text-center text-[0.7rem] leading-tight sm:text-xs">
-          Skip = see again later. Not a no.
+          Later = see again this round. Not a no.
         </p>
       </div>
     </div>

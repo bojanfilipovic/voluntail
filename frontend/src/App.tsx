@@ -327,7 +327,7 @@ function App() {
         onCycleTheme={cycleTheme}
         stats={communityStats}
       />
-      <WelcomeOverlay />
+      <WelcomeOverlay stats={communityStats} />
       <main
         className={
           appView === 'directory'

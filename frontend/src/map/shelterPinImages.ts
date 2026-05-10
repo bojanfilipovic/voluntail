@@ -32,6 +32,9 @@ function loadImage(src: string): Promise<HTMLImageElement> {
 /**
  * Register teardrop rasters. Call again on `style.load` and when `isDark` changes — custom images
  * are cleared on style swap; default pin colors follow the basemap (light vs dark).
+ *
+ * Callers should **not** run multiple instances concurrently for the same map (see ShelterMap
+ * single-flight registration); otherwise `removeImage` / `addImage` can race with symbol layers.
  */
 export async function ensureShelterPinImages(
   map: MapboxMap,
@@ -57,6 +60,17 @@ export async function ensureShelterPinImages(
       }
     }
     const img = await loadImage(svgPinDataUrl(fill, stroke))
-    map.addImage(id, img, { pixelRatio: 2 })
+    try {
+      map.addImage(id, img, { pixelRatio: 2 })
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e)
+      if (!msg.includes('already exists')) throw e
+      try {
+        map.removeImage(id)
+      } catch {
+        /* noop */
+      }
+      map.addImage(id, img, { pixelRatio: 2 })
+    }
   }
 }

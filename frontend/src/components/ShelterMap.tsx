@@ -163,6 +163,31 @@ export const ShelterMap = forwardRef<ShelterMapHandle, Props>(
     const [emptyViewportHint, setEmptyViewportHint] = useState(false)
 
     const lastFittedBoundsKeyRef = useRef<string | null>(null)
+    /** Serialize pin raster registration — concurrent runs can remove images while symbol layers still mount. */
+    const pinImageRegRef = useRef({ busy: false, pending: false })
+
+    const runShelterPinImages = useCallback(async (map: MapboxMap): Promise<void> => {
+      const reg = pinImageRegRef.current
+      if (reg.busy) {
+        reg.pending = true
+        return
+      }
+      reg.busy = true
+      try {
+        do {
+          reg.pending = false
+          setShelterPinSpritesReady(false)
+          try {
+            await ensureShelterPinImages(map, isDarkRef.current)
+            setShelterPinSpritesReady(true)
+          } catch {
+            setShelterPinSpritesReady(false)
+          }
+        } while (reg.pending)
+      } finally {
+        reg.busy = false
+      }
+    }, [])
 
     const { isoCodes, isoByShelterId } = useMemo(() => {
       const byId = new Map<string, string>()
@@ -250,20 +275,12 @@ export const ShelterMap = forwardRef<ShelterMapHandle, Props>(
       return () => ro.disconnect()
     }, [token, resizeMap])
 
-    /** Recolor default pin when theme toggles (`style.load` also runs, but this keeps rasters in sync). */
+    /** Recolor default pin when theme toggles — same single-flight path as map load / style.load. */
     useEffect(() => {
       const map = mapRef.current?.getMap()
       if (!map || !mapReady || !token) return
-      void (async () => {
-        setShelterPinSpritesReady(false)
-        try {
-          await ensureShelterPinImages(map, isDark)
-          setShelterPinSpritesReady(true)
-        } catch {
-          setShelterPinSpritesReady(false)
-        }
-      })()
-    }, [isDark, mapReady, token])
+      void runShelterPinImages(map)
+    }, [isDark, mapReady, token, runShelterPinImages])
 
     const runFitBounds = useCallback(
       (duration: number) => {
@@ -536,17 +553,8 @@ export const ShelterMap = forwardRef<ShelterMapHandle, Props>(
             interactiveLayerIds={interactiveLayerIds}
             onLoad={(e) => {
               const map = e.target
-              const registerPins = async () => {
-                setShelterPinSpritesReady(false)
-                try {
-                  await ensureShelterPinImages(map, isDarkRef.current)
-                  setShelterPinSpritesReady(true)
-                } catch {
-                  setShelterPinSpritesReady(false)
-                }
-              }
               const syncPins = () => {
-                void registerPins()
+                void runShelterPinImages(map)
               }
               map.on('style.load', syncPins)
               map.on('styleimagemissing', (ev) => {
@@ -556,11 +564,11 @@ export const ShelterMap = forwardRef<ShelterMapHandle, Props>(
                   id === SHELTER_PIN_IMAGE_IDS.selected ||
                   id === SHELTER_PIN_IMAGE_IDS.animal
                 ) {
-                  void registerPins()
+                  void runShelterPinImages(map)
                 }
               })
               void (async () => {
-                await registerPins()
+                await runShelterPinImages(map)
                 setMapReady(true)
                 resizeMap()
                 requestAnimationFrame(() => resizeMap())

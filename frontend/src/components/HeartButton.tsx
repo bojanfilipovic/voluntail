@@ -10,6 +10,8 @@ type Props = {
   animalId: string
   initialCount: number
   className?: string
+  /** Narrow vertical layout for list rail (icon above count). */
+  compact?: boolean
 }
 
 /**
@@ -17,7 +19,7 @@ type Props = {
  * `addHeartedId` / `removeHeartedId` run only after heart/unheart POST succeeds.
  * Cached animal lists are patched in-place (no broad invalidation); directory heart sum is adjusted.
  */
-export function HeartButton({ animalId, initialCount, className }: Props) {
+export function HeartButton({ animalId, initialCount, className, compact = false }: Props) {
   const queryClient = useQueryClient()
   const [, storageTick] = useState(0)
   useEffect(() => subscribeHeartsChanged(() => storageTick((n) => n + 1)), [])
@@ -80,6 +82,8 @@ export function HeartButton({ animalId, initialCount, className }: Props) {
       aria-label={hearted ? 'Remove from favorites' : `Like this animal (${count})`}
       className={cn(
         'inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium transition-colors',
+        compact &&
+          'max-sm:inline-flex max-sm:h-8 max-sm:min-h-8 max-sm:flex-row max-sm:items-center max-sm:justify-center max-sm:gap-1 max-sm:rounded-full max-sm:px-2 max-sm:py-0 max-sm:text-[11px] max-sm:leading-none',
         hearted
           ? 'text-rose-600 bg-rose-50 border border-rose-200'
           : 'text-muted-foreground hover:text-rose-500 hover:bg-rose-50 border border-transparent hover:border-rose-200',
@@ -87,7 +91,7 @@ export function HeartButton({ animalId, initialCount, className }: Props) {
       )}
     >
       <Heart
-        className={cn('size-3.5', hearted && 'fill-rose-500 text-rose-500')}
+        className={cn('size-3.5', compact && 'max-sm:size-4', hearted && 'fill-rose-500 text-rose-500')}
         aria-hidden
       />
       {count > 0 ? <span>{count}</span> : null}
