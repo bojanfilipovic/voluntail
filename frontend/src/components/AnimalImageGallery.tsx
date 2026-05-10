@@ -7,13 +7,21 @@ type Props = {
   urls: string[]
   /** Layout preset for container height */
   variant?: 'dialog' | 'card' | 'overlay'
+  /** With `variant="card"`, `compact` lowers hero vh/rem and thumbnail size below `sm` only (directory modal). Explore keeps `default`. */
+  density?: 'default' | 'compact'
   className?: string
   /** Rendered inside the card hero frame (below nav chevrons). Explore swipe deck uses this for a mobile title gradient. */
   cardHeroOverlay?: ReactNode
 }
 
 /** Remount when URLs change so slide index resets without an effect. */
-function AnimalImageGalleryInner({ urls, variant = 'dialog', className, cardHeroOverlay }: Props) {
+function AnimalImageGalleryInner({
+  urls,
+  variant = 'dialog',
+  density = 'default',
+  className,
+  cardHeroOverlay,
+}: Props) {
   const [index, setIndex] = useState(0)
   const n = urls.length
   const safeIdx = n === 0 ? 0 : Math.min(index, n - 1)
@@ -46,7 +54,12 @@ function AnimalImageGalleryInner({ urls, variant = 'dialog', className, cardHero
 
   const emptyWrap =
     variant === 'card'
-      ? 'relative flex h-[min(52vh,26rem)] w-full items-center justify-center rounded-xl bg-muted/80 ring-1 ring-border/40 sm:h-[min(54vh,28rem)]'
+      ? cn(
+          'relative flex w-full items-center justify-center rounded-xl bg-muted/80 ring-1 ring-border/40',
+          density === 'compact'
+            ? 'h-[min(36vh,18rem)] sm:h-[min(54vh,28rem)]'
+            : 'h-[min(52vh,26rem)] sm:h-[min(54vh,28rem)]',
+        )
       : variant === 'overlay'
         ? 'relative flex h-48 w-full items-center justify-center bg-muted p-2 sm:h-56'
         : 'relative flex min-h-[14rem] h-[min(48vh,26rem)] w-full items-center justify-center bg-muted px-6 py-8 sm:min-h-[16rem] sm:h-[min(52vh,30rem)] sm:px-10'
@@ -81,7 +94,10 @@ function AnimalImageGalleryInner({ urls, variant = 'dialog', className, cardHero
         variant === 'card' ? (
           <div
             className={cn(
-              'relative mx-auto h-[min(52vh,26rem)] w-full max-w-md overflow-hidden rounded-xl bg-muted/40 shadow-sm ring-1 ring-border/60 sm:h-[min(54vh,28rem)] sm:max-w-lg',
+              'relative mx-auto w-full max-w-md overflow-hidden rounded-xl bg-muted/40 shadow-sm ring-1 ring-border/60 sm:max-w-lg',
+              density === 'compact'
+                ? 'h-[min(36vh,18rem)] sm:h-[min(54vh,28rem)]'
+                : 'h-[min(52vh,26rem)] sm:h-[min(54vh,28rem)]',
             )}
           >
             <img src={current} alt="" className={cardImgClass} draggable={false} loading="lazy" />
@@ -179,6 +195,7 @@ function AnimalImageGalleryInner({ urls, variant = 'dialog', className, cardHero
       <div
         className={cn(
           'border-border flex max-w-full shrink-0 touch-pan-x justify-center gap-2 overflow-x-auto border-t px-3 py-2.5',
+          variant === 'card' && density === 'compact' && 'max-sm:gap-1.5 max-sm:py-1.5',
           variant === 'card' ? 'border-border/60 bg-muted/25' : 'bg-background/40',
         )}
         role="tablist"
@@ -193,7 +210,11 @@ function AnimalImageGalleryInner({ urls, variant = 'dialog', className, cardHero
             aria-selected={i === safeIdx}
             className={cn(
               'border-border shrink-0 overflow-hidden rounded-lg border-2 shadow-sm transition-[opacity,border-color]',
-              variant === 'card' ? 'size-12 sm:size-11' : 'size-11',
+              variant === 'card'
+                ? density === 'compact'
+                  ? 'size-10 sm:size-11'
+                  : 'size-12 sm:size-11'
+                : 'size-11',
               i === safeIdx ? 'border-primary ring-primary/30 ring-offset-background ring-2 ring-offset-1' : 'opacity-80 hover:opacity-100',
             )}
             aria-label={`Photo ${i + 1} of ${n}`}

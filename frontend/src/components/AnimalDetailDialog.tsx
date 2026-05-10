@@ -157,6 +157,7 @@ function AnimalDetailDialogBody({
     <>
       <AnimalImageGallery
               variant="card"
+              density="compact"
               urls={effectiveAnimalImageUrls(animal)}
               className="shrink-0 overflow-hidden rounded-t-xl"
             />
