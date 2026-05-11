@@ -7,8 +7,8 @@ import { parseAnimalAge } from '@/domain/animalAge'
 import { type SpeciesFilterValue } from '@/domain/species'
 import type { AnimalStatus } from '@/schemas/animals'
 import { effectiveAnimalImageUrls } from '@/domain/animalGallery'
+import { animalStatusLabel } from '@/i18n/animalStatusLabel'
 import { useI18n } from '@/i18n/I18nContext'
-import type { MessageKey } from '@/i18n/nl'
 import type { TranslateFn } from '@/i18n/locale'
 import { cn } from '@/lib/utils'
 import { getHeartedIds, subscribeHeartsChanged } from '@/lib/heartStorage'
@@ -21,21 +21,9 @@ function isNew(createdAt: string): boolean {
   return created.getTime() > sevenDaysAgo
 }
 
-const STATUS_LABEL_KEY: Partial<Record<AnimalStatus, MessageKey>> = {
-  available: 'animalList.status.available',
-  reserved: 'animalList.status.reserved',
-  adopted: 'animalList.status.adopted',
-}
-
-function statusLabel(status: AnimalStatus, t: TranslateFn): string {
-  const key = STATUS_LABEL_KEY[status]
-  return key ? t(key) : status
-}
-
-/** Shown in list meta only when it adds information (pilot is mostly "available"). */
 function listStatusExtra(status: AnimalStatus, t: TranslateFn): string | null {
   if (status === 'available') return null
-  return statusLabel(status, t)
+  return animalStatusLabel(status, t)
 }
 
 type Props = {

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { CommunityStatsStrip } from '@/components/layout/CommunityStatsStrip'
 import type { CommunityStats } from '@/components/layout/CommunityStatsStrip'
 import { LocaleSwitcher } from '@/components/LocaleSwitcher'
+import { ShareFeedbackButton } from '@/components/ShareFeedbackButton'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -68,16 +69,6 @@ function ExploreIntro({ hasMatches }: { hasMatches?: boolean }) {
     <p className="text-muted-foreground max-w-2xl text-sm leading-relaxed">
       {t('discovery.exploreIntro')}
     </p>
-  )
-}
-
-function ShareFeedbackButton({ onShareFeedback }: Pick<Props, 'onShareFeedback'>) {
-  const { t } = useI18n()
-  return (
-    <Button type="button" variant="default" className="shrink-0 md:min-w-0" onClick={onShareFeedback}>
-      <MessageSquare aria-hidden />
-      {t('discovery.shareFeedback')}
-    </Button>
   )
 }
 
@@ -149,7 +140,12 @@ export function DiscoveryHeader({
             </Button>
             <LocaleSwitcher />
             <ThemeToggleButton theme={theme} onCycleTheme={onCycleTheme} />
-            <ShareFeedbackButton onShareFeedback={onShareFeedback} />
+            <ShareFeedbackButton
+              variant="default"
+              className="shrink-0 md:min-w-0"
+              leadingIcon={<MessageSquare aria-hidden />}
+              onClick={onShareFeedback}
+            />
           </div>
         </div>
         {appView === 'directory' ? null : <ExploreIntro hasMatches={hasMatches} />}
@@ -202,7 +198,12 @@ export function DiscoveryHeader({
             )}
             <LocaleSwitcher />
             <ThemeToggleButton theme={theme} onCycleTheme={onCycleTheme} />
-            <ShareFeedbackButton onShareFeedback={onShareFeedback} />
+            <ShareFeedbackButton
+              variant="default"
+              className="shrink-0 md:min-w-0"
+              leadingIcon={<MessageSquare aria-hidden />}
+              onClick={onShareFeedback}
+            />
           </div>
         </div>
         {appView === 'directory' ? (
