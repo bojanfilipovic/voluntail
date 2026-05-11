@@ -1,13 +1,16 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { CommunityStatsStrip } from '@/components/layout/CommunityStatsStrip'
 import type { CommunityStats } from '@/components/layout/CommunityStatsStrip'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
+  DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { MessageSquare, ArrowLeft, Compass, Moon, Sun, Monitor, Info } from 'lucide-react'
+import { MessageSquare, ArrowLeft, Compass, Moon, Sun, Monitor, Info, Menu } from 'lucide-react'
+import { INFO_NAV_LINKS } from '@/marketing/navLinks'
 import type { ThemeValue } from '@/lib/theme'
 
 type AppView = 'directory' | 'explore'
@@ -92,13 +95,18 @@ function ThemeToggleButton({ theme, onCycleTheme }: Pick<Props, 'theme' | 'onCyc
 
 export function DiscoveryHeader({ onShareFeedback, appView, onGoExplore, onGoDirectory, hasMatches, theme, onCycleTheme, stats }: Props) {
   const [welcomeOpen, setWelcomeOpen] = useState(false)
+  const [infoMenuOpen, setInfoMenuOpen] = useState(false)
 
   return (
     <header className="border-border border-b px-4 py-3 md:px-6 md:py-4">
       {/* Mobile & narrow: Voluntail + Share, then intro, then Explore / Back */}
       <div className="flex flex-col gap-3 md:hidden">
         <div className="flex items-center justify-between gap-3">
-          <h1 className="text-lg font-semibold tracking-tight">Voluntail</h1>
+          <h1 className="text-lg font-semibold tracking-tight">
+            <Link to="/" className="underline-offset-4 hover:underline">
+              Voluntail
+            </Link>
+          </h1>
           <div className="flex items-center gap-1">
             {appView === 'directory' ? (
               <Button
@@ -112,6 +120,18 @@ export function DiscoveryHeader({ onShareFeedback, appView, onGoExplore, onGoDir
                 <Info className="size-4" aria-hidden />
               </Button>
             ) : null}
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              className="shrink-0 md:hidden"
+              aria-expanded={infoMenuOpen}
+              aria-controls="directory-info-nav-menu"
+              aria-label="Meer pagina&apos;s"
+              onClick={() => setInfoMenuOpen(true)}
+            >
+              <Menu className="size-4" aria-hidden />
+            </Button>
             <ThemeToggleButton theme={theme} onCycleTheme={onCycleTheme} />
             <ShareFeedbackButton onShareFeedback={onShareFeedback} />
           </div>
@@ -144,7 +164,11 @@ export function DiscoveryHeader({ onShareFeedback, appView, onGoExplore, onGoDir
       {/* md+: Voluntail + Explore + Share on one row; intro below */}
       <div className="hidden md:flex md:flex-col md:gap-3">
         <div className="flex items-center justify-between gap-6">
-          <h1 className="text-lg font-semibold tracking-tight">Voluntail</h1>
+          <h1 className="text-lg font-semibold tracking-tight">
+            <Link to="/" className="underline-offset-4 hover:underline">
+              Voluntail
+            </Link>
+          </h1>
           <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
             {appView === 'directory' ? (
               <Button
@@ -189,6 +213,46 @@ export function DiscoveryHeader({ onShareFeedback, appView, onGoExplore, onGoDir
           </DialogContent>
         </Dialog>
       ) : null}
+      <nav
+        className="border-border mt-3 hidden flex-wrap gap-x-3 gap-y-1 border-t pt-3 text-xs text-muted-foreground md:mt-4 md:flex md:pt-4"
+        aria-label="Informatiepagina&apos;s"
+      >
+        {INFO_NAV_LINKS.filter(({ to }) => to !== '/').map(({ to, label }) => (
+          <Link
+            key={to}
+            to={to}
+            className="underline-offset-2 hover:text-foreground hover:underline"
+          >
+            {label}
+          </Link>
+        ))}
+      </nav>
+      <Dialog open={infoMenuOpen} onOpenChange={setInfoMenuOpen}>
+        <DialogContent
+          className="top-auto bottom-0 left-1/2 max-h-[min(85dvh,calc(100%-2rem))] max-w-none translate-x-[-50%] translate-y-0 rounded-b-none rounded-t-2xl border-x-0 border-b-0 sm:max-w-sm"
+          showCloseButton
+        >
+          <DialogHeader>
+            <DialogTitle className="text-left">Meer pagina&apos;s</DialogTitle>
+          </DialogHeader>
+          <nav
+            id="directory-info-nav-menu"
+            className="flex flex-col gap-1 pb-2"
+            aria-label="Informatiepagina&apos;s"
+          >
+            {INFO_NAV_LINKS.map(({ to, label }) => (
+              <Link
+                key={to}
+                to={to}
+                onClick={() => setInfoMenuOpen(false)}
+                className="text-foreground hover:bg-muted rounded-lg px-3 py-3 text-base font-medium"
+              >
+                {label}
+              </Link>
+            ))}
+          </nav>
+        </DialogContent>
+      </Dialog>
     </header>
   )
 }
