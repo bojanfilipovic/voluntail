@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button'
+import { useI18n } from '@/i18n/I18nContext'
 
 type Props = {
   onClick: () => void
@@ -6,6 +7,7 @@ type Props = {
 }
 
 export function ShareFeedbackButton({ onClick, className }: Props) {
+  const { t } = useI18n()
   return (
     <Button
       type="button"
@@ -14,7 +16,7 @@ export function ShareFeedbackButton({ onClick, className }: Props) {
       className={className}
       onClick={onClick}
     >
-      Share feedback
+      {t('discovery.shareFeedback')}
     </Button>
   )
 }

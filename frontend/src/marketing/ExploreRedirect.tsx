@@ -1,16 +1,20 @@
 import { Navigate } from 'react-router-dom'
 
 import { SeoHelmet } from '@/components/SeoHelmet'
-
-const TITLE = 'Explore — swipe door beschikbare dieren — Voluntail'
-const DESCRIPTION =
-  'Anoniem door gepubliceerde dieren swipen op Voluntail. Shortlist in je browser; adoptie en vervolgstappen via het asiel.'
+import { useI18n } from '@/i18n/I18nContext'
 
 /** Canonical URL `/explore` redirects into the existing Explore entry (`/?view=explore`). */
 export function ExploreRedirect() {
+  const { locale, t } = useI18n()
+
   return (
     <>
-      <SeoHelmet title={TITLE} description={DESCRIPTION} path="/explore" />
+      <SeoHelmet
+        title={t('seo.exploreRedirect.title')}
+        description={t('seo.exploreRedirect.description')}
+        path="/explore"
+        locale={locale}
+      />
       <Navigate to={{ pathname: '/', search: '?view=explore' }} replace />
     </>
   )

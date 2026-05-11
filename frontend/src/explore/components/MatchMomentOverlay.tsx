@@ -4,22 +4,24 @@ import { effectiveAnimalImageUrls } from '@/domain/animalGallery'
 import { Button } from '@/components/ui/button'
 import { useId } from 'react'
 import { cn } from '@/lib/utils'
+import { useI18n } from '@/i18n/I18nContext'
+import type { MessageKey } from '@/i18n/nl'
 
-const MESSAGES = [
-  "The vibe check passed. (It's mostly you.)",
-  'A solid match \u2014 your list of wins just got more interesting.',
-  'We\u2019re not an algorithm, but if we were, this would be a \u201Cchef\u2019s kiss\u201D.',
-  'Plot twist: you have excellent taste. Who knew?',
-  'This one was meant to be. Probably. We\u2019re not scientists.',
-  'Look at you, collecting cuties like they\u2019re trading cards.',
-] as const
+const MATCH_LINE_KEYS = [
+  'explore.match.line0',
+  'explore.match.line1',
+  'explore.match.line2',
+  'explore.match.line3',
+  'explore.match.line4',
+  'explore.match.line5',
+] as const satisfies readonly MessageKey[]
 
-function lineForMatch(animalId: string): (typeof MESSAGES)[number] {
+function lineForMatch(animalId: string, t: (k: MessageKey) => string): string {
   let h = 0
   for (let i = 0; i < animalId.length; i++) {
     h = (h * 33 + animalId.charCodeAt(i)) >>> 0
   }
-  return MESSAGES[h % MESSAGES.length]!
+  return t(MATCH_LINE_KEYS[h % MATCH_LINE_KEYS.length]!)
 }
 
 type Props = {
@@ -30,8 +32,9 @@ type Props = {
 }
 
 export function MatchMomentOverlay({ animal, onOpen, onKeepSwiping, rare = false }: Props) {
+  const { t } = useI18n()
   const titleId = useId()
-  const line = lineForMatch(animal.id)
+  const line = lineForMatch(animal.id, t)
 
   return (
     <div
@@ -68,7 +71,7 @@ export function MatchMomentOverlay({ animal, onOpen, onKeepSwiping, rare = false
                 ? 'bg-gradient-to-r from-yellow-500 via-amber-500 to-orange-500'
                 : 'bg-gradient-to-r from-emerald-500 to-teal-500',
             )}>
-              {rare ? 'Rare match!' : "It\u2019s a match!"}
+              {rare ? t('explore.match.rare') : t('explore.match.normal')}
             </span>
           </p>
           <p className="text-muted-foreground mt-2 text-sm leading-relaxed">{line}</p>
@@ -78,7 +81,7 @@ export function MatchMomentOverlay({ animal, onOpen, onKeepSwiping, rare = false
               className="bg-emerald-600 text-white transition active:scale-[0.98] motion-reduce:active:scale-100 hover:bg-emerald-700"
               onClick={() => onOpen(animal)}
             >
-              Open {animal.name}
+              {t('explore.match.openAnimal', { name: animal.name })}
             </Button>
             <Button
               type="button"
@@ -86,7 +89,7 @@ export function MatchMomentOverlay({ animal, onOpen, onKeepSwiping, rare = false
               className="transition active:scale-[0.98] motion-reduce:active:scale-100"
               onClick={onKeepSwiping}
             >
-              Keep swiping
+              {t('explore.match.keepSwiping')}
             </Button>
           </div>
         </div>

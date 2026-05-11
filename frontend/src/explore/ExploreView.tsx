@@ -18,6 +18,7 @@ import { MatchMomentOverlay } from '@/explore/components/MatchMomentOverlay'
 import { rollMatchMoment, rollRareMatch } from '@/explore/matchMomentConfig'
 import { makeShuffleSeed } from '@/explore/exploreSession'
 import { useExploreSessionState } from '@/explore/useExploreSessionState'
+import { useI18n } from '@/i18n/I18nContext'
 import { cn } from '@/lib/utils'
 
 type Props = {
@@ -25,9 +26,8 @@ type Props = {
   onOpenAnimal: (animal: Animal) => void
 }
 
-const SWIPE_VIEW_TITLE = 'Swipe deck'
-
 export function ExploreView({ onBack, onOpenAnimal }: Props) {
+  const { t } = useI18n()
   const { session, patch, sessionPassed, setSessionPassed, setDisplayName } =
     useExploreSessionState()
 
@@ -244,12 +244,11 @@ export function ExploreView({ onBack, onOpenAnimal }: Props) {
   if (animalsErrorNorm) {
     return (
       <div className="flex min-h-0 flex-1 flex-col gap-4 p-4">
-        <ExploreToolbar onOpenSettings={() => setSettingsOpen(true)} title={SWIPE_VIEW_TITLE} />
+        <ExploreToolbar onOpenSettings={() => setSettingsOpen(true)} title={t('explore.toolbar.title')} />
         <Card>
           <CardContent className="p-4 text-sm">
             <p className="text-foreground">
-              We can’t load the animal list right now. Please try again later or go back to the
-              directory.
+              {t('explore.error.body')}
             </p>
             {import.meta.env.DEV ? (
               <p className="text-muted-foreground mt-2 text-xs" role="status">
@@ -257,7 +256,7 @@ export function ExploreView({ onBack, onOpenAnimal }: Props) {
               </p>
             ) : null}
             <Button type="button" className="mt-3" onClick={onBack}>
-              Back to directory
+              {t('explore.error.back')}
             </Button>
           </CardContent>
         </Card>
@@ -290,7 +289,7 @@ export function ExploreView({ onBack, onOpenAnimal }: Props) {
     <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
       <ExploreToolbar
         onOpenSettings={() => setSettingsOpen(true)}
-        title={SWIPE_VIEW_TITLE}
+        title={t('explore.toolbar.title')}
         displayName={session.deckEntered ? session.displayName : undefined}
         intent={session.deckEntered ? session.intent : undefined}
         deckMatches={session.deckEntered ? shortlistAnimals : undefined}
@@ -331,7 +330,7 @@ export function ExploreView({ onBack, onOpenAnimal }: Props) {
                 size="lg"
                 onClick={startDeck}
               >
-                Shuffle deck
+                {t('explore.shuffleDeck')}
               </Button>
             </div>
           ) : (
@@ -340,23 +339,23 @@ export function ExploreView({ onBack, onOpenAnimal }: Props) {
                 return (
                   <div className="text-muted-foreground flex items-center justify-center gap-2 py-12 text-sm">
                     <span className="size-5 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                    Loading deck…
+                    {t('loading.exploreDeck')}
                   </div>
                 )
               }
               if (resolvingStaleTop) {
                 return (
                   <div className="text-muted-foreground flex items-center justify-center py-8 text-sm">
-                    Updating…
+                    {t('explore.updating')}
                   </div>
                 )
               }
               if (deckOrder.length === 0 || !current) {
                 return (
                   <div className="text-center">
-                    <p className="text-foreground text-base font-medium">You&apos;re caught up (for now).</p>
+                    <p className="text-foreground text-base font-medium">{t('explore.caughtUp.title')}</p>
                     <p className="text-muted-foreground mt-1 text-sm">
-                      Reshuffle to see all animals again, or start over to reset your matches too.
+                      {t('explore.caughtUp.hint')}
                     </p>
                     <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-center sm:flex-wrap">
                       <Button
@@ -365,10 +364,10 @@ export function ExploreView({ onBack, onOpenAnimal }: Props) {
                         onClick={requestReshuffle}
                         className="transition active:scale-[0.99] enabled:opacity-100 disabled:opacity-40 motion-reduce:active:scale-100"
                       >
-                        Reshuffle deck
+                        {t('explore.caughtUp.reshuffle')}
                       </Button>
                       <Button type="button" variant="secondary" onClick={() => setSettingsOpen(true)}>
-                        Open settings
+                        {t('explore.caughtUp.openSettings')}
                       </Button>
                     </div>
                   </div>
@@ -401,7 +400,7 @@ export function ExploreView({ onBack, onOpenAnimal }: Props) {
         >
           <p className="text-center text-amber-900 dark:text-amber-100">
             <span className="text-base">&#128064;</span>{' '}
-            <span className="font-semibold">{lowKeySaveName}</span> — no match this time. Keep swiping!
+            {t('explore.lowKeySave', { name: lowKeySaveName })}
           </p>
         </div>
       ) : null}

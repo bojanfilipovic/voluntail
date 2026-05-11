@@ -2,6 +2,9 @@ import type { Animal } from '@/api/animals'
 import { AnimalImageGallery } from '@/components/AnimalImageGallery'
 import { effectiveAnimalImageUrls } from '@/domain/animalGallery'
 import type { Shelter } from '@/api/shelters'
+import { useI18n } from '@/i18n/I18nContext'
+import type { MessageKey } from '@/i18n/nl'
+import type { TranslateFn } from '@/i18n/locale'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { DialogFooterStack } from '@/components/DialogFooterStack'
 import { HeartButton } from '@/components/HeartButton'
@@ -38,6 +41,7 @@ function ShelterDetailsPanel({
   shelter: Shelter
   onShelterClick: () => void
 }) {
+  const { t } = useI18n()
   return (
     <div
       className="border-border bg-muted/30 space-y-3 rounded-lg border p-3 text-sm"
@@ -63,7 +67,7 @@ function ShelterDetailsPanel({
             target="_blank"
             className={cn(buttonVariants({ variant: 'default', size: 'sm' }))}
           >
-            Volunteer
+            {t('outbound.volunteer')}
           </a>
         ) : null}
         {shelter.donationUrl ? (
@@ -73,7 +77,7 @@ function ShelterDetailsPanel({
             target="_blank"
             className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}
           >
-            Donate
+            {t('outbound.donate')}
           </a>
         ) : null}
       </div>
@@ -81,17 +85,15 @@ function ShelterDetailsPanel({
   )
 }
 
-function statusLabel(s: Animal['status']): string {
-  switch (s) {
-    case 'available':
-      return 'Available'
-    case 'reserved':
-      return 'Reserved'
-    case 'adopted':
-      return 'Adopted'
-    default:
-      return s
-  }
+const ANIMAL_STATUS_I18N: Partial<Record<Animal['status'], MessageKey>> = {
+  available: 'animalList.status.available',
+  reserved: 'animalList.status.reserved',
+  adopted: 'animalList.status.adopted',
+}
+
+function animalStatusLabel(status: Animal['status'], t: TranslateFn): string {
+  const key = ANIMAL_STATUS_I18N[status]
+  return key ? t(key) : status
 }
 
 type Props = {
@@ -123,6 +125,7 @@ function AnimalDetailDialogBody({
   onShareFeedback,
   onShelterClick,
 }: BodyProps) {
+  const { t } = useI18n()
   const showCms = cmsConfigured
   const isSmUp = useSmUp()
   const [shelterDetailsOpen, setShelterDetailsOpen] = useState(false)
@@ -135,14 +138,18 @@ function AnimalDetailDialogBody({
     const shareUrl = url.toString()
     if (navigator.share) {
       try {
-        await navigator.share({ title: animal.name, text: `Help ${animal.name} find a home!`, url: shareUrl })
+        await navigator.share({
+          title: animal.name,
+          text: t('animalDetail.shareMessage', { name: animal.name }),
+          url: shareUrl,
+        })
       } catch { /* user cancelled */ }
     } else {
       await navigator.clipboard.writeText(shareUrl)
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     }
-  }, [animal])
+  }, [animal, t])
 
   const showShelterPanel = Boolean(shelter && shelterDetailsOpen)
   const shelterPanelInScroll = isSmUp && showShelterPanel
@@ -169,7 +176,7 @@ function AnimalDetailDialogBody({
                     <HeartButton animalId={animal.id} initialCount={animal.heartCount} />
                   </div>
                   <p className="text-muted-foreground text-sm">
-                    {speciesLabel(animal.species)} · {statusLabel(animal.status)} · {animal.city}
+                    {speciesLabel(animal.species)} · {animalStatusLabel(animal.status, t)} · {animal.city}
                     {parseAnimalAge(animal.description) ? ` · ${parseAnimalAge(animal.description)}` : ''}
                   </p>
                 </div>
@@ -180,8 +187,10 @@ function AnimalDetailDialogBody({
                     size="icon-sm"
                     className="text-muted-foreground hover:text-foreground sm:hidden"
                     onClick={handleShare}
-                    aria-label={copied ? 'Link copied!' : 'Share animal link'}
-                    title={copied ? 'Link copied!' : 'Share'}
+                    aria-label={
+                      copied ? t('animalDetail.linkCopied') : t('animalDetail.shareAnimalAria')
+                    }
+                    title={copied ? t('animalDetail.linkCopied') : t('animalDetail.share')}
                   >
                     <Share2 className="size-4" aria-hidden />
                   </Button>
@@ -191,7 +200,7 @@ function AnimalDetailDialogBody({
                         variant="ghost"
                         size="icon-sm"
                         className="text-muted-foreground hover:text-foreground shrink-0"
-                        aria-label="Close"
+                        aria-label={t('animalDetail.closeAria')}
                       />
                     }
                   >
@@ -224,7 +233,7 @@ function AnimalDetailDialogBody({
                 </p>
                 {!animal.published ? (
                   <p className="text-destructive text-sm font-medium">
-                    Unpublished — only visible with CMS key in the API.
+                    {t('animalDetail.unpublishedBanner')}
                   </p>
                 ) : null}
 
@@ -240,7 +249,7 @@ function AnimalDetailDialogBody({
                     )}
                     aria-expanded={false}
                     aria-controls="animal-dialog-mobile-expanded"
-                    aria-label="Show full description and links"
+                    aria-label={t('animalDetail.showFullAria')}
                     onClick={() => setMobileDetailsOpen(true)}
                   >
                     {descriptionTrimmed ? (
@@ -255,11 +264,11 @@ function AnimalDetailDialogBody({
                       </div>
                     ) : (
                       <p className="text-foreground/90 text-sm leading-snug">
-                        Shelter & external listing
+                        {t('animalDetail.mobileTeaserFallback')}
                       </p>
                     )}
                     <span className="text-muted-foreground mt-1.5 inline-flex items-center gap-1 text-[11px] font-medium">
-                      Read more
+                      {t('animalDetail.readMore')}
                       <ChevronDown className="size-3 opacity-70" aria-hidden />
                     </span>
                   </button>
@@ -280,7 +289,9 @@ function AnimalDetailDialogBody({
                         aria-controls="animal-dialog-shelter-details"
                         onClick={() => setShelterDetailsOpen((open) => !open)}
                       >
-                        {shelterDetailsOpen ? 'Hide shelter details' : 'Shelter details'}
+                        {shelterDetailsOpen
+                          ? t('animalDetail.hideShelterDetails')
+                          : t('animalDetail.shelterDetails')}
                       </Button>
                     ) : null}
                     {animal.externalUrl ? (
@@ -295,7 +306,7 @@ function AnimalDetailDialogBody({
                         )}
                       >
                         <ExternalLink className="size-4 shrink-0" aria-hidden />
-                        More info
+                        {t('animalDetail.moreInfo')}
                       </a>
                     ) : null}
                     {shelterPanelMobileInBody && shelter ? (
@@ -308,7 +319,7 @@ function AnimalDetailDialogBody({
                       className="text-muted-foreground hover:text-foreground h-9 w-full"
                       onClick={() => setMobileDetailsOpen(false)}
                     >
-                      Show less
+                      {t('animalDetail.readLess')}
                     </Button>
                   </div>
                 ) : null}
@@ -324,7 +335,11 @@ function AnimalDetailDialogBody({
                   mobileBodyEmpty && 'max-sm:border-t-0 max-sm:pt-1',
                 )}
               >
-              <div className="hidden flex-wrap items-center gap-2 sm:flex" role="group" aria-label="Animal actions">
+              <div
+                className="hidden flex-wrap items-center gap-2 sm:flex"
+                role="group"
+                aria-label={t('animalDetail.footerActionsAria')}
+              >
                 {animal.externalUrl ? (
                   <a
                     href={animal.externalUrl}
@@ -336,7 +351,7 @@ function AnimalDetailDialogBody({
                       'inline-flex',
                     )}
                   >
-                    More info
+                    {t('animalDetail.moreInfo')}
                   </a>
                 ) : null}
                 {shelter ? (
@@ -348,7 +363,9 @@ function AnimalDetailDialogBody({
                     aria-controls="animal-dialog-shelter-details"
                     onClick={() => setShelterDetailsOpen((open) => !open)}
                   >
-                    {shelterDetailsOpen ? 'Hide shelter details' : 'Shelter details'}
+                    {shelterDetailsOpen
+                      ? t('animalDetail.hideShelterDetails')
+                      : t('animalDetail.shelterDetails')}
                   </Button>
                 ) : null}
                 <Button
@@ -356,8 +373,10 @@ function AnimalDetailDialogBody({
                   variant="outline"
                   size="icon-sm"
                   onClick={handleShare}
-                  aria-label={copied ? 'Link copied!' : 'Share animal link'}
-                  title={copied ? 'Link copied!' : 'Share'}
+                  aria-label={
+                    copied ? t('animalDetail.linkCopied') : t('animalDetail.shareAnimalAria')
+                  }
+                  title={copied ? t('animalDetail.linkCopied') : t('animalDetail.share')}
                 >
                   <Share2 className="size-3.5" aria-hidden />
                 </Button>
@@ -374,11 +393,11 @@ function AnimalDetailDialogBody({
                     'max-sm:pt-2 max-sm:gap-1.5',
                   )}
                   role="group"
-                  aria-label="Curation"
+                  aria-label={t('animalDetail.cmsAria')}
                 >
                   <div className="flex min-w-0 flex-wrap items-center gap-2">
                     <Button type="button" size="sm" variant="secondary" onClick={onEdit}>
-                      Edit
+                      {t('animalDetail.edit')}
                     </Button>
                     <Button
                       type="button"
@@ -388,10 +407,10 @@ function AnimalDetailDialogBody({
                       disabled={publishBusy}
                     >
                       {publishBusy
-                        ? 'Updating…'
+                        ? t('animalDetail.updating')
                         : animal.published
-                          ? 'Unpublish'
-                          : 'Publish'}
+                          ? t('animalDetail.unpublish')
+                          : t('animalDetail.publish')}
                     </Button>
                   </div>
                   <Button
@@ -402,7 +421,7 @@ function AnimalDetailDialogBody({
                     onClick={onDelete}
                     disabled={deleteBusy}
                   >
-                    {deleteBusy ? 'Removing…' : 'Delete'}
+                    {deleteBusy ? t('animalDetail.removing') : t('animalDetail.delete')}
                   </Button>
                 </div>
               ) : null}

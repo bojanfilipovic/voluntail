@@ -9,6 +9,7 @@ import {
 import { Button, buttonVariants } from '@/components/ui/button'
 import { DialogFooterStack } from '@/components/DialogFooterStack'
 import { ShareFeedbackRow } from '@/components/ShareFeedbackRow'
+import { useI18n } from '@/i18n/I18nContext'
 import { cn } from '@/lib/utils'
 import type { Shelter } from '@/api/shelters'
 import { speciesLabel } from '@/domain/species'
@@ -35,6 +36,7 @@ export function ShelterDetailDialog({
   onShareFeedback,
   cmsConfigured = false,
 }: Props) {
+  const { t } = useI18n()
   return (
     <Dialog open={Boolean(shelter)} onOpenChange={(open) => !open && onClose()}>
       <DialogContent
@@ -77,7 +79,7 @@ export function ShelterDetailDialog({
                       variant="ghost"
                       size="icon-sm"
                       className="text-muted-foreground hover:text-foreground -mr-1 shrink-0"
-                      aria-label="Close"
+                      aria-label={t('shelterDetail.closeAria')}
                     />
                   }
                 >
@@ -92,7 +94,7 @@ export function ShelterDetailDialog({
               <div
                 className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto"
                 role="group"
-                aria-label="Directory actions"
+                aria-label={t('shelterDetail.actionsAria')}
               >
                 {shelter.signupUrl ? (
                   <a
@@ -104,7 +106,7 @@ export function ShelterDetailDialog({
                       buttonVariants({ variant: 'default', size: 'sm' }),
                     )}
                   >
-                    Volunteer
+                    {t('outbound.volunteer')}
                   </a>
                 ) : null}
                 {shelter.donationUrl ? (
@@ -117,7 +119,7 @@ export function ShelterDetailDialog({
                       buttonVariants({ variant: 'outline', size: 'sm' }),
                     )}
                   >
-                    Donate
+                    {t('outbound.donate')}
                   </a>
                 ) : null}
               </div>
@@ -126,7 +128,7 @@ export function ShelterDetailDialog({
                 <div
                   className="border-border/50 flex w-full min-w-0 flex-nowrap items-center justify-between gap-2 border-t pt-3"
                   role="group"
-                  aria-label="Curation"
+                  aria-label={t('shelterDetail.cmsAria')}
                 >
                   <Button
                     type="button"
@@ -136,7 +138,7 @@ export function ShelterDetailDialog({
                     disabled={editDisabled}
                     onClick={onEdit}
                   >
-                    Edit details
+                    {t('shelterDetail.editDetails')}
                   </Button>
                   <Button
                     type="button"
@@ -146,7 +148,7 @@ export function ShelterDetailDialog({
                     disabled={removeDisabled}
                     onClick={onRemove}
                   >
-                    Remove pin
+                    {t('shelterDetail.removePin')}
                   </Button>
                 </div>
               ) : null}

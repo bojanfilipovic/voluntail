@@ -8,6 +8,7 @@ import {
 } from '@/components/ui/dialog'
 import { ExploreFormFields } from '@/explore/components/ExploreFormFields'
 import type { ExplorePersisted } from '@/explore/types'
+import { useI18n } from '@/i18n/I18nContext'
 
 type Props = {
   open: boolean
@@ -30,11 +31,13 @@ export function ExploreSettingsDialog({
   onRequestReshuffle,
   onRequestStartOver,
 }: Props) {
+  const { t } = useI18n()
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent showCloseButton className="sm:max-w-md" aria-describedby={undefined}>
         <DialogHeader>
-          <DialogTitle>Swipe deck settings</DialogTitle>
+          <DialogTitle>{t('explore.settings.title')}</DialogTitle>
         </DialogHeader>
         <ExploreFormFields
           idSuffix="settings"
@@ -44,7 +47,7 @@ export function ExploreSettingsDialog({
           onIntentChange={(intent) => patch((s) => ({ ...s, intent }))}
         />
         <div className="grid gap-2 border-t pt-4">
-          <p className="text-muted-foreground text-xs">Data stays in this browser only. Nothing is sent to a server.</p>
+          <p className="text-muted-foreground text-xs">{t('explore.settings.localOnly')}</p>
           <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
             <Button
               type="button"
@@ -53,7 +56,7 @@ export function ExploreSettingsDialog({
               onClick={onRequestReshuffle}
               className="w-full transition active:scale-[0.99] enabled:opacity-100 disabled:opacity-40 sm:w-auto"
             >
-              Reshuffle deck
+              {t('explore.settings.reshuffle')}
             </Button>
             <Button
               type="button"
@@ -61,13 +64,13 @@ export function ExploreSettingsDialog({
               onClick={onRequestStartOver}
               className="w-full text-destructive transition active:scale-[0.99] sm:w-auto"
             >
-              Start over
+              {t('explore.settings.startOver')}
             </Button>
           </div>
         </div>
         <DialogFooter>
           <Button type="button" onClick={() => onOpenChange(false)}>
-            Done
+            {t('explore.settings.done')}
           </Button>
         </DialogFooter>
       </DialogContent>

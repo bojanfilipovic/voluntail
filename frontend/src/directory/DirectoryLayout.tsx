@@ -22,6 +22,7 @@ import { getShortlistIds } from '@/lib/exploreShortlist'
 import { getHeartedIds, HEARTS_STORAGE_KEY, subscribeHeartsChanged } from '@/lib/heartStorage'
 import { animalQueryKeys, type AnimalListQuery } from '@/lib/queryKeys'
 import { catalogQueryOptions } from '@/lib/catalogQueryOptions'
+import { useI18n } from '@/i18n/I18nContext'
 import { Dices } from 'lucide-react'
 
 /** Same as MapCenter from ShelterMap — duplicated here to avoid a static import of the map module next to a lazy() of it. */
@@ -154,6 +155,7 @@ export function DirectoryLayout({
   animalsHasNextPage,
   animalsFetchingNextPage,
 }: DirectoryLayoutProps) {
+  const { t } = useI18n()
   const cmsDraftLocationKnown = draftFlow === 'cms' && Boolean(draftLocation)
   const suggestDraftLocationKnown = draftFlow === 'suggest' && Boolean(draftLocation)
   const [favoritesOnly, setFavoritesOnly] = useState(false)
@@ -226,7 +228,7 @@ export function DirectoryLayout({
       <DiscoveryGrid>
         <section
           className="border-border relative shrink-0 snap-start overflow-hidden rounded-lg border h-[30svh] lg:h-auto"
-          aria-label="Map of shelters"
+          aria-label={t('directory.mapAria')}
         >
           <Suspense fallback={<MapLoadingFallback />}>
             <ShelterMapLazy
@@ -271,7 +273,7 @@ export function DirectoryLayout({
         </section>
         <section
           className="border-border flex min-h-[calc(100%-80px)] shrink-0 snap-start flex-col overflow-hidden rounded-lg border lg:min-h-0"
-          aria-label="Directory"
+          aria-label={t('directory.sectionAria')}
         >
           {/* Drag handle — mobile affordance for scroll-snap */}
           <div className="flex justify-center py-1.5 lg:hidden" aria-hidden>
@@ -280,7 +282,7 @@ export function DirectoryLayout({
           <div
             className="border-border bg-muted/30 flex flex-shrink-0 flex-wrap items-center gap-2 border-b px-3 py-2"
             role="tablist"
-            aria-label="Directory view"
+            aria-label={t('directory.tablistAria')}
           >
             <Button
               type="button"
@@ -289,7 +291,7 @@ export function DirectoryLayout({
               onClick={() => onDirectoryTab('shelters')}
               aria-pressed={directoryTab === 'shelters'}
             >
-              Shelters
+              {t('directory.tab.shelters')}
             </Button>
             <Button
               type="button"
@@ -298,7 +300,7 @@ export function DirectoryLayout({
               onClick={() => onDirectoryTab('animals')}
               aria-pressed={directoryTab === 'animals'}
             >
-              Animals
+              {t('directory.tab.animals')}
             </Button>
             {directoryTab === 'animals' && (surprisePickSource?.length ?? 0) > 1 ? (
               <Button
@@ -314,14 +316,14 @@ export function DirectoryLayout({
                 }}
               >
                 <Dices className="size-3.5" aria-hidden />
-                Surprise me
+                {t('directory.surpriseMe')}
               </Button>
             ) : null}
           </div>
           <div
             className="flex min-h-0 flex-1 flex-col overflow-y-auto p-2 sm:p-4"
             role="region"
-            aria-label="Shelter and animal directory list"
+            aria-label={t('directory.listAria')}
           >
             {directoryTab === 'shelters' ? (
               <ShelterList

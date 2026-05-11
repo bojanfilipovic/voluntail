@@ -1,9 +1,10 @@
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { EXPLORE_INTENT_MESSAGE_KEYS } from '@/explore/labels'
 import { EXPLORE_INTENTS, type ExploreIntent } from '@/explore/types'
 import { pickFunnyDisplayName } from '@/explore/funnyDisplayNames'
-import { intentLabel } from '@/explore/labels'
+import { useI18n } from '@/i18n/I18nContext'
 import { Dices } from 'lucide-react'
 
 type Props = {
@@ -26,12 +27,13 @@ export function ExploreFormFields({
   idSuffix,
   nameOnly = false,
 }: Props) {
+  const { t } = useI18n()
   const s = (k: string) => `${k}-${idSuffix}`
 
   return (
     <div className="grid gap-4">
       <div className="grid gap-2">
-        <Label htmlFor={s('name')}>What should we call you?</Label>
+        <Label htmlFor={s('name')}>{t('explore.form.nameLabel')}</Label>
         <div className="flex gap-2">
           <Input
             id={s('name')}
@@ -46,8 +48,8 @@ export function ExploreFormFields({
             size="icon"
             className="shrink-0 transition active:scale-95"
             onClick={() => onDisplayNameChange(pickFunnyDisplayName())}
-            aria-label="Random name"
-            title="Random name"
+            aria-label={t('explore.form.randomNameAria')}
+            title={t('explore.form.randomNameTitle')}
           >
             <Dices className="size-4" />
           </Button>
@@ -55,7 +57,7 @@ export function ExploreFormFields({
       </div>
       {!nameOnly && (
         <div className="grid gap-2">
-          <Label htmlFor={s('intent')}>I&apos;m here to…</Label>
+          <Label htmlFor={s('intent')}>{t('explore.form.intentLabel')}</Label>
           <select
             id={s('intent')}
             className="border-input bg-background ring-offset-background h-9 w-full rounded-md border px-3 text-sm"
@@ -64,7 +66,7 @@ export function ExploreFormFields({
           >
             {EXPLORE_INTENTS.map((i) => (
               <option key={i} value={i}>
-                {intentLabel(i)}
+                {t(EXPLORE_INTENT_MESSAGE_KEYS[i])}
               </option>
             ))}
           </select>
