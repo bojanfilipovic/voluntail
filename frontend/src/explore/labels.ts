@@ -1,11 +1,9 @@
 import type { ExploreIntent } from '@/explore/types'
+import type { MessageKey } from '@/i18n/nl'
 
-export function intentLabel(intent: ExploreIntent): string {
-  const labels: Record<ExploreIntent, string> = {
-    volunteer: 'Volunteer or help out',
-    adopt: 'Adopt',
-    foster: 'Foster',
-    undecided: 'Just browsing',
-  }
-  return labels[intent]
+export const EXPLORE_INTENT_MESSAGE_KEYS: Record<ExploreIntent, MessageKey> = {
+  volunteer: 'explore.intent.volunteer',
+  adopt: 'explore.intent.adopt',
+  foster: 'explore.intent.foster',
+  undecided: 'explore.intent.undecided',
 }

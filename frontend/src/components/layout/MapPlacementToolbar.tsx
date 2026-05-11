@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button'
+import { useI18n } from '@/i18n/I18nContext'
 
 type Props = {
   placementMode: boolean
@@ -21,11 +22,13 @@ export function MapPlacementToolbar({
   onEnterDetails,
   onCancelPlacement,
 }: Props) {
+  const { t } = useI18n()
+
   return (
     <div
       className="pointer-events-auto inline-flex flex-wrap items-center gap-2 rounded-lg bg-background/90 px-2 py-1 shadow-md backdrop-blur-sm"
       role="toolbar"
-      aria-label="Shelter CMS"
+      aria-label={t('map.cmsToolbarAria')}
     >
       <Button
         type="button"
@@ -34,7 +37,7 @@ export function MapPlacementToolbar({
         onClick={onStartAddPin}
         disabled={cmsBusy}
       >
-        Add pin
+        {t('map.addPin')}
       </Button>
       <Button
         type="button"
@@ -42,7 +45,7 @@ export function MapPlacementToolbar({
         onClick={onEnterDetails}
         disabled={cmsBusy || !draftLocationKnown}
       >
-        Enter details
+        {t('map.enterDetails')}
       </Button>
       <Button
         type="button"
@@ -51,16 +54,12 @@ export function MapPlacementToolbar({
         onClick={onCancelPlacement}
         disabled={cancelPlacementDisabled}
       >
-        Cancel
+        {t('map.cancel')}
       </Button>
       {placementMode ? (
-        <span className="text-muted-foreground text-xs">
-          Tap the map to place a pin.
-        </span>
+        <span className="text-muted-foreground text-xs">{t('map.tapToPlace')}</span>
       ) : draftLocationKnown && !addDialogOpen ? (
-        <span className="text-muted-foreground text-xs">
-          Draft pin set — Enter details or tap to move.
-        </span>
+        <span className="text-muted-foreground text-xs">{t('map.draftPinCms')}</span>
       ) : null}
     </div>
   )

@@ -17,6 +17,7 @@ import {
   SUGGESTION_MAX_CONTACT_LENGTH,
   SUGGESTION_MAX_MESSAGE_LENGTH,
 } from '@/domain/feedbackLimits'
+import { useI18n } from '@/i18n/I18nContext'
 import { PartyPopper } from 'lucide-react'
 
 export type ShareFeedbackContext = {
@@ -32,6 +33,7 @@ type Props = {
 }
 
 export function ShareFeedbackDialog({ open, onOpenChange, context }: Props) {
+  const { t } = useI18n()
   const [message, setMessage] = useState('')
   const [contact, setContact] = useState('')
   const mutation = useMutation({
@@ -71,12 +73,10 @@ export function ShareFeedbackDialog({ open, onOpenChange, context }: Props) {
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="flex max-h-[min(92vh,calc(100dvh-2rem))] w-[calc(100vw-2rem)] max-w-lg flex-col gap-0 overflow-hidden p-5 pt-6 sm:p-6">
         <DialogHeader className="border-border shrink-0 border-b pb-4 pr-10">
-          <DialogTitle>Pilot feedback</DialogTitle>
-          <DialogDescription>
-            Share what works, what doesn&apos;t, and what you&apos;d like next.
-          </DialogDescription>
+          <DialogTitle>{t('feedback.title')}</DialogTitle>
+          <DialogDescription>{t('feedback.description')}</DialogDescription>
           {context?.label ? (
-            <p className="text-foreground/90 pt-1 text-sm">About: {context.label}</p>
+            <p className="text-foreground/90 pt-1 text-sm">{t('feedback.about')} {context.label}</p>
           ) : null}
         </DialogHeader>
         <form
@@ -86,7 +86,7 @@ export function ShareFeedbackDialog({ open, onOpenChange, context }: Props) {
           <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain py-4 [-webkit-overflow-scrolling:touch]">
             <div className="space-y-3">
               <div className="space-y-2">
-                <Label htmlFor="peer-feedback-modal-message">Your message</Label>
+                <Label htmlFor="peer-feedback-modal-message">{t('feedback.messageLabel')}</Label>
                 <Textarea
                   id="peer-feedback-modal-message"
                   name="message"
@@ -95,7 +95,7 @@ export function ShareFeedbackDialog({ open, onOpenChange, context }: Props) {
                     setMessage(e.target.value)
                     mutation.reset()
                   }}
-                  placeholder="Your thoughts…"
+                  placeholder={t('feedback.messagePlaceholder')}
                   rows={5}
                   maxLength={SUGGESTION_MAX_MESSAGE_LENGTH}
                   aria-invalid={tooLong || undefined}
@@ -106,20 +106,22 @@ export function ShareFeedbackDialog({ open, onOpenChange, context }: Props) {
                 />
                 {tooLong ? (
                   <p id="peer-feedback-modal-too-long" className="text-destructive text-xs" role="alert">
-                    Message exceeds {SUGGESTION_MAX_MESSAGE_LENGTH.toLocaleString()} characters.
+                    {t('feedback.tooLong', { max: SUGGESTION_MAX_MESSAGE_LENGTH })}
                   </p>
                 ) : (
                   <p id="peer-feedback-modal-counter" className="text-muted-foreground text-xs">
-                    {message.length.toLocaleString()} /{' '}
-                    {SUGGESTION_MAX_MESSAGE_LENGTH.toLocaleString()} characters
+                    {t('feedback.charCount', {
+                      n: message.length.toLocaleString(),
+                      max: SUGGESTION_MAX_MESSAGE_LENGTH.toLocaleString(),
+                    })}
                   </p>
                 )}
               </div>
               <div className="space-y-2">
                 <div className="flex flex-col gap-1">
-                  <Label htmlFor="peer-feedback-modal-contact">How to reach you (optional)</Label>
+                  <Label htmlFor="peer-feedback-modal-contact">{t('feedback.contactLabel')}</Label>
                   <p id="peer-feedback-modal-contact-hint" className="text-muted-foreground text-xs">
-                    Leave blank if you prefer — your message above still counts either way.
+                    {t('feedback.contactHint')}
                   </p>
                 </div>
                 <Input
@@ -132,7 +134,7 @@ export function ShareFeedbackDialog({ open, onOpenChange, context }: Props) {
                     setContact(e.target.value)
                     mutation.reset()
                   }}
-                  placeholder="Name, email, or handle"
+                  placeholder={t('feedback.contactPlaceholder')}
                   maxLength={SUGGESTION_MAX_CONTACT_LENGTH}
                   aria-describedby="peer-feedback-modal-contact-hint peer-feedback-modal-contact-counter"
                   className="max-w-full"
@@ -141,15 +143,17 @@ export function ShareFeedbackDialog({ open, onOpenChange, context }: Props) {
                   id="peer-feedback-modal-contact-counter"
                   className="text-muted-foreground text-xs"
                 >
-                  {contact.length.toLocaleString()} /{' '}
-                  {SUGGESTION_MAX_CONTACT_LENGTH.toLocaleString()} characters
+                  {t('feedback.contactCharCount', {
+                    n: contact.length.toLocaleString(),
+                    max: SUGGESTION_MAX_CONTACT_LENGTH.toLocaleString(),
+                  })}
                 </p>
               </div>
               {mutation.isError ? (
                 <p className="text-destructive text-sm" role="alert">
                   {mutation.error instanceof Error
                     ? mutation.error.message
-                    : 'Something went wrong.'}
+                    : t('feedback.errorGeneric')}
                 </p>
               ) : null}
               {mutation.isSuccess ? (
@@ -163,7 +167,7 @@ export function ShareFeedbackDialog({ open, onOpenChange, context }: Props) {
                     aria-hidden
                   />
                   <p className="font-semibold leading-snug text-emerald-950 dark:text-emerald-50">
-                    Thanks — we got your feedback!
+                    {t('feedback.success')}
                   </p>
                 </div>
               ) : null}
@@ -171,10 +175,10 @@ export function ShareFeedbackDialog({ open, onOpenChange, context }: Props) {
           </div>
           <DialogFooter className="mt-0 shrink-0 border-t bg-muted/50 pt-4">
             <Button type="button" variant="outline" onClick={() => handleOpenChange(false)}>
-              Close
+              {t('feedback.close')}
             </Button>
             <Button type="submit" disabled={submitDisabled}>
-              {mutation.isPending ? 'Sending…' : 'Send feedback'}
+              {mutation.isPending ? t('feedback.sending') : t('feedback.send')}
             </Button>
           </DialogFooter>
         </form>

@@ -35,19 +35,16 @@ import type { DirectoryTab } from '@/directory/types'
 import { useTheme } from '@/hooks/useTheme'
 import { catalogQueryOptions } from '@/lib/catalogQueryOptions'
 import { animalQueryKeys, directoryQueryKeys, shelterQueryKeys } from '@/lib/queryKeys'
+import { useI18n } from '@/i18n/I18nContext'
 
 const ExploreViewLazy = lazy(async () => {
   const mod = await import('@/explore/ExploreView')
   return { default: mod.ExploreView }
 })
 
-const HOME_PAGE_TITLE =
-  'Voluntail — Overzicht van dierenasiels in Nederland (kaart & directory)'
-const HOME_PAGE_DESCRIPTION =
-  'Orientatiehub: asiels op de kaart of in een lijst. Vrijwilligerswerk en adoptie: altijd via de officiële site van het asiel (o.a. DOA)—Voluntail linkt door. Pilot met DOA en ROZ.'
-
 export function DirectoryApp() {
   const location = useLocation()
+  const { locale, t } = useI18n()
   const { theme, resolved, cycleTheme } = useTheme()
   const mutations = useShelterMutations()
   const animalMutations = useAnimalMutations()
@@ -280,11 +277,11 @@ export function DirectoryApp() {
 
   const handleDeleteAnimal = useCallback(async () => {
     if (!selectedAnimal) return
-    if (!window.confirm('Remove this animal from the directory?')) return
+    if (!window.confirm(t('cms.confirmRemoveAnimal'))) return
     animalMutations.setCmsError(null)
     await animalMutations.deleteMutation.mutateAsync(selectedAnimal.id)
     handleCloseAnimalDetail()
-  }, [selectedAnimal, animalMutations, handleCloseAnimalDetail])
+  }, [selectedAnimal, animalMutations, handleCloseAnimalDetail, t])
 
   const openHeaderFeedback = useCallback(() => {
     setFeedbackContext(undefined)
@@ -310,9 +307,10 @@ export function DirectoryApp() {
   return (
     <>
       <SeoHelmet
-        title={HOME_PAGE_TITLE}
-        description={HOME_PAGE_DESCRIPTION}
+        title={t('seo.home.title')}
+        description={t('seo.home.description')}
         path={location.pathname}
+        locale={locale}
       />
       <div className="bg-background text-foreground flex min-h-0 flex-1 flex-col overflow-hidden">
       <DiscoveryHeader
@@ -400,7 +398,7 @@ export function DirectoryApp() {
             fallback={
               <div className="text-muted-foreground flex min-h-0 flex-1 flex-col items-center justify-center gap-2 px-4 py-8 text-sm">
                 <span className="inline-block size-6 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                <span>Loading Explore…</span>
+                <span>{t('loading.explore')}</span>
               </div>
             }
           >

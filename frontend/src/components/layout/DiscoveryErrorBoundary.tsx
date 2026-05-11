@@ -1,5 +1,6 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react'
 import { Button } from '@/components/ui/button'
+import { useI18n } from '@/i18n/I18nContext'
 
 type Props = {
   children: ReactNode
@@ -7,6 +8,37 @@ type Props = {
 
 type State = {
   hasError: boolean
+}
+
+function DiscoveryErrorFallback({
+  onRetry,
+}: {
+  onRetry: () => void
+}) {
+  const { t } = useI18n()
+  return (
+    <div
+      className="border-destructive/40 bg-destructive/5 flex min-h-[12rem] flex-col items-center justify-center gap-4 rounded-lg border p-6 text-center"
+      role="alert"
+    >
+      <p className="text-foreground max-w-md text-sm leading-relaxed">
+        {t('errorBoundary.body')}
+      </p>
+      <div className="flex flex-wrap items-center justify-center gap-2">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={onRetry}
+        >
+          {t('errorBoundary.tryAgain')}
+        </Button>
+        <Button type="button" size="sm" onClick={() => window.location.reload()}>
+          {t('errorBoundary.reload')}
+        </Button>
+      </div>
+    </div>
+  )
 }
 
 /**
@@ -30,28 +62,7 @@ export class DiscoveryErrorBoundary extends Component<Props, State> {
   render(): ReactNode {
     if (this.state.hasError) {
       return (
-        <div
-          className="border-destructive/40 bg-destructive/5 flex min-h-[12rem] flex-col items-center justify-center gap-4 rounded-lg border p-6 text-center"
-          role="alert"
-        >
-          <p className="text-foreground max-w-md text-sm leading-relaxed">
-            Something went wrong while loading the map or directory. You can try again or reload
-            the page.
-          </p>
-          <div className="flex flex-wrap items-center justify-center gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => this.setState({ hasError: false })}
-            >
-              Try again
-            </Button>
-            <Button type="button" size="sm" onClick={() => window.location.reload()}>
-              Reload page
-            </Button>
-          </div>
-        </div>
+        <DiscoveryErrorFallback onRetry={() => this.setState({ hasError: false })} />
       )
     }
     return this.props.children

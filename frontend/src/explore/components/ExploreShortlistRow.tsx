@@ -1,6 +1,7 @@
 import type { Animal } from '@/api/animals'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { useI18n } from '@/i18n/I18nContext'
 import { Heart } from 'lucide-react'
 
 /** Pre–shuffle deck only; matches while swiping live in ExploreToolbar */
@@ -11,6 +12,7 @@ export function ExploreShortlistRow({
   animals: Animal[]
   onPick: (a: Animal) => void
 }) {
+  const { t } = useI18n()
   if (animals.length === 0) return null
   return (
     <div
@@ -21,7 +23,7 @@ export function ExploreShortlistRow({
     >
       <p className="text-muted-foreground flex items-center gap-2 text-xs font-medium">
         <Heart className="size-4" aria-hidden />
-        Your matches ({animals.length})
+        {t('explore.shortlist.title', { count: animals.length })}
       </p>
       <ul className="mt-2 flex max-h-32 flex-wrap gap-2 overflow-y-auto">
         {animals.map((a) => (

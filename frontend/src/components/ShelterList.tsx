@@ -3,6 +3,7 @@ import { SpeciesFilterBar, type SpeciesFilterRow } from '@/components/SpeciesFil
 import { Button } from '@/components/ui/button'
 import { listWebsiteHref } from '@/domain/listWebsiteHref'
 import { speciesLabel, type SpeciesFilterValue } from '@/domain/species'
+import { useI18n } from '@/i18n/I18nContext'
 import { cn } from '@/lib/utils'
 import { ExternalLink } from 'lucide-react'
 import { startTransition, useEffect, useState } from 'react'
@@ -43,6 +44,7 @@ export function ShelterList({
   speciesFilters,
   onViewAnimals,
 }: Props) {
+  const { t } = useI18n()
   const [noticePhase, setNoticePhase] = useState<NoticePhase>('idle')
 
   const wantsNotice =
@@ -82,7 +84,7 @@ export function ShelterList({
     noticePhase === 'showing' && !error && !isPending && !shelters?.length
 
   return (
-    <section className="text-start" aria-label="Shelter list">
+    <section className="text-start" aria-label={t('shelterList.sectionAria')}>
       {showErrorPopup && error ? (
         <div
           className="border-destructive/40 bg-destructive/5 text-destructive mb-4 rounded-lg border px-3 py-2 text-sm leading-relaxed"
@@ -100,7 +102,7 @@ export function ShelterList({
       />
 
       {error ? null : isPending ? (
-        <p className="text-muted-foreground text-sm">Loading shelters…</p>
+        <p className="text-muted-foreground text-sm">{t('shelterList.loading')}</p>
       ) : shelters && shelters.length > 0 ? (
         <ul className="list-none space-y-3 p-0">
           {shelters.map((s) => (
@@ -147,10 +149,10 @@ export function ShelterList({
                           onClick={(e) => e.stopPropagation()}
                           rel="noreferrer noopener"
                           target="_blank"
-                          aria-label="Website (opens in new tab)"
+                          aria-label={t('shelterList.websiteAria')}
                           className="inline-flex h-8 items-center gap-1 rounded-md bg-emerald-600 px-3 text-xs font-medium text-white hover:bg-emerald-700"
                         >
-                          Website
+                          {t('shelterList.website')}
                           <ExternalLink className="size-3" aria-hidden />
                         </a>
                       ) : null}
@@ -161,7 +163,7 @@ export function ShelterList({
                         onClick={(e) => { e.stopPropagation(); onViewAnimals(s.id) }}
                         className="h-8 px-3 text-xs"
                       >
-                        Animals
+                        {t('shelterList.animals')}
                       </Button>
                     </span>
                   </span>
@@ -171,7 +173,7 @@ export function ShelterList({
           ))}
         </ul>
       ) : showEmptyPopup ? (
-        <p className="text-muted-foreground py-8 text-center text-sm">No shelters found.</p>
+        <p className="text-muted-foreground py-8 text-center text-sm">{t('shelterList.empty')}</p>
       ) : null}
     </section>
   )

@@ -1,7 +1,9 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { CommunityStatsStrip } from '@/components/layout/CommunityStatsStrip'
 import type { CommunityStats } from '@/components/layout/CommunityStatsStrip'
+import { LocaleSwitcher } from '@/components/LocaleSwitcher'
+import { ShareFeedbackButton } from '@/components/ShareFeedbackButton'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -10,7 +12,8 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { MessageSquare, ArrowLeft, Compass, Moon, Sun, Monitor, Info, Menu } from 'lucide-react'
-import { INFO_NAV_LINKS } from '@/marketing/navLinks'
+import { useI18n } from '@/i18n/I18nContext'
+import { mapNavLinks } from '@/i18n/navLinks'
 import type { ThemeValue } from '@/lib/theme'
 
 type AppView = 'directory' | 'explore'
@@ -32,9 +35,9 @@ function DirectoryIntro({
   onShareFeedbackClick,
 }: {
   forModal?: boolean
-  /** When set (e.g. in welcome modal), "Share Feedback" in the sentence opens feedback. */
   onShareFeedbackClick?: () => void
 }) {
+  const { t } = useI18n()
   const bodyClass =
     forModal
       ? 'text-foreground/95 m-0 max-w-none text-[15px] leading-relaxed tracking-tight'
@@ -43,63 +46,66 @@ function DirectoryIntro({
   if (forModal && onShareFeedbackClick) {
     return (
       <p className={bodyClass}>
-        Please use{' '}
+        {t('discovery.intro.modalBeforeLink')}
         <button
           type="button"
           className="text-primary font-medium underline decoration-primary/60 underline-offset-[3px] transition-opacity hover:opacity-90"
           onClick={onShareFeedbackClick}
         >
-          Share Feedback
+          {t('discovery.intro.modalLink')}
         </button>
-        {' '}
-        so I can learn what works and what you&apos;d like me to add to this. Love, Bojan 🫶
+        {t('discovery.intro.modalAfterLink')}
       </p>
     )
   }
 
-  return (
-    <p className={bodyClass}>
-      Please use Share Feedback so I can learn what works and what you&apos;d like me to add to
-      this. Love, Bojan 🫶
-    </p>
-  )
+  return <p className={bodyClass}>{t('discovery.intro.inline')}</p>
 }
 
 function ExploreIntro({ hasMatches }: { hasMatches?: boolean }) {
+  const { t } = useI18n()
   if (hasMatches) return null
   return (
     <p className="text-muted-foreground max-w-2xl text-sm leading-relaxed">
-      Swipe through animals that are listed as available and see if you land a match!{' '}
-      {'<3'}
+      {t('discovery.exploreIntro')}
     </p>
-  )
-}
-
-function ShareFeedbackButton({ onShareFeedback }: Pick<Props, 'onShareFeedback'>) {
-  return (
-    <Button type="button" variant="default" className="shrink-0 md:min-w-0" onClick={onShareFeedback}>
-      <MessageSquare aria-hidden />
-      Share feedback
-    </Button>
   )
 }
 
 function ThemeToggleButton({ theme, onCycleTheme }: Pick<Props, 'theme' | 'onCycleTheme'>) {
+  const { t } = useI18n()
   const Icon = theme === 'dark' ? Moon : theme === 'light' ? Sun : Monitor
   return (
-    <Button type="button" variant="outline" size="icon" onClick={onCycleTheme} aria-label={`Theme: ${theme}`} className="shrink-0">
+    <Button
+      type="button"
+      variant="outline"
+      size="icon"
+      onClick={onCycleTheme}
+      aria-label={t('discovery.themeAria', { theme })}
+      className="shrink-0"
+    >
       <Icon className="size-4" aria-hidden />
     </Button>
   )
 }
 
-export function DiscoveryHeader({ onShareFeedback, appView, onGoExplore, onGoDirectory, hasMatches, theme, onCycleTheme, stats }: Props) {
+export function DiscoveryHeader({
+  onShareFeedback,
+  appView,
+  onGoExplore,
+  onGoDirectory,
+  hasMatches,
+  theme,
+  onCycleTheme,
+  stats,
+}: Props) {
+  const { t } = useI18n()
   const [welcomeOpen, setWelcomeOpen] = useState(false)
   const [infoMenuOpen, setInfoMenuOpen] = useState(false)
+  const navLinks = useMemo(() => mapNavLinks(t), [t])
 
   return (
     <header className="border-border border-b px-4 py-3 md:px-6 md:py-4">
-      {/* Mobile & narrow: Voluntail + Share, then intro, then Explore / Back */}
       <div className="flex flex-col gap-3 md:hidden">
         <div className="flex items-center justify-between gap-3">
           <h1 className="text-lg font-semibold tracking-tight">
@@ -115,7 +121,7 @@ export function DiscoveryHeader({ onShareFeedback, appView, onGoExplore, onGoDir
                 size="icon"
                 onClick={() => setWelcomeOpen(true)}
                 className="shrink-0"
-                aria-label="Welcome message"
+                aria-label={t('discovery.welcomeAria')}
               >
                 <Info className="size-4" aria-hidden />
               </Button>
@@ -127,13 +133,19 @@ export function DiscoveryHeader({ onShareFeedback, appView, onGoExplore, onGoDir
               className="shrink-0 md:hidden"
               aria-expanded={infoMenuOpen}
               aria-controls="directory-info-nav-menu"
-              aria-label="Meer pagina&apos;s"
+              aria-label={t('discovery.morePagesAria')}
               onClick={() => setInfoMenuOpen(true)}
             >
               <Menu className="size-4" aria-hidden />
             </Button>
+            <LocaleSwitcher />
             <ThemeToggleButton theme={theme} onCycleTheme={onCycleTheme} />
-            <ShareFeedbackButton onShareFeedback={onShareFeedback} />
+            <ShareFeedbackButton
+              variant="default"
+              className="shrink-0 md:min-w-0"
+              leadingIcon={<MessageSquare aria-hidden />}
+              onClick={onShareFeedback}
+            />
           </div>
         </div>
         {appView === 'directory' ? null : <ExploreIntro hasMatches={hasMatches} />}
@@ -145,7 +157,7 @@ export function DiscoveryHeader({ onShareFeedback, appView, onGoExplore, onGoDir
               onClick={onGoExplore}
             >
               <Compass className="size-4" aria-hidden />
-              Explore
+              {t('discovery.explore')}
             </Button>
           ) : (
             <Button
@@ -155,13 +167,12 @@ export function DiscoveryHeader({ onShareFeedback, appView, onGoExplore, onGoDir
               onClick={onGoDirectory}
             >
               <ArrowLeft className="size-4" aria-hidden />
-              Back to map
+              {t('discovery.backToMap')}
             </Button>
           )}
         </div>
       </div>
 
-      {/* md+: Voluntail + Explore + Share on one row; intro below */}
       <div className="hidden md:flex md:flex-col md:gap-3">
         <div className="flex items-center justify-between gap-6">
           <h1 className="text-lg font-semibold tracking-tight">
@@ -177,19 +188,32 @@ export function DiscoveryHeader({ onShareFeedback, appView, onGoExplore, onGoDir
                 onClick={onGoExplore}
               >
                 <Compass className="size-4" aria-hidden />
-                Explore
+                {t('discovery.explore')}
               </Button>
             ) : (
               <Button type="button" variant="secondary" className="md:w-auto" onClick={onGoDirectory}>
                 <ArrowLeft className="size-4" aria-hidden />
-                Back to map
+                {t('discovery.backToMap')}
               </Button>
             )}
+            <LocaleSwitcher />
             <ThemeToggleButton theme={theme} onCycleTheme={onCycleTheme} />
-            <ShareFeedbackButton onShareFeedback={onShareFeedback} />
+            <ShareFeedbackButton
+              variant="default"
+              className="shrink-0 md:min-w-0"
+              leadingIcon={<MessageSquare aria-hidden />}
+              onClick={onShareFeedback}
+            />
           </div>
         </div>
-        {appView === 'directory' ? <><DirectoryIntro /><CommunityStatsStrip stats={stats} /></> : <ExploreIntro hasMatches={hasMatches} />}
+        {appView === 'directory' ? (
+          <>
+            <DirectoryIntro />
+            <CommunityStatsStrip stats={stats} />
+          </>
+        ) : (
+          <ExploreIntro hasMatches={hasMatches} />
+        )}
       </div>
       {appView === 'directory' ? (
         <Dialog open={welcomeOpen} onOpenChange={setWelcomeOpen}>
@@ -197,7 +221,7 @@ export function DiscoveryHeader({ onShareFeedback, appView, onGoExplore, onGoDir
             showCloseButton
             className="w-[min(calc(100vw-1.25rem),22rem)] max-w-[calc(100vw-1.25rem)] gap-0 rounded-2xl border-0 p-6 pr-12 pt-5 shadow-xl sm:max-w-sm"
           >
-            <DialogTitle className="sr-only">Welcome message</DialogTitle>
+            <DialogTitle className="sr-only">{t('discovery.welcomeAria')}</DialogTitle>
             <DirectoryIntro
               forModal
               onShareFeedbackClick={() => {
@@ -215,17 +239,19 @@ export function DiscoveryHeader({ onShareFeedback, appView, onGoExplore, onGoDir
       ) : null}
       <nav
         className="border-border mt-3 hidden flex-wrap gap-x-3 gap-y-1 border-t pt-3 text-xs text-muted-foreground md:mt-4 md:flex md:pt-4"
-        aria-label="Informatiepagina&apos;s"
+        aria-label={t('discovery.footerNavAria')}
       >
-        {INFO_NAV_LINKS.filter(({ to }) => to !== '/').map(({ to, label }) => (
-          <Link
-            key={to}
-            to={to}
-            className="underline-offset-2 hover:text-foreground hover:underline"
-          >
-            {label}
-          </Link>
-        ))}
+        {navLinks
+          .filter(({ to }) => to !== '/')
+          .map(({ to, label }) => (
+            <Link
+              key={to}
+              to={to}
+              className="underline-offset-2 hover:text-foreground hover:underline"
+            >
+              {label}
+            </Link>
+          ))}
       </nav>
       <Dialog open={infoMenuOpen} onOpenChange={setInfoMenuOpen}>
         <DialogContent
@@ -233,14 +259,14 @@ export function DiscoveryHeader({ onShareFeedback, appView, onGoExplore, onGoDir
           showCloseButton
         >
           <DialogHeader>
-            <DialogTitle className="text-left">Meer pagina&apos;s</DialogTitle>
+            <DialogTitle className="text-left">{t('discovery.morePagesTitle')}</DialogTitle>
           </DialogHeader>
           <nav
             id="directory-info-nav-menu"
             className="flex flex-col gap-1 pb-2"
-            aria-label="Informatiepagina&apos;s"
+            aria-label={t('discovery.footerNavAria')}
           >
-            {INFO_NAV_LINKS.map(({ to, label }) => (
+            {navLinks.map(({ to, label }) => (
               <Link
                 key={to}
                 to={to}

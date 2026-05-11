@@ -6,6 +6,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import { useI18n } from '@/i18n/I18nContext'
 
 type Props = {
   kind: null | 'reshuffle' | 'startOver'
@@ -20,24 +21,25 @@ export function ExploreLocalDataConfirmDialog({
   onConfirmReshuffle,
   onConfirmStartOver,
 }: Props) {
+  const { t } = useI18n()
+
   return (
     <Dialog open={kind !== null} onOpenChange={onOpenChange}>
       <DialogContent showCloseButton className="sm:max-w-md" aria-describedby={undefined}>
         {kind === 'reshuffle' ? (
           <>
             <DialogHeader>
-              <DialogTitle>Reshuffle deck?</DialogTitle>
+              <DialogTitle>{t('explore.confirm.reshuffle.title')}</DialogTitle>
               <p className="text-muted-foreground text-sm">
-                All animals come back into the deck — passed ones and &ldquo;no match&rdquo; ones.
-                Your saved matches stay.
+                {t('explore.confirm.reshuffle.body')}
               </p>
             </DialogHeader>
             <DialogFooter>
               <Button type="button" variant="secondary" onClick={() => onOpenChange(false)}>
-                Cancel
+                {t('explore.confirm.cancel')}
               </Button>
               <Button type="button" onClick={onConfirmReshuffle}>
-                Reshuffle
+                {t('explore.confirm.reshuffleCta')}
               </Button>
             </DialogFooter>
           </>
@@ -45,18 +47,17 @@ export function ExploreLocalDataConfirmDialog({
         {kind === 'startOver' ? (
           <>
             <DialogHeader>
-              <DialogTitle>Start over?</DialogTitle>
+              <DialogTitle>{t('explore.confirm.startOver.title')}</DialogTitle>
               <p className="text-muted-foreground text-sm">
-                This resets everything — your matches, passed animals, and deck.
-                Your display name and filters stay the same.
+                {t('explore.confirm.startOver.body')}
               </p>
             </DialogHeader>
             <DialogFooter>
               <Button type="button" variant="secondary" onClick={() => onOpenChange(false)}>
-                Cancel
+                {t('explore.confirm.cancel')}
               </Button>
               <Button type="button" variant="destructive" onClick={onConfirmStartOver}>
-                Start over
+                {t('explore.confirm.startOverCta')}
               </Button>
             </DialogFooter>
           </>

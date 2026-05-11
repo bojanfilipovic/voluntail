@@ -10,6 +10,7 @@ import { CommunityStatsStrip } from '@/components/layout/CommunityStatsStrip'
 import type { CommunityStats } from '@/components/layout/CommunityStatsStrip'
 import { Button } from '@/components/ui/button'
 import { Compass, MapPin, MessageSquare } from 'lucide-react'
+import { useI18n } from '@/i18n/I18nContext'
 
 const STORAGE_KEY = 'voluntail.welcomed.v1'
 
@@ -32,6 +33,7 @@ type Props = {
 }
 
 export function WelcomeOverlay({ stats }: Props) {
+  const { t } = useI18n()
   const [open, setOpen] = useState(() => !hasBeenWelcomed())
 
   if (!open) return null
@@ -45,23 +47,23 @@ export function WelcomeOverlay({ stats }: Props) {
     <Dialog open onOpenChange={(o) => { if (!o) handleDismiss() }}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-xl">Welcome to Voluntail</DialogTitle>
-          <DialogDescription>
-            Discover animal shelters and find ways to help.
-          </DialogDescription>
+          <DialogTitle className="text-xl">{t('welcome.title')}</DialogTitle>
+          <DialogDescription>{t('welcome.description')}</DialogDescription>
         </DialogHeader>
         <ul className="space-y-3 py-2 text-sm">
           <li className="flex items-start gap-3">
             <MapPin className="text-muted-foreground mt-0.5 size-4 shrink-0" aria-hidden />
-            <span>Browse shelters on the map — find volunteer signups and donation links</span>
+            <span>{t('welcome.li1')}</span>
           </li>
           <li className="flex items-start gap-3">
             <Compass className="text-muted-foreground mt-0.5 size-4 shrink-0" aria-hidden />
-            <span>Try <strong>Explore</strong> — swipe through available animals and build a shortlist</span>
+            <span>
+              {t('welcome.li2')}
+            </span>
           </li>
           <li className="flex items-start gap-3">
             <MessageSquare className="text-muted-foreground mt-0.5 size-4 shrink-0" aria-hidden />
-            <span>Share feedback anytime — this is a pilot and your input shapes what comes next</span>
+            <span>{t('welcome.li3')}</span>
           </li>
         </ul>
         {stats != null && stats.shelters !== undefined ? (
@@ -71,7 +73,7 @@ export function WelcomeOverlay({ stats }: Props) {
         ) : null}
         <div className="flex flex-col gap-2 pt-2 sm:flex-row sm:justify-end">
           <Button onClick={handleDismiss}>
-            Go
+            {t('welcome.go')}
           </Button>
         </div>
       </DialogContent>

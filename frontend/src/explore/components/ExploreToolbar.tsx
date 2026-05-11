@@ -8,8 +8,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { intentLabel } from '@/explore/labels'
+import { EXPLORE_INTENT_MESSAGE_KEYS } from '@/explore/labels'
 import type { ExploreIntent } from '@/explore/types'
+import { useI18n } from '@/i18n/I18nContext'
 import { Heart, Settings } from 'lucide-react'
 
 type Props = {
@@ -30,6 +31,7 @@ export function ExploreToolbar({
   deckMatches,
   onPickDeckMatch,
 }: Props) {
+  const { t } = useI18n()
   const [matchesOpen, setMatchesOpen] = useState(false)
   const matchRows = deckMatches ?? []
   const pick = onPickDeckMatch
@@ -42,7 +44,7 @@ export function ExploreToolbar({
         <h2 className="min-w-0 truncate text-sm font-semibold tracking-tight">{title}</h2>
         {displayName ? (
           <p className="text-muted-foreground min-w-0 truncate text-xs">
-            {displayName}{intent && intent !== 'undecided' ? ` \u00b7 ${intentLabel(intent)}` : ''}
+            {displayName}{intent && intent !== 'undecided' ? ` \u00b7 ${t(EXPLORE_INTENT_MESSAGE_KEYS[intent])}` : ''}
           </p>
         ) : null}
       </div>
@@ -55,7 +57,7 @@ export function ExploreToolbar({
               size="sm"
               className="h-8 gap-1 px-2"
               onClick={() => setMatchesOpen(true)}
-              aria-label={`Your matches, ${n}`}
+              aria-label={t('explore.toolbar.matchesAria', { count: n })}
             >
               <Heart className="size-4 shrink-0" aria-hidden />
               <span className="text-xs font-semibold tabular-nums">{n}</span>
@@ -63,8 +65,8 @@ export function ExploreToolbar({
             <Dialog open={matchesOpen} onOpenChange={setMatchesOpen}>
               <DialogContent className="flex max-h-[min(85dvh,calc(100dvh-3rem))] flex-col gap-0 overflow-hidden p-4 pt-5 sm:max-w-sm">
                 <DialogHeader className="shrink-0 pr-8">
-                  <DialogTitle>Your matches</DialogTitle>
-                  <DialogDescription>Tap a name to open details.</DialogDescription>
+                  <DialogTitle>{t('explore.toolbar.matchesTitle')}</DialogTitle>
+                  <DialogDescription>{t('explore.toolbar.matchesHint')}</DialogDescription>
                 </DialogHeader>
                 <ul className="mt-3 min-h-0 flex-1 space-y-2 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch]">
                   {matchRows.map((a) => (
@@ -93,7 +95,7 @@ export function ExploreToolbar({
           variant="secondary"
           onClick={onOpenSettings}
           className="transition active:scale-95 motion-reduce:active:scale-100"
-          aria-label="Swipe deck settings"
+          aria-label={t('explore.toolbar.settingsAria')}
         >
           <Settings className="size-4" />
         </Button>

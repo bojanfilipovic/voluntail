@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { parseAnimalAge } from '@/domain/animalAge'
 import { speciesLabel } from '@/domain/species'
+import { useI18n } from '@/i18n/I18nContext'
 import { cn } from '@/lib/utils'
 import { Dice5, Heart, X } from 'lucide-react'
 
@@ -41,6 +42,7 @@ export function ExploreSwipeStack({
   rareCard = false,
   streak = 0,
 }: Props) {
+  const { t } = useI18n()
   const [dragX, setDragX] = useState(0)
   const [exitDir, setExitDir] = useState<ExitDir>(null)
   const [ringPulse, setRingPulse] = useState(false)
@@ -58,8 +60,8 @@ export function ExploreSwipeStack({
   }
 
   useEffect(() => {
-    const t = window.setTimeout(() => setShowHint(false), 700)
-    return () => window.clearTimeout(t)
+    const hintTimer = window.setTimeout(() => setShowHint(false), 700)
+    return () => window.clearTimeout(hintTimer)
   }, [])
 
   // Cleanup on unmount
@@ -134,16 +136,16 @@ export function ExploreSwipeStack({
     <div className="flex h-full min-h-0 w-full max-w-md flex-1 flex-col">
       {streak >= 2 && (
         <p className="text-center text-xs font-semibold text-amber-600 dark:text-amber-400" role="status">
-          {streak} matches in a row!
+          {t('explore.swipe.streak', { count: streak })}
         </p>
       )}
       {singleCardSkipNudge ? (
         <p className="text-muted-foreground text-center text-xs" role="status">
-          Only this animal left. Still unsure? You can pass or try for a match.
+          {t('explore.swipe.singleLeft')}
         </p>
       ) : remaining != null && remaining > 0 && remaining < 5 ? (
         <p className="text-muted-foreground text-center text-xs">
-          Just a few left to discover
+          {t('explore.swipe.fewLeft')}
         </p>
       ) : null}
       <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden pr-0.5 pb-32 sm:pb-0">
@@ -178,7 +180,7 @@ export function ExploreSwipeStack({
             )}
             style={{ opacity: exitDir === 'right' ? 1 : likeOpacity }}
           >
-            YES
+            {t('explore.swipe.yes')}
           </div>
           <div
             className={cn(
@@ -187,7 +189,7 @@ export function ExploreSwipeStack({
             )}
             style={{ opacity: exitDir === 'left' ? 1 : passOpacity }}
           >
-            PASS
+            {t('explore.swipe.pass')}
           </div>
           <Card
             className={cn(
@@ -224,8 +226,7 @@ export function ExploreSwipeStack({
         </div>
       </div>
       <p id={`${baseId}-hint`} className="sr-only">
-        Swipe the card, or use Not for me, Later, or Yes. A rolled match adds the animal to your matches
-        list. Later shows this card again after you see other animals in this round.
+        {t('explore.swipe.hintSr')}
       </p>
       <div
         className={cn(
@@ -244,7 +245,7 @@ export function ExploreSwipeStack({
             className="min-w-0 flex-1 h-12 sm:h-10 rounded-full border-rose-200 bg-rose-50 text-rose-600 shadow-sm transition active:scale-[0.93] hover:bg-rose-100 motion-reduce:transition-none sm:min-w-[4.5rem] sm:flex-initial dark:border-rose-800 dark:bg-rose-950 dark:text-rose-400"
             onClick={handlePass}
             disabled={busy || !!exitDir}
-            aria-label="Not for me"
+            aria-label={t('explore.swipe.notForMeAria')}
           >
             <X aria-hidden className="size-5" strokeWidth={2.5} />
           </Button>
@@ -254,7 +255,7 @@ export function ExploreSwipeStack({
             className="h-11 w-11 shrink-0 rounded-full p-0 text-foreground transition active:scale-[0.95] motion-reduce:transition-none sm:h-9 sm:min-w-[3.5rem] sm:w-auto sm:gap-1.5 sm:px-3"
             onClick={onSkip}
             disabled={busy || !!exitDir}
-            aria-label="Decide later; this animal is shown again after the others in this round"
+            aria-label={t('explore.swipe.laterAria')}
           >
             <Dice5 aria-hidden className="size-4" />
           </Button>
@@ -264,13 +265,13 @@ export function ExploreSwipeStack({
             className="min-w-0 flex-1 h-12 sm:h-10 rounded-full border-emerald-200 bg-emerald-50 text-emerald-600 shadow-sm transition active:scale-[0.93] hover:bg-emerald-100 motion-reduce:transition-none sm:min-w-[4.5rem] sm:flex-initial dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-400"
             onClick={handleLike}
             disabled={busy || !!exitDir}
-            aria-label="Yes, try for a match"
+            aria-label={t('explore.swipe.yesAria')}
           >
             <Heart aria-hidden className="size-5" fill="currentColor" />
           </Button>
         </div>
         <p className="text-muted-foreground text-center text-[0.7rem] leading-tight sm:text-xs">
-          Later = see again this round. Not a no.
+          {t('explore.swipe.laterHint')}
         </p>
       </div>
     </div>

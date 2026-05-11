@@ -7,6 +7,9 @@ import { parseAnimalAge } from '@/domain/animalAge'
 import { type SpeciesFilterValue } from '@/domain/species'
 import type { AnimalStatus } from '@/schemas/animals'
 import { effectiveAnimalImageUrls } from '@/domain/animalGallery'
+import { animalStatusLabel } from '@/i18n/animalStatusLabel'
+import { useI18n } from '@/i18n/I18nContext'
+import type { TranslateFn } from '@/i18n/locale'
 import { cn } from '@/lib/utils'
 import { getHeartedIds, subscribeHeartsChanged } from '@/lib/heartStorage'
 import { getShortlistIds } from '@/lib/exploreShortlist'
@@ -18,23 +21,9 @@ function isNew(createdAt: string): boolean {
   return created.getTime() > sevenDaysAgo
 }
 
-function statusLabel(s: AnimalStatus): string {
-  switch (s) {
-    case 'available':
-      return 'Available'
-    case 'reserved':
-      return 'Reserved'
-    case 'adopted':
-      return 'Adopted'
-    default:
-      return s
-  }
-}
-
-/** Shown in list meta only when it adds information (pilot is mostly "available"). */
-function listStatusExtra(status: AnimalStatus): string | null {
+function listStatusExtra(status: AnimalStatus, t: TranslateFn): string | null {
   if (status === 'available') return null
-  return statusLabel(status)
+  return animalStatusLabel(status, t)
 }
 
 type Props = {
@@ -87,6 +76,7 @@ export function AnimalList({
   hasNextPage,
   isFetchingNextPage,
 }: Props) {
+  const { t } = useI18n()
   const [, setHeartRevision] = useState(0)
   useEffect(() => subscribeHeartsChanged(() => setHeartRevision((n) => n + 1)), [])
 
@@ -100,8 +90,14 @@ export function AnimalList({
       ? (animals ?? []).filter((a) => shortlistIds.has(a.id))
       : animals
 
+  const emptyMessage = favoritesOnly
+    ? t('animalList.empty.favorites')
+    : matchesOnly
+      ? t('animalList.empty.matches')
+      : t('animalList.empty.default')
+
   return (
-    <section className="text-start" aria-label="Animal list">
+    <section className="text-start" aria-label={t('animalList.sectionAria')}>
       {error ? (
         <div
           className="border-destructive/40 bg-destructive/5 text-destructive mb-4 rounded-lg border px-3 py-2 text-sm leading-relaxed"
@@ -132,7 +128,7 @@ export function AnimalList({
               )}
             >
               <Heart className={cn('size-3', favoritesOnly && 'fill-rose-500')} />
-              My favorites ({favCount})
+              {t('animalList.favorites', { count: favCount })}
             </button>
           ) : null}
           {matchCount > 0 || matchesOnly ? (
@@ -147,7 +143,7 @@ export function AnimalList({
               )}
             >
               <Sparkles className={cn('size-3', matchesOnly && 'fill-amber-500')} />
-              My matches ({matchCount})
+              {t('animalList.matches', { count: matchCount })}
             </button>
           ) : null}
         </div>
@@ -163,11 +159,9 @@ export function AnimalList({
       />
 
       {error ? null : isPending ? (
-        <p className="text-muted-foreground text-sm">Loading animals…</p>
+        <p className="text-muted-foreground text-sm">{t('animalList.loading')}</p>
       ) : !displayAnimals?.length ? (
-        <p className="text-muted-foreground py-8 text-center text-sm">
-          {favoritesOnly ? 'No favorites yet.' : matchesOnly ? 'No matches yet.' : 'No animals found.'}
-        </p>
+        <p className="text-muted-foreground py-8 text-center text-sm">{emptyMessage}</p>
       ) : (
         <>
           <ul className="list-none space-y-1 p-0 sm:space-y-3">
@@ -209,13 +203,13 @@ export function AnimalList({
                         <span className="min-w-0">{a.name}</span>
                         {isNew(a.createdAt) ? (
                           <span className="rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
-                            New
+                            {t('animalList.new')}
                           </span>
                         ) : null}
                         {shortlistIds.has(a.id) ? (
                           <span className="inline-flex items-center gap-0.5 rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">
                             <Sparkles className="size-2.5" aria-hidden />
-                            Match
+                            {t('animalList.matchBadge')}
                           </span>
                         ) : null}
                         {a.city ? (
@@ -226,7 +220,7 @@ export function AnimalList({
                       </span>
                       {(() => {
                         const age = parseAnimalAge(a.description)
-                        const status = listStatusExtra(a.status)
+                        const status = listStatusExtra(a.status, t)
                         const parts = [age, status].filter(Boolean) as string[]
                         return parts.length > 0 ? (
                           <span className="text-muted-foreground text-[11px] leading-tight sm:text-xs">
@@ -239,7 +233,7 @@ export function AnimalList({
                       </span>
                       <span className="flex flex-wrap items-center gap-2">
                         {!a.published ? (
-                          <span className="text-destructive text-xs font-medium">Unpublished</span>
+                          <span className="text-destructive text-xs font-medium">{t('animalList.unpublished')}</span>
                         ) : null}
                       </span>
                     </span>
@@ -261,7 +255,7 @@ export function AnimalList({
                 disabled={isFetchingNextPage}
                 onClick={() => onLoadMore?.()}
               >
-                {isFetchingNextPage ? 'Loading…' : 'Load more'}
+                {isFetchingNextPage ? t('animalList.loadingMore') : t('animalList.loadMore')}
               </button>
             </div>
           ) : null}
@@ -288,6 +282,7 @@ function SecondaryFilters({
   cityOptions: string[]
   shelters: Shelter[] | undefined
 }) {
+  const { t } = useI18n()
   const [open, setOpen] = useState(false)
   const activeCount = (cityFilter ? 1 : 0) + (shelterFilter ? 1 : 0)
 
@@ -307,7 +302,7 @@ function SecondaryFilters({
         >
           <path d="M6.22 4.22a.75.75 0 0 1 1.06 0l3.5 3.5a.75.75 0 0 1 0 1.06l-3.5 3.5a.75.75 0 0 1-1.06-1.06L9.44 8 6.22 4.78a.75.75 0 0 1 0-1.06Z" />
         </svg>
-        More filters
+        {t('animalList.moreFilters')}
         {activeCount > 0 ? (
           <span className="bg-primary text-primary-foreground inline-flex size-4 items-center justify-center rounded-full text-[10px] font-semibold">
             {activeCount}
@@ -321,9 +316,9 @@ function SecondaryFilters({
             className="border-input bg-background ring-offset-background focus-visible:ring-ring flex h-9 w-full rounded-md border px-3 py-1 text-sm shadow-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
             value={cityFilter ?? ''}
             onChange={(e) => onCityFilter(e.target.value || null)}
-            aria-label="Filter by city"
+            aria-label={t('animalList.filterCityAria')}
           >
-            <option value="">All cities</option>
+            <option value="">{t('animalList.allCities')}</option>
             {cityOptions.map((city) => (
               <option key={city} value={city}>
                 {city}
@@ -335,9 +330,9 @@ function SecondaryFilters({
             className="border-input bg-background ring-offset-background focus-visible:ring-ring flex h-9 w-full rounded-md border px-3 py-1 text-sm shadow-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
             value={shelterFilter ?? ''}
             onChange={(e) => onShelterFilter(e.target.value || null)}
-            aria-label="Filter by shelter"
+            aria-label={t('animalList.filterShelterAria')}
           >
-            <option value="">All shelters</option>
+            <option value="">{t('animalList.allShelters')}</option>
             {(shelters ?? []).map((s) => (
               <option key={s.id} value={s.id}>
                 {s.name}
