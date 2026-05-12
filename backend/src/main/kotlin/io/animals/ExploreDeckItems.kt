@@ -14,9 +14,11 @@ suspend fun loadExploreDeckItems(
     maxRows: Int = EXPLORE_DECK_MAX_ROWS,
     pageLimit: Int = MAX_PAGE_LIMIT,
 ): List<AnimalResponse> {
-    val items = mutableListOf<AnimalResponse>()
-    var offset = 0
-    while (items.size < maxRows) {
+    suspend fun paginate(
+        offset: Int,
+        acc: List<AnimalResponse>,
+    ): List<AnimalResponse> {
+        if (acc.size >= maxRows) return acc
         val page =
             animalRepository.listPage(
                 filters = filters,
@@ -25,9 +27,11 @@ suspend fun loadExploreDeckItems(
                 offset = offset,
                 shuffleSeed = shuffleSeed,
             )
-        items.addAll(page.items)
-        if (page.items.isEmpty() || items.size >= page.total) break
-        offset += page.items.size
+        val merged = acc + page.items
+        return when {
+            page.items.isEmpty() || merged.size >= page.total -> merged
+            else -> paginate(offset + page.items.size, merged)
+        }
     }
-    return items
+    return paginate(0, emptyList())
 }

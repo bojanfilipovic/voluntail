@@ -34,6 +34,7 @@ fun Application.configureRouting() {
     logApplicationStartup(
         persistence = persistence,
         feedbackAvailable = repos.feedbackRepository != null,
+        cmsMutationsEnabled = cmsAuthConfig.mutationsEnabled,
     )
     routing {
         listOf("/", "/health").forEach { path ->
