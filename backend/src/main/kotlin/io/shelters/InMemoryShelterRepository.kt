@@ -3,7 +3,7 @@ package io.shelters
 import java.util.UUID
 
 class InMemoryShelterRepository : ShelterRepository {
-    private var rows = ShelterSamples.all.toMutableList()
+    private val rows = ShelterSamples.all.toMutableList()
 
     private fun sorted(): List<ShelterResponse> = rows.sortedBy { it.name }
 
